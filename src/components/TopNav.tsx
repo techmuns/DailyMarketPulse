@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import { motion } from 'framer-motion';
-import logoUrl from '../assets/munshot-logo.png';
+import logoUrl from '../assets/logos/munshot-logo-w.png';
 
 export type TabKey =
   | 'Today'
@@ -39,7 +39,7 @@ export function MunshotMark({ size = 28, className }: { size?: number; className
   return (
     <span
       className={clsx(
-        'shrink-0 inline-flex items-center justify-center rounded-lg overflow-hidden',
+        'shrink-0 inline-flex items-center justify-center',
         className
       )}
       style={{ width: size, height: size }}
@@ -51,6 +51,7 @@ export function MunshotMark({ size = 28, className }: { size?: number; className
         width={size}
         height={size}
         className="block w-full h-full object-contain select-none pointer-events-none"
+        style={{ mixBlendMode: 'multiply' }}
         draggable={false}
       />
     </span>
@@ -73,7 +74,7 @@ export function TopNav({ active, onChange }: Props) {
         "
       >
         <div className="flex items-center gap-2.5 shrink-0 pl-1">
-          <MunshotMark size={32} />
+          <MunshotMark size={36} />
           <div className="leading-none">
             <div className="font-masthead text-[14px] font-bold tracking-tight">Daily Market Pulse</div>
             <div className="text-[9.5px] text-charcoal-mute mt-1 tracking-[0.22em] uppercase font-semibold">By Munshot</div>

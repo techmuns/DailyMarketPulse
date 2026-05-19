@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { TopNav } from './components/TopNav';
 import type { TabKey } from './components/TopNav';
 import { AISignalDrawer } from './components/AISignalDrawer';
+import watermarkUrl from './assets/logos/munshot-logo.png';
 import { StoreProvider } from './state/store';
 import { LiveDataProvider } from './state/liveData';
 import { Today } from './tabs/Today';
@@ -55,6 +56,22 @@ function App() {
           Daily Market Pulse · By Munshot · Mock data
         </footer>
         <AISignalDrawer />
+        <div
+          aria-hidden
+          className="pointer-events-none fixed bottom-5 right-5 z-10 hidden sm:flex items-center gap-2.5 pl-2 pr-3.5 py-2 rounded-full bg-cream/70 backdrop-blur-md ring-1 ring-bordersoft/60 shadow-soft"
+        >
+          <img
+            src={watermarkUrl}
+            alt=""
+            width={32}
+            height={32}
+            className="block rounded-lg opacity-90"
+            draggable={false}
+          />
+          <span className="text-[9.5px] tracking-[0.22em] uppercase font-semibold text-charcoal-mute">
+            Munshot
+          </span>
+        </div>
       </div>
     </StoreProvider>
     </LiveDataProvider>
