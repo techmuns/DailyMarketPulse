@@ -33,29 +33,27 @@ interface Props {
 }
 
 /**
- * Munshot mark — crops the wordmark off the supplied lockup so the
- * gold "M" symbol stands alone as a publication badge.
- * Image natural size: 399 × 178; the M occupies roughly the left 40%.
+ * Munshot M-mark — gold M on a soft tile.
  */
 export function MunshotMark({ size = 28, className }: { size?: number; className?: string }) {
-  const naturalAspect = 399 / 178;
-  // Scale the image to the box's height (auto width).
-  const imgWidth = size * naturalAspect;
-  // Show only the leftmost square portion (the M symbol).
   return (
-    <div
-      className={clsx('shrink-0 overflow-hidden flex items-center justify-start', className)}
+    <span
+      className={clsx(
+        'shrink-0 inline-flex items-center justify-center rounded-lg overflow-hidden',
+        className
+      )}
       style={{ width: size, height: size }}
       aria-label="Munshot"
     >
       <img
         src={logoUrl}
         alt=""
-        style={{ height: size, width: imgWidth, maxWidth: 'none', objectFit: 'contain' }}
-        className="block select-none pointer-events-none"
+        width={size}
+        height={size}
+        className="block w-full h-full object-contain select-none pointer-events-none"
         draggable={false}
       />
-    </div>
+    </span>
   );
 }
 
