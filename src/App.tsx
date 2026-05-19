@@ -34,9 +34,9 @@ function App() {
   const [tab, setTab] = useState<TabKey>('Today');
   return (
     <StoreProvider>
-      <div className="min-h-screen bg-ivory-50 text-charcoal">
+      <div className="min-h-screen text-charcoal">
         <TopNav active={tab} onChange={setTab} />
-        <main className="max-w-[1320px] mx-auto px-6 py-8">
+        <main className="max-w-[1320px] mx-auto px-6 py-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={tab}
@@ -49,8 +49,8 @@ function App() {
             </motion.div>
           </AnimatePresence>
         </main>
-        <footer className="max-w-[1320px] mx-auto px-6 py-6 text-[11.5px] text-charcoal-mute">
-          Daily Market Pulse · Calm Alpha · Mock/demo data — to be replaced by live feeds.
+        <footer className="max-w-[1320px] mx-auto px-6 pb-10 pt-4 text-[10.5px] text-charcoal-mute tracking-wider uppercase border-t border-bordersoft/60 mt-10">
+          Daily Market Pulse · Calm Alpha · Mock data
         </footer>
         <AISignalDrawer />
       </div>

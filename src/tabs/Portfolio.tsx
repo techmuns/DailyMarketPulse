@@ -1,147 +1,151 @@
 import { motion } from 'framer-motion';
 import { Card } from '../components/Card';
 import { SectionHeader } from '../components/SectionHeader';
+import { Heatmap } from '../components/Heatmap';
+import type { HeatCell } from '../components/Heatmap';
 import { portfolio, portfolioStats } from '../data/portfolio';
 import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
-import { SignalChip, ChangeStripChip } from '../components/Chip';
-import { pct, deltaColor } from '../utils/format';
+import { SignalChip } from '../components/Chip';
+import { pct, signalHex } from '../utils/format';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
 import clsx from 'clsx';
 
 export function Portfolio() {
   const { openDrawer } = useStore();
-  const tempSpark = [49, 51, 52, 53, 51, 50, 49];
-  const sorted = [...portfolio].sort((a, b) => b.weight - a.weight);
+  const sortedByWeight = [...portfolio].sort((a, b) => b.weight - a.weight);
+
+  const heat: HeatCell[] = sortedByWeight.map((h) => ({
+    id: h.id,
+    label: h.ticker,
+    value: h.trend!.d1,
+    sub: h.sector,
+    size: h.weight,
+  }));
+
+  const contribData = [...portfolio]
+    .map((h) => ({ name: h.ticker, value: h.trend!.d1 * (h.weight / 100) * 100, raw: h.trend!.d1 }))
+    .sort((a, b) => b.value - a.value);
 
   return (
-    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-7">
+    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
       <header>
-        <h1 className="font-display text-[28px] text-charcoal">Portfolio</h1>
-        <p className="text-[13px] text-charcoal-mute mt-1">What changed since yesterday for your book.</p>
+        <p className="label-mute">Portfolio</p>
+        <h1 className="h-display text-[26px] font-semibold mt-1.5">Your book</h1>
+        <p className="text-[12.5px] text-charcoal-mute mt-1.5">What changed since yesterday for your holdings.</p>
       </header>
 
-      <section className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        <Card className="lg:col-span-2">
-          <div className="flex items-center justify-between">
-            <span className="label-mute">Portfolio temperature</span>
-            <span className="chip bg-calm-amber-bg text-calm-amber border border-calm-amber/30">Mildly defensive</span>
-          </div>
-          <div className="font-display text-[24px] text-charcoal mt-2">{portfolioStats.bookValue}</div>
-          <div className="flex items-center gap-3 mt-2">
-            <Delta value={portfolioStats.todayChange} label="1D" />
-            <Delta value={portfolioStats.d5Change} label="5D" />
-            <Delta value={portfolioStats.m1Change} label="1M" />
-          </div>
-          <div className="mt-3">
-            <Sparkline data={tempSpark} color="#3A5A7A" height={48} strokeWidth={2} />
-          </div>
+      {/* Scorecards */}
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Scorecard label="Book value" value={portfolioStats.bookValue} sub="mock NAV" accent="navy" />
+        <Scorecard label="Today" value={pct(portfolioStats.todayChange)} dir={portfolioStats.todayChange} sub={`${portfolioStats.positive}↑ / ${portfolioStats.negative}↓`} />
+        <Scorecard label="5-day" value={pct(portfolioStats.d5Change)} dir={portfolioStats.d5Change} sub="rolling" />
+        <Scorecard label="1-month" value={pct(portfolioStats.m1Change)} dir={portfolioStats.m1Change} sub="rolling" />
+      </section>
+
+      <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <Card className="lg:col-span-2" title="Holdings heatmap" subtitle="Sized by weight · coloured by 1D move">
+          <Heatmap cells={heat} cols={4} onClick={() => openDrawer(aiSignals[0])} />
         </Card>
-        <Card>
-          <div className="label-mute">Positions up</div>
-          <div className="text-[22px] font-display font-semibold text-calm-green mt-1">{portfolioStats.positive}</div>
-          <div className="text-[12px] text-charcoal-mute">of {portfolioStats.positive + portfolioStats.negative}</div>
-        </Card>
-        <Card>
-          <div className="label-mute">Positions down</div>
-          <div className="text-[22px] font-display font-semibold text-calm-rose mt-1">{portfolioStats.negative}</div>
-          <div className="text-[12px] text-charcoal-mute">of {portfolioStats.positive + portfolioStats.negative}</div>
+        <Card title="Contribution (1D)" subtitle="Weighted bps to book today">
+          <div className="h-[220px] mt-1">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={contribData} layout="vertical" margin={{ left: 0, right: 12, top: 4, bottom: 4 }}>
+                <XAxis type="number" hide />
+                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#7A7A82' }} width={56} />
+                <ReferenceLine x={0} stroke="#D6CCB4" />
+                <Bar dataKey="value" radius={[3, 3, 3, 3]} barSize={10}>
+                  {contribData.map((d) => (
+                    <Cell key={d.name} fill={d.value >= 0 ? '#6FAE92' : '#BF7E78'} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </Card>
       </section>
 
       <section>
-        <SectionHeader title="Holdings heatmap" hint="Sized by weight, coloured by 1D change." />
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-          {sorted.map((h) => {
-            const v = h.trend!.d1;
-            const intensity = Math.min(1, Math.abs(v) / 2);
-            const bg = v >= 0
-              ? `rgba(91, 174, 138, ${0.10 + intensity * 0.35})`
-              : `rgba(201, 122, 120, ${0.10 + intensity * 0.35})`;
-            return (
-              <button
-                key={h.id}
-                onClick={() => openDrawer(aiSignals[0])}
-                className="text-left p-3 rounded-xl border border-bordersoft hover:shadow-soft transition"
-                style={{ background: bg }}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="text-[12px] text-charcoal-soft truncate">{h.title}</div>
-                  <div className="text-[11px] text-charcoal-mute">{h.weight}%</div>
-                </div>
-                <div className={clsx('text-[16px] font-semibold mt-1', deltaColor(v))}>{pct(v)}</div>
-                <div className="text-[11px] text-charcoal-mute mt-0.5">{h.sector}</div>
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
-      <section>
-        <SectionHeader title="Top contributors & detractors" />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card title="Contributors">
-            <ul className="mt-2 divide-y divide-bordersoft">
-              {[...portfolio].sort((a, b) => b.trend!.d1 - a.trend!.d1).slice(0, 3).map((h) => (
-                <li key={h.id} className="py-2 flex items-center justify-between">
-                  <div>
-                    <div className="text-[13.5px] font-medium text-charcoal">{h.title}</div>
-                    <div className="text-[12px] text-charcoal-mute">{h.whyShown}</div>
-                  </div>
-                  <Delta value={h.trend!.d1} />
-                </li>
+        <SectionHeader title="Holdings" eyebrow="Detail" />
+        <div className="card overflow-hidden">
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th className="pl-5">Company</th>
+                <th className="w-[90px]">Weight</th>
+                <th className="w-[90px]">1D</th>
+                <th className="w-[110px]">5D trend</th>
+                <th>Impact driver</th>
+                <th className="w-[90px]">Signal</th>
+                <th className="pr-5 w-[120px]">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedByWeight.map((h) => (
+                <tr key={h.id} className="row-link" onClick={() => openDrawer(aiSignals[0])}>
+                  <td className="pl-5">
+                    <div className="text-[13px] font-semibold text-charcoal">{h.title}</div>
+                    <div className="text-[10.5px] text-charcoal-mute">{h.sector}</div>
+                  </td>
+                  <td className="tabular-nums text-charcoal-soft text-[12px]">{h.weight}%</td>
+                  <td><Delta value={h.trend!.d1} /></td>
+                  <td>
+                    <div className="w-[80px]">
+                      <Sparkline data={h.trend!.spark} color={signalHex(h.signal)} height={22} />
+                    </div>
+                  </td>
+                  <td className="text-[11.5px] text-charcoal-mute leading-snug">{h.whyShown}</td>
+                  <td><SignalChip value={h.signal} dot /></td>
+                  <td className="pr-5 text-[11.5px] text-calm-violet">{h.action || '—'}</td>
+                </tr>
               ))}
-            </ul>
-          </Card>
-          <Card title="Detractors">
-            <ul className="mt-2 divide-y divide-bordersoft">
-              {[...portfolio].sort((a, b) => a.trend!.d1 - b.trend!.d1).slice(0, 3).map((h) => (
-                <li key={h.id} className="py-2 flex items-center justify-between">
-                  <div>
-                    <div className="text-[13.5px] font-medium text-charcoal">{h.title}</div>
-                    <div className="text-[12px] text-charcoal-mute">{h.whyShown}</div>
-                  </div>
-                  <Delta value={h.trend!.d1} />
-                </li>
-              ))}
-            </ul>
-          </Card>
+            </tbody>
+          </table>
         </div>
       </section>
 
       <section>
-        <SectionHeader title="Thesis risk / support changes" hint="How today's flows lean against (or with) your written thesis." />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {portfolio.slice(0, 6).map((h) => (
-            <Card
-              key={h.id}
-              strip={h.changeStrip}
-              title={`${h.title} (${h.ticker})`}
-              subtitle={h.thesis}
-              right={<SignalChip value={h.signal} />}
-              onClick={() => openDrawer(aiSignals[0])}
-            >
-              <div className="flex items-center justify-between mt-1">
-                <div className="text-[12px] text-charcoal-mute">Weight {h.weight}% · {h.sector}</div>
-                <Delta value={h.trend!.d1} label="1D" />
-              </div>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      <section>
-        <SectionHeader title='"What changed since yesterday for my book?"' />
-        <Card>
-          <ul className="space-y-2 text-[13.5px] text-charcoal-soft">
-            <li className="flex items-center gap-2"><ChangeStripChip value="Risk increased" /> Autos input cost squeeze deepened (M&M, Maruti).</li>
-            <li className="flex items-center gap-2"><ChangeStripChip value="Support improved" /> CPI cooler than expected — supports rate-sensitive holdings.</li>
-            <li className="flex items-center gap-2"><ChangeStripChip value="Changed since yesterday" /> Asian Paints filing eased crude worry.</li>
-            <li className="flex items-center gap-2"><ChangeStripChip value="5-day trend" /> INR weakness now durable — exporter tailwind, importer drag.</li>
+        <SectionHeader title="What changed since yesterday for my book" eyebrow="Read" />
+        <Card padding="md">
+          <ul className="text-[12.5px] text-charcoal-soft space-y-2.5">
+            <Read change="Risk increased" text="Autos input cost squeezed deepened (M&M, MARUTI)" />
+            <Read change="Support improved" text="CPI cooler than expected — rate-sensitive holdings benefit" />
+            <Read change="Changed since yesterday" text="Asian Paints filing eased crude pass-through worry" />
+            <Read change="5-day trend" text="INR weakness now durable — exporter tailwind, importer drag" />
           </ul>
         </Card>
       </section>
     </motion.div>
+  );
+}
+
+function Scorecard({ label, value, sub, dir, accent }: { label: string; value: string; sub?: string; dir?: number; accent?: 'navy' }) {
+  const c =
+    accent === 'navy'
+      ? 'border-l-calm-navy'
+      : dir !== undefined
+      ? dir > 0
+        ? 'border-l-calm-green'
+        : dir < 0
+        ? 'border-l-calm-rose'
+        : 'border-l-bordersoft'
+      : 'border-l-bordersoft';
+  return (
+    <div className={clsx('bg-cream border border-bordersoft border-l-[3px] rounded-xl p-4 shadow-soft', c)}>
+      <div className="label-mute">{label}</div>
+      <div className="mt-2 font-display text-[20px] font-semibold text-charcoal leading-tight tabular-nums">{value}</div>
+      {sub && <div className="mt-0.5 text-[11.5px] text-charcoal-mute">{sub}</div>}
+    </div>
+  );
+}
+
+function Read({ change, text }: { change: any; text: string }) {
+  return (
+    <li className="flex items-start gap-2.5">
+      <span className="chip bg-cream-deep text-charcoal-mute shrink-0 mt-0.5">{change}</span>
+      <span>{text}</span>
+    </li>
   );
 }

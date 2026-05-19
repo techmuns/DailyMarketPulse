@@ -4,38 +4,41 @@ export default {
   theme: {
     extend: {
       colors: {
+        // Calm Alpha v2 — warmer, slightly deeper, easier on the eyes
         ivory: {
-          50: '#FBF8F2',
-          100: '#F7F3EA',
-          200: '#EFEAE0',
+          50: '#ECE5D6', // page background — warm taupe
+          100: '#E3DAC6',
+          200: '#D9CFB6',
         },
-        cream: '#FDFCF7',
+        cream: '#F4EEDF',        // primary card surface
+        'cream-deep': '#EEE6D2', // secondary surface (header, kanban)
         charcoal: {
-          DEFAULT: '#2B2F36',
-          soft: '#3F4550',
-          mute: '#6B7280',
+          DEFAULT: '#2D2E36',
+          soft: '#454751',
+          mute: '#7A7A82',
         },
         calm: {
-          green: '#5BAE8A',
-          'green-bg': '#E8F3EC',
-          rose: '#C97A78',
-          'rose-bg': '#F8E9E7',
-          amber: '#D4A24C',
-          'amber-bg': '#F8EFD9',
-          navy: '#3A5A7A',
-          'navy-bg': '#E6EEF5',
-          violet: '#8B7BB8',
-          'violet-bg': '#EFEAF7',
+          green: '#6FAE92',
+          'green-bg': '#DDE7DC',
+          rose: '#BF7E78',
+          'rose-bg': '#EEDAD4',
+          amber: '#B79257',
+          'amber-bg': '#EADDBE',
+          navy: '#3F5C7A',
+          'navy-bg': '#D6DEE7',
+          violet: '#8C82B0',
+          'violet-bg': '#DDD8E6',
         },
-        bordersoft: '#ECE7DA',
+        bordersoft: '#D6CCB4',
+        borderstrong: '#C5B998',
       },
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         display: ['"Source Serif Pro"', '"Source Serif 4"', 'Georgia', 'serif'],
       },
       boxShadow: {
-        soft: '0 1px 2px rgba(43, 47, 54, 0.04), 0 4px 16px rgba(43, 47, 54, 0.04)',
-        lift: '0 2px 4px rgba(43, 47, 54, 0.06), 0 12px 28px rgba(43, 47, 54, 0.08)',
+        soft: '0 1px 2px rgba(60, 50, 30, 0.05), 0 6px 18px rgba(60, 50, 30, 0.04)',
+        lift: '0 2px 4px rgba(60, 50, 30, 0.07), 0 14px 32px rgba(60, 50, 30, 0.07)',
       },
       borderRadius: {
         xl2: '1.25rem',

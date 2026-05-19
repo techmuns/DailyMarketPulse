@@ -1,56 +1,95 @@
 import { motion } from 'framer-motion';
-import { TrendCard } from '../components/TrendCard';
 import { Card } from '../components/Card';
 import { SectionHeader } from '../components/SectionHeader';
+import { Delta } from '../components/Delta';
+import { Sparkline } from '../components/Sparkline';
+import { SignalChip } from '../components/Chip';
 import { currencies, currencySummary } from '../data/currencies';
-import { ChangeStripChip } from '../components/Chip';
+import { aiSignals } from '../data/signals';
+import { useStore } from '../state/store';
+import { num, signalHex } from '../utils/format';
 
 export function Currency() {
+  const { openDrawer } = useStore();
   return (
-    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-7">
+    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
       <header>
-        <h1 className="font-display text-[28px] text-charcoal">Currency</h1>
-        <p className="text-[13px] text-charcoal-mute mt-1">USD/INR, EUR/INR, JPY/INR, CNY/INR, DXY — importer/exporter impact.</p>
+        <p className="label-mute">Currency</p>
+        <h1 className="h-display text-[26px] font-semibold mt-1.5">FX board</h1>
+        <p className="text-[12.5px] text-charcoal-mute mt-1.5">{currencySummary}</p>
       </header>
 
-      <Card>
-        <div className="flex items-center gap-2 mb-2">
-          <span className="chip bg-calm-navy-bg text-calm-navy border border-calm-navy/30">Currency Pulse</span>
-          <ChangeStripChip value="Risk increased" />
-        </div>
-        <p className="font-display text-[18px] text-charcoal leading-snug">{currencySummary}</p>
-      </Card>
-
       <section>
-        <SectionHeader title="Pairs" hint="1D / 5D / 1M move with sparkline." />
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {currencies.map((c) => (
-            <TrendCard key={c.id} item={c} />
-          ))}
+        <SectionHeader title="Pairs" eyebrow="Today" />
+        <div className="card overflow-hidden">
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th className="pl-5">Currency</th>
+                <th className="w-[100px]">Rate</th>
+                <th className="w-[80px]">1D</th>
+                <th className="w-[80px]">5D</th>
+                <th className="w-[80px]">1M</th>
+                <th className="w-[120px]">Trend</th>
+                <th>Portfolio impact</th>
+                <th className="pr-5 w-[90px]">Signal</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currencies.map((c) => (
+                <tr key={c.id} className="row-link" onClick={() => openDrawer(aiSignals[0])}>
+                  <td className="pl-5">
+                    <div className="text-[13px] font-semibold text-charcoal">{c.title}</div>
+                    <div className="text-[10.5px] text-charcoal-mute font-mono">{c.pair}</div>
+                  </td>
+                  <td className="font-display font-medium text-charcoal tabular-nums">{num(c.current as number, c.pair === 'JPYINR' ? 3 : 2)}</td>
+                  <td><Delta value={c.trend!.d1} /></td>
+                  <td><Delta value={c.trend!.d5} size="xs" /></td>
+                  <td><Delta value={c.trend!.m1} size="xs" /></td>
+                  <td>
+                    <div className="w-[100px]">
+                      <Sparkline data={c.trend!.spark} color={signalHex(c.signal)} height={26} />
+                    </div>
+                  </td>
+                  <td className="text-[11.5px] text-charcoal-mute leading-snug">{c.affected.slice(0, 2).join('; ')}</td>
+                  <td className="pr-5"><SignalChip value={c.signal} dot /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
 
       <section>
-        <SectionHeader title="Importer / exporter impact map" hint="Who carries the cost, who collects the tailwind." />
+        <SectionHeader title="Importer / exporter map" eyebrow="FX impact" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card title="Importers — cost pressure" subtitle="Stronger USD raises landed input cost.">
-            <ul className="space-y-2 mt-2 text-[13.5px] text-charcoal-soft">
-              <li>· Mahindra & Mahindra — steel + FX double squeeze</li>
-              <li>· Maruti Suzuki — Yen sourcing eased, USD raw materials watch</li>
-              <li>· Asian Paints — crude / TiO2 / specialty imports</li>
-              <li>· HUL — palm oil + packaging</li>
+          <Card title="Importers" subtitle="Stronger USD = landed input cost up" right={<SignalChip value="risk" dot />}>
+            <ul className="mt-1 divide-y divide-bordersoft/60 text-[12.5px] text-charcoal-soft">
+              <ImpactRow ticker="M&M" note="Steel + USD raw materials" />
+              <ImpactRow ticker="MARUTI" note="JPY eased, USD intact" />
+              <ImpactRow ticker="ASIANP" note="Crude / TiO2 / specialty" />
+              <ImpactRow ticker="HUL" note="Palm oil + packaging" />
             </ul>
           </Card>
-          <Card title="Exporters — revenue tailwind" subtitle="Weaker INR translates dollar revenue higher.">
-            <ul className="space-y-2 mt-2 text-[13.5px] text-charcoal-soft">
-              <li>· Infosys, TCS — USD revenue concentration</li>
-              <li>· PI Industries — CSM exports</li>
-              <li>· Sun Pharma, Divi's — US generics & API</li>
-              <li>· Bharat Forge — global components</li>
+          <Card title="Exporters" subtitle="Weaker INR = USD revenue tailwind" right={<SignalChip value="support" dot />}>
+            <ul className="mt-1 divide-y divide-bordersoft/60 text-[12.5px] text-charcoal-soft">
+              <ImpactRow ticker="INFY" note="USD revenue concentration" />
+              <ImpactRow ticker="TCS" note="USD revenue concentration" />
+              <ImpactRow ticker="PI" note="CSM exports" />
+              <ImpactRow ticker="DIVIS" note="US generics & API" />
             </ul>
           </Card>
         </div>
       </section>
     </motion.div>
+  );
+}
+
+function ImpactRow({ ticker, note }: { ticker: string; note: string }) {
+  return (
+    <li className="py-2 flex items-center justify-between gap-3 first:pt-0 last:pb-0">
+      <span className="font-mono text-[11.5px] text-charcoal bg-cream-deep border border-bordersoft px-1.5 py-0.5 rounded">{ticker}</span>
+      <span className="text-[11.5px] text-charcoal-mute text-right">{note}</span>
+    </li>
   );
 }

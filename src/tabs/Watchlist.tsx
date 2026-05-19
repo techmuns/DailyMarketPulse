@@ -1,93 +1,114 @@
 import { motion } from 'framer-motion';
 import { Card } from '../components/Card';
 import { SectionHeader } from '../components/SectionHeader';
-import { watchlist } from '../data/watchlist';
 import { Delta } from '../components/Delta';
-import { SignalChip, ChangeStripChip } from '../components/Chip';
 import { Sparkline } from '../components/Sparkline';
+import { SignalChip } from '../components/Chip';
+import { watchlist } from '../data/watchlist';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
+import { signalHex, num } from '../utils/format';
 
 export function Watchlist() {
   const { openDrawer } = useStore();
+  const opp = watchlist.filter((w) => w.signal === 'support' || w.signal === 'monitor');
+  const risk = watchlist.filter((w) => w.signal === 'risk');
+  const correctedNoNews = watchlist.filter((w) => w.trend!.d1 < 0);
+
   return (
-    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-7">
+    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
       <header>
-        <h1 className="font-display text-[28px] text-charcoal">Watchlist</h1>
-        <p className="text-[13px] text-charcoal-mute mt-1">Movers, opportunity signals, risks, unusual volume.</p>
+        <p className="label-mute">Watchlist</p>
+        <h1 className="h-display text-[26px] font-semibold mt-1.5">On the radar</h1>
+        <p className="text-[12.5px] text-charcoal-mute mt-1.5">Movers, opportunity & risk signals, unusual volume.</p>
       </header>
 
       <section>
-        <SectionHeader title="Watchlist movers" />
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {watchlist.map((w) => (
-            <Card
-              key={w.id}
-              strip={w.changeStrip}
-              title={`${w.title} (${w.ticker})`}
-              subtitle={w.whyShown}
-              right={<SignalChip value={w.signal} />}
-              onClick={() => openDrawer(aiSignals[2])}
-            >
-              <div className="flex items-end justify-between gap-3">
-                <div>
-                  <div className="text-[22px] font-display font-semibold text-charcoal">{w.current}</div>
-                  <div className="flex items-center gap-3 mt-1">
-                    <Delta value={w.trend!.d1} label="1D" />
-                    <Delta value={w.trend!.d5} label="5D" />
-                    <Delta value={w.trend!.m1} label="1M" />
-                  </div>
-                </div>
-                <div className="w-24">
-                  <Sparkline data={w.trend!.spark} color={w.signal === 'risk' ? '#C97A78' : w.signal === 'support' ? '#5BAE8A' : '#D4A24C'} />
-                </div>
-              </div>
-              <div className="mt-3 text-[12px] text-charcoal-mute">{w.thesis}</div>
-            </Card>
-          ))}
+        <SectionHeader title="Watchlist board" eyebrow="Today" />
+        <div className="card overflow-hidden">
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th className="pl-5">Company</th>
+                <th className="w-[100px]">Price</th>
+                <th className="w-[80px]">1D</th>
+                <th className="w-[80px]">5D</th>
+                <th className="w-[80px]">1M</th>
+                <th className="w-[110px]">Trend</th>
+                <th>Why shown</th>
+                <th className="pr-5 w-[90px]">Signal</th>
+              </tr>
+            </thead>
+            <tbody>
+              {watchlist.map((w) => (
+                <tr key={w.id} className="row-link" onClick={() => openDrawer(aiSignals[2])}>
+                  <td className="pl-5">
+                    <div className="text-[13px] font-semibold text-charcoal">{w.title}</div>
+                    <div className="text-[10.5px] text-charcoal-mute">{w.sector}</div>
+                  </td>
+                  <td className="font-display font-medium text-charcoal tabular-nums">{num(w.current as number, 1)}</td>
+                  <td><Delta value={w.trend!.d1} /></td>
+                  <td><Delta value={w.trend!.d5} size="xs" /></td>
+                  <td><Delta value={w.trend!.m1} size="xs" /></td>
+                  <td><div className="w-[90px]"><Sparkline data={w.trend!.spark} color={signalHex(w.signal)} height={24} /></div></td>
+                  <td className="text-[11.5px] text-charcoal-mute leading-snug">{w.whyShown}</td>
+                  <td className="pr-5"><SignalChip value={w.signal} dot /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
 
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card title="Opportunity signals" right={<SignalChip value="support" />}>
-          <ul className="space-y-1.5 mt-2 text-[13.5px] text-charcoal-soft">
-            <li>· DMART — 1.8x volume, no news, quiet accumulation</li>
-            <li>· PI Industries — INR tailwind for CSM exports</li>
-            <li>· Pidilite — corrected without negative news</li>
+        <Card title="Opportunity signals" right={<SignalChip value="support" dot />}>
+          <ul className="mt-1 divide-y divide-bordersoft/60 text-[12.5px]">
+            {opp.map((w) => (
+              <li key={w.id} className="py-2 flex items-center justify-between gap-3 first:pt-0 last:pb-0">
+                <span className="text-charcoal">{w.ticker}</span>
+                <span className="text-[11px] text-charcoal-mute text-right truncate">{w.whyShown}</span>
+              </li>
+            ))}
           </ul>
         </Card>
-        <Card title="Risk signals" right={<SignalChip value="risk" />}>
-          <ul className="space-y-1.5 mt-2 text-[13.5px] text-charcoal-soft">
-            <li>· Zomato — quick-commerce competitive intensity rising</li>
-            <li>· Divi's — range-bound; thesis intact but slow</li>
+        <Card title="Risk signals" right={<SignalChip value="risk" dot />}>
+          <ul className="mt-1 divide-y divide-bordersoft/60 text-[12.5px]">
+            {risk.map((w) => (
+              <li key={w.id} className="py-2 flex items-center justify-between gap-3 first:pt-0 last:pb-0">
+                <span className="text-charcoal">{w.ticker}</span>
+                <span className="text-[11px] text-charcoal-mute text-right truncate">{w.whyShown}</span>
+              </li>
+            ))}
           </ul>
         </Card>
       </section>
 
       <section>
-        <SectionHeader title="Corrected without negative news" hint="Often the more interesting list." />
-        <Card>
-          <ul className="space-y-2 mt-2">
-            {watchlist.filter((w) => w.trend!.d1 < 0).map((w) => (
-              <li key={w.id} className="flex items-center justify-between gap-3 border-b border-bordersoft last:border-b-0 pb-2">
-                <div>
-                  <div className="text-[13.5px] font-medium text-charcoal">{w.title}</div>
-                  <div className="text-[12px] text-charcoal-mute">{w.whyShown}</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <ChangeStripChip value={w.changeStrip} />
-                  <Delta value={w.trend!.d1} />
-                  <button
-                    onClick={() => openDrawer(aiSignals[2])}
-                    className="chip bg-calm-violet-bg text-calm-violet border border-calm-violet/30"
-                  >
-                    + Add to thesis
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </Card>
+        <SectionHeader title="Corrected without negative news" eyebrow="Quiet movers" hint="Often the more interesting list." />
+        <div className="card overflow-hidden">
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th className="pl-5">Company</th>
+                <th className="w-[80px]">1D</th>
+                <th className="w-[80px]">5D</th>
+                <th>Read</th>
+                <th className="pr-5 w-[120px]">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {correctedNoNews.map((w) => (
+                <tr key={w.id} className="row-link" onClick={() => openDrawer(aiSignals[2])}>
+                  <td className="pl-5 text-[13px] font-medium text-charcoal">{w.title}</td>
+                  <td><Delta value={w.trend!.d1} /></td>
+                  <td><Delta value={w.trend!.d5} size="xs" /></td>
+                  <td className="text-[11.5px] text-charcoal-mute">{w.whyShown}</td>
+                  <td className="pr-5 text-[11.5px] text-calm-violet">+ Add to thesis</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </section>
     </motion.div>
   );

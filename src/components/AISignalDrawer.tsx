@@ -1,7 +1,9 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useStore } from '../state/store';
 import { SignalChip, SourceChip } from './Chip';
+import { Sparkline } from './Sparkline';
 import clsx from 'clsx';
+import { signalHex } from '../utils/format';
 
 export function AISignalDrawer() {
   const { drawerSignal, closeDrawer } = useStore();
@@ -15,98 +17,123 @@ export function AISignalDrawer() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 bg-charcoal/20 backdrop-blur-[2px] z-40"
+            className="fixed inset-0 bg-charcoal/25 backdrop-blur-[3px] z-40"
             onClick={closeDrawer}
           />
           <motion.aside
             key="drawer"
-            initial={{ x: 480, opacity: 0 }}
+            initial={{ x: 460, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            exit={{ x: 480, opacity: 0 }}
+            exit={{ x: 460, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 280, damping: 30 }}
             className="fixed top-0 right-0 h-full w-[440px] max-w-[92vw] bg-cream border-l border-bordersoft shadow-lift z-50 overflow-y-auto"
           >
-            <div className="p-5 border-b border-bordersoft flex items-start justify-between gap-3 sticky top-0 bg-cream z-10">
+            {/* Header */}
+            <div className="px-5 py-4 border-b border-bordersoft flex items-start justify-between gap-3 sticky top-0 bg-cream z-10">
               <div className="min-w-0">
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="chip bg-calm-violet-bg text-calm-violet border border-calm-violet/30">AI Signal</span>
-                  <SignalChip value={drawerSignal.signal} />
+                <div className="flex items-center gap-1.5 mb-2">
+                  <span className="chip bg-calm-violet-bg text-calm-violet">AI Signal</span>
+                  <SignalChip value={drawerSignal.signal} dot />
                 </div>
-                <h2 className="text-[17px] font-semibold leading-snug text-charcoal">{drawerSignal.title}</h2>
+                <h2 className="h-display text-[16px] font-semibold leading-snug">{drawerSignal.title}</h2>
               </div>
               <button
                 onClick={closeDrawer}
-                className="text-charcoal-mute hover:text-charcoal transition rounded-lg p-1 hover:bg-ivory-100"
+                className="text-charcoal-mute hover:text-charcoal-soft transition rounded-lg p-1 hover:bg-ivory-100"
                 aria-label="Close"
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M6 6l12 12M6 18L18 6" />
                 </svg>
               </button>
             </div>
 
             <div className="p-5 space-y-5">
-              <Section title="What changed">
-                <p className="text-[14px] leading-relaxed text-charcoal-soft">{drawerSignal.whatChanged}</p>
-              </Section>
-
-              <Section title="Why it matters">
-                <p className="text-[14px] leading-relaxed text-charcoal-soft">{drawerSignal.whyItMatters}</p>
-              </Section>
-
-              <div className="grid grid-cols-2 gap-3">
-                <Stat label="Trend or noise">
+              {/* Trend mini-chart */}
+              <div className="bg-cream-deep rounded-xl border border-bordersoft p-3.5">
+                <div className="flex items-center justify-between">
+                  <span className="label-mute">Trend</span>
                   <span
                     className={clsx(
-                      'chip border',
-                      drawerSignal.trendOrNoise === 'trend' && 'bg-calm-amber-bg text-calm-amber border-calm-amber/30',
-                      drawerSignal.trendOrNoise === 'one-day-noise' && 'bg-ivory-100 text-charcoal-soft border-bordersoft',
-                      drawerSignal.trendOrNoise === 'building' && 'bg-calm-navy-bg text-calm-navy border-calm-navy/30'
+                      'chip',
+                      drawerSignal.trendOrNoise === 'trend' && 'bg-calm-amber-bg text-calm-amber',
+                      drawerSignal.trendOrNoise === 'one-day-noise' && 'bg-ivory-100 text-charcoal-mute',
+                      drawerSignal.trendOrNoise === 'building' && 'bg-calm-navy-bg text-calm-navy'
                     )}
                   >
-                    {drawerSignal.trendOrNoise === 'trend'
-                      ? '5-day trend'
-                      : drawerSignal.trendOrNoise === 'one-day-noise'
-                      ? 'One-day move'
-                      : 'Building'}
+                    {drawerSignal.trendOrNoise === 'trend' ? '5-day trend' :
+                     drawerSignal.trendOrNoise === 'one-day-noise' ? 'One-day move' : 'Building'}
                   </span>
-                </Stat>
-                <Stat label="Source">
-                  <SourceChip value={drawerSignal.source} />
-                </Stat>
-                <Stat label="Confidence">
-                  <ConfidenceBar value={drawerSignal.confidence} />
-                </Stat>
-                <Stat label="Signal">
-                  <SignalChip value={drawerSignal.signal} />
-                </Stat>
+                </div>
+                <div className="mt-2 -mx-1">
+                  <Sparkline
+                    data={[1, 1.05, 1.12, 1.18, 1.22, 1.28, 1.32]}
+                    color={signalHex(drawerSignal.signal)}
+                    height={52}
+                    strokeWidth={2}
+                  />
+                </div>
               </div>
 
-              <Section title="Affected names / sectors">
-                <div className="flex flex-wrap gap-1.5">
-                  {drawerSignal.affected.map((a) => (
-                    <span key={a} className="chip bg-ivory-100 text-charcoal-soft border border-bordersoft">
-                      {a}
-                    </span>
-                  ))}
-                </div>
-              </Section>
+              {/* Compact key-value table */}
+              <table className="w-full text-[12.5px]">
+                <tbody className="divide-y divide-bordersoft/60">
+                  <KV label="What changed" value={drawerSignal.whatChanged} />
+                  <KV label="Why it matters" value={drawerSignal.whyItMatters} />
+                  <tr>
+                    <td className="py-2.5 align-top label-mute w-[110px]">Affected</td>
+                    <td className="py-2.5 text-charcoal-soft">
+                      <div className="flex flex-wrap gap-1">
+                        {drawerSignal.affected.map((a) => (
+                          <span key={a} className="chip bg-ivory-100 text-charcoal-soft">{a}</span>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="py-2.5 align-middle label-mute">Source</td>
+                    <td className="py-2.5"><SourceChip value={drawerSignal.source} /></td>
+                  </tr>
+                  <tr>
+                    <td className="py-2.5 align-middle label-mute">Confidence</td>
+                    <td className="py-2.5">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-1.5 rounded-full bg-ivory-100 overflow-hidden">
+                          <div
+                            className="h-full bg-calm-violet/80"
+                            style={{ width: `${Math.min(100, Math.max(0, drawerSignal.confidence))}%` }}
+                          />
+                        </div>
+                        <span className="text-[12px] font-medium text-charcoal tabular-nums w-9 text-right">
+                          {drawerSignal.confidence}%
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td className="py-2.5 align-middle label-mute">Signal</td>
+                    <td className="py-2.5"><SignalChip value={drawerSignal.signal} /></td>
+                  </tr>
+                </tbody>
+              </table>
 
-              <Section title="Suggested actions">
-                <div className="flex flex-col gap-2">
+              {/* Suggested actions */}
+              <div>
+                <div className="label-mute mb-2">Suggested actions</div>
+                <div className="flex flex-col gap-1.5">
                   {drawerSignal.suggestedActions.map((a) => (
                     <button
                       key={a}
-                      className="text-left text-[13.5px] px-3 py-2 rounded-xl bg-white border border-bordersoft hover:border-calm-violet/40 hover:bg-calm-violet-bg/40 transition"
+                      className="text-left text-[13px] px-3 py-2 rounded-lg bg-cream-deep border border-bordersoft hover:border-calm-violet/40 hover:bg-calm-violet-bg/60 transition flex items-center justify-between gap-2"
                     >
-                      <span className="text-calm-violet font-medium">+ </span>
-                      <span className="text-charcoal">{a}</span>
+                      <span className="text-charcoal-soft">{a}</span>
+                      <span className="text-calm-violet text-[12px]">+</span>
                     </button>
                   ))}
                 </div>
-              </Section>
+              </div>
 
-              <div className="text-[11px] text-charcoal-mute pt-2 border-t border-bordersoft">
+              <div className="text-[10.5px] text-charcoal-mute pt-3 border-t border-bordersoft tracking-wide">
                 Demo data · generated for the Daily Market Pulse MVP.
               </div>
             </div>
@@ -117,34 +144,11 @@ export function AISignalDrawer() {
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function KV({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <div className="label-mute mb-1.5">{title}</div>
-      {children}
-    </div>
-  );
-}
-
-function Stat({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="p-3 rounded-xl bg-white border border-bordersoft">
-      <div className="label-mute mb-1.5">{label}</div>
-      {children}
-    </div>
-  );
-}
-
-function ConfidenceBar({ value }: { value: number }) {
-  return (
-    <div>
-      <div className="text-[13px] font-medium text-charcoal">{value}%</div>
-      <div className="mt-1 h-1.5 rounded-full bg-ivory-100 overflow-hidden">
-        <div
-          className="h-full bg-calm-violet/70"
-          style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
-        />
-      </div>
-    </div>
+    <tr>
+      <td className="py-2.5 align-top label-mute w-[110px]">{label}</td>
+      <td className="py-2.5 text-charcoal-soft leading-relaxed">{value}</td>
+    </tr>
   );
 }

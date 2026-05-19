@@ -12,9 +12,17 @@ export function ChangeStripChip({ value }: { value?: ChangeStrip }) {
   return <Chip className={changeStripColor(value)}>{value}</Chip>;
 }
 
-export function SignalChip({ value }: { value: Signal }) {
+export function SignalChip({ value, dot }: { value: Signal; dot?: boolean }) {
   const c = signalColor(value);
-  return <Chip className={clsx(c.bg, c.fg, 'border', c.border)}>{c.label}</Chip>;
+  if (dot) {
+    return (
+      <span className={clsx('inline-flex items-center gap-1.5 text-[11.5px] font-medium', c.fg)}>
+        <span className={clsx('w-1.5 h-1.5 rounded-full', c.dotBg)} />
+        {c.label}
+      </span>
+    );
+  }
+  return <Chip className={clsx(c.bg, c.fg)}>{c.label}</Chip>;
 }
 
 export function SourceChip({ value }: { value: string }) {
@@ -23,12 +31,20 @@ export function SourceChip({ value }: { value: string }) {
   return (
     <Chip
       className={clsx(
-        isOfficial && 'bg-calm-navy-bg text-calm-navy border border-calm-navy/20',
-        isLow && 'bg-ivory-100 text-charcoal-mute border border-bordersoft',
-        !isOfficial && !isLow && 'bg-ivory-100 text-charcoal-soft border border-bordersoft'
+        isOfficial && 'bg-calm-navy-bg text-calm-navy',
+        isLow && 'bg-ivory-100 text-charcoal-mute',
+        !isOfficial && !isLow && 'bg-cream-deep text-charcoal-mute'
       )}
     >
       {value}
     </Chip>
+  );
+}
+
+export function Ticker({ children }: { children: ReactNode }) {
+  return (
+    <span className="font-mono text-[11.5px] tracking-tight text-charcoal-soft bg-cream-deep border border-bordersoft px-1.5 py-0.5 rounded">
+      {children}
+    </span>
   );
 }

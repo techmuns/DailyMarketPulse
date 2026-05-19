@@ -14,34 +14,55 @@ interface Props {
   subtitle?: string;
   right?: ReactNode;
   bare?: boolean;
+  padding?: 'sm' | 'md' | 'lg';
+  variant?: 'cream' | 'deep';
 }
 
-export function Card({ children, className, hover, onClick, strip, title, subtitle, right, bare }: Props) {
+export function Card({
+  children,
+  className,
+  hover,
+  onClick,
+  strip,
+  title,
+  subtitle,
+  right,
+  bare,
+  padding = 'md',
+  variant = 'cream',
+}: Props) {
   const Comp = onClick ? motion.button : motion.div;
+  const pad = padding === 'lg' ? 'p-6' : padding === 'sm' ? 'p-4' : 'p-5';
+  const head = padding === 'lg' ? 'px-6 pt-6 pb-2' : padding === 'sm' ? 'px-4 pt-4 pb-2' : 'px-5 pt-5 pb-2';
+  const body = padding === 'lg' ? 'px-6 pb-6' : padding === 'sm' ? 'px-4 pb-4' : 'px-5 pb-5';
   return (
     <Comp
       type={onClick ? 'button' : undefined}
       onClick={onClick}
       whileHover={hover || onClick ? { y: -1 } : undefined}
-      transition={{ type: 'spring', stiffness: 300, damping: 22 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 24 }}
       className={clsx(
-        bare ? '' : 'card',
+        bare ? '' : variant === 'deep' ? 'card-deep' : 'card',
         (hover || onClick) && 'card-hover cursor-pointer text-left',
         'block w-full',
         className
       )}
     >
-      {(strip || title || right) && (
-        <div className="flex items-start justify-between gap-3 p-4 pb-2">
-          <div className="flex flex-col gap-1.5 min-w-0">
-            {strip && <ChangeStripChip value={strip} />}
-            {title && <h3 className="text-[15px] font-semibold text-charcoal leading-snug truncate">{title}</h3>}
-            {subtitle && <p className="text-[12.5px] text-charcoal-mute leading-snug">{subtitle}</p>}
+      {(strip || title || right) ? (
+        <>
+          <div className={clsx('flex items-start justify-between gap-3', head)}>
+            <div className="flex flex-col gap-1.5 min-w-0">
+              {strip && <ChangeStripChip value={strip} />}
+              {title && <h3 className="text-[14.5px] font-semibold text-charcoal leading-snug truncate">{title}</h3>}
+              {subtitle && <p className="text-[12px] text-charcoal-mute leading-snug">{subtitle}</p>}
+            </div>
+            {right && <div className="shrink-0">{right}</div>}
           </div>
-          {right && <div className="shrink-0">{right}</div>}
-        </div>
+          <div className={body}>{children}</div>
+        </>
+      ) : (
+        <div className={pad}>{children}</div>
       )}
-      <div className={clsx((strip || title || right) ? 'p-4 pt-1' : 'p-4')}>{children}</div>
     </Comp>
   );
 }

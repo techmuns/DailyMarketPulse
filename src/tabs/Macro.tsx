@@ -1,68 +1,94 @@
 import { motion } from 'framer-motion';
-import { TrendCard } from '../components/TrendCard';
 import { SectionHeader } from '../components/SectionHeader';
-import { Card } from '../components/Card';
+import { Delta } from '../components/Delta';
+import { Sparkline } from '../components/Sparkline';
+import { SignalChip } from '../components/Chip';
 import { macro, macroPulseSummary } from '../data/macro';
 import { aiSignals } from '../data/signals';
-import { ChangeStripChip, SignalChip } from '../components/Chip';
 import { useStore } from '../state/store';
+import { signalHex } from '../utils/format';
+import clsx from 'clsx';
 
 export function Macro() {
   const { openDrawer } = useStore();
-  const macroAI = aiSignals.find((s) => s.category === 'macro') || aiSignals[0];
+
+  const sectorReads = [
+    { sector: 'Banks', signal: 'support' as const, note: 'Liquidity + dovish CPI' },
+    { sector: 'NBFC', signal: 'support' as const, note: 'Funding cost easing' },
+    { sector: 'Autos', signal: 'risk' as const, note: 'FX + steel cost squeeze' },
+    { sector: 'IT', signal: 'support' as const, note: 'INR + US yields tailwind' },
+    { sector: 'Paints', signal: 'risk' as const, note: 'Crude input pressure' },
+    { sector: 'Real Estate', signal: 'support' as const, note: 'Rate path improving' },
+    { sector: 'FMCG', signal: 'monitor' as const, note: 'Palm oil + CPO firm' },
+    { sector: 'Capital Goods', signal: 'support' as const, note: 'IIP firming' },
+  ];
 
   return (
-    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-7">
+    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
       <header>
-        <h1 className="font-display text-[28px] text-charcoal">Macro</h1>
-        <p className="text-[13px] text-charcoal-mute mt-1">Inflation, rates, policy, liquidity, geopolitics, activity.</p>
+        <p className="label-mute">Macro</p>
+        <h1 className="h-display text-[26px] font-semibold mt-1.5">Pulse</h1>
+        <p className="text-[12.5px] text-charcoal-mute mt-1.5">{macroPulseSummary}</p>
       </header>
 
-      <Card>
-        <div className="flex items-center gap-2 mb-2">
-          <span className="chip bg-calm-navy-bg text-calm-navy border border-calm-navy/30">Macro Pulse</span>
-          <ChangeStripChip value="Support improved" />
-        </div>
-        <p className="font-display text-[18px] text-charcoal leading-snug">{macroPulseSummary}</p>
-      </Card>
-
-      <button
-        onClick={() => openDrawer(macroAI)}
-        className="block w-full text-left rounded-2xl border border-calm-violet/25 bg-gradient-to-br from-calm-violet-bg via-cream to-white p-5 shadow-soft hover:shadow-lift transition-all"
-      >
-        <div className="flex items-center gap-2 mb-2">
-          <span className="chip bg-calm-violet text-white">AI Macro Signal</span>
-          <SignalChip value={macroAI.signal} />
-        </div>
-        <div className="font-display text-[18px] text-charcoal">{macroAI.title}</div>
-        <p className="text-[13.5px] text-charcoal-soft mt-1.5">{macroAI.whyItMatters}</p>
-      </button>
-
       <section>
-        <SectionHeader title="Macro indicators" hint="What changed since yesterday and over 5D/1M." />
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {macro.map((m) => (
-            <TrendCard key={m.id} item={m} unit={m.unit} />
-          ))}
+        <SectionHeader title="Indicators" eyebrow="Board" />
+        <div className="card overflow-hidden">
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th className="pl-5">Indicator</th>
+                <th className="w-[100px]">Current</th>
+                <th className="w-[80px]">1D</th>
+                <th className="w-[80px]">5D</th>
+                <th className="w-[80px]">1M</th>
+                <th className="w-[110px]">Trend</th>
+                <th>Affected</th>
+                <th className="pr-5 w-[90px]">Signal</th>
+              </tr>
+            </thead>
+            <tbody>
+              {macro.map((m) => (
+                <tr key={m.id} className="row-link" onClick={() => openDrawer(aiSignals.find(s => s.category === 'macro') || aiSignals[0])}>
+                  <td className="pl-5">
+                    <div className="text-[13px] font-semibold text-charcoal">{m.title}</div>
+                    <div className="text-[10.5px] text-charcoal-mute capitalize">{m.category}</div>
+                  </td>
+                  <td className="font-display font-medium text-charcoal tabular-nums">
+                    {typeof m.current === 'number' ? m.current : m.current}
+                    {m.unit && <span className="text-[10px] text-charcoal-mute ml-1">{m.unit}</span>}
+                  </td>
+                  <td><Delta value={m.trend!.d1} /></td>
+                  <td><Delta value={m.trend!.d5} size="xs" /></td>
+                  <td><Delta value={m.trend!.m1} size="xs" /></td>
+                  <td><div className="w-[90px]"><Sparkline data={m.trend!.spark} color={signalHex(m.signal)} height={24} /></div></td>
+                  <td className="text-[11.5px] text-charcoal-mute leading-snug">{m.affected.slice(0, 2).join(', ')}</td>
+                  <td className="pr-5"><SignalChip value={m.signal} dot /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
 
       <section>
-        <SectionHeader title="Portfolio sectors affected" />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {['Banks', 'NBFC', 'Autos', 'IT Services', 'Paints', 'Real Estate', 'FMCG', 'Capital Goods'].map((s) => (
-            <div key={s} className="card p-4">
-              <div className="label-mute">Sector</div>
-              <div className="text-[14px] font-semibold text-charcoal mt-1">{s}</div>
-              <div className="text-[12px] text-charcoal-mute mt-1">
-                {s === 'Autos' || s === 'Paints'
-                  ? 'Cost pressure rising'
-                  : s === 'IT Services'
-                  ? 'FX + yields tailwind'
-                  : 'Macro tilt mildly supportive'}
+        <SectionHeader title="Sectors affected" eyebrow="Read" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+          {sectorReads.map((s) => {
+            const bg =
+              s.signal === 'support' ? 'bg-calm-green-bg/60'
+                : s.signal === 'risk' ? 'bg-calm-rose-bg/60'
+                : 'bg-calm-amber-bg/60';
+            return (
+              <div key={s.sector} className={clsx('rounded-xl p-3 border border-bordersoft', bg)}>
+                <div className="flex items-center justify-between">
+                  <span className="text-[12px] font-semibold text-charcoal">{s.sector}</span>
+                  <SignalChip value={s.signal} dot />
+                </div>
+                <div className="text-[11px] text-charcoal-mute mt-1.5 leading-snug">{s.note}</div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
     </motion.div>

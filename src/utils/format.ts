@@ -12,16 +12,31 @@ export function num(value: number, digits = 2): string {
   });
 }
 
-export function signalColor(s: Signal): { fg: string; bg: string; border: string; label: string } {
+export function signalColor(
+  s: Signal
+): { fg: string; bg: string; dotBg: string; label: string } {
   switch (s) {
     case 'risk':
-      return { fg: 'text-calm-rose', bg: 'bg-calm-rose-bg', border: 'border-calm-rose/30', label: 'Risk' };
+      return { fg: 'text-calm-rose', bg: 'bg-calm-rose-bg', dotBg: 'bg-calm-rose', label: 'Risk' };
     case 'support':
-      return { fg: 'text-calm-green', bg: 'bg-calm-green-bg', border: 'border-calm-green/30', label: 'Support' };
+      return { fg: 'text-calm-green', bg: 'bg-calm-green-bg', dotBg: 'bg-calm-green', label: 'Support' };
     case 'monitor':
-      return { fg: 'text-calm-amber', bg: 'bg-calm-amber-bg', border: 'border-calm-amber/30', label: 'Monitor' };
+      return { fg: 'text-calm-amber', bg: 'bg-calm-amber-bg', dotBg: 'bg-calm-amber', label: 'Monitor' };
     case 'noise':
-      return { fg: 'text-charcoal-mute', bg: 'bg-ivory-100', border: 'border-bordersoft', label: 'Noise' };
+      return { fg: 'text-charcoal-mute', bg: 'bg-ivory-100', dotBg: 'bg-charcoal-mute', label: 'Noise' };
+  }
+}
+
+export function signalHex(s: Signal): string {
+  switch (s) {
+    case 'risk':
+      return '#BF7E78';
+    case 'support':
+      return '#6FAE92';
+    case 'monitor':
+      return '#B79257';
+    case 'noise':
+      return '#9F968A';
   }
 }
 
@@ -43,7 +58,7 @@ export function changeStripColor(c?: ChangeStrip): string {
     case 'Support improved':
       return 'bg-calm-green-bg text-calm-green';
     case 'Repeated theme':
-      return 'bg-ivory-100 text-charcoal-soft';
+      return 'bg-cream-deep text-charcoal-mute';
     case '5-day trend':
       return 'bg-calm-amber-bg text-calm-amber';
     case 'Action needed':

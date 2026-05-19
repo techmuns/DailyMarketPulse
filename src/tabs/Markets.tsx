@@ -1,88 +1,89 @@
 import { motion } from 'framer-motion';
-import { TrendCard } from '../components/TrendCard';
-import { SectionHeader } from '../components/SectionHeader';
 import { Card } from '../components/Card';
+import { SectionHeader } from '../components/SectionHeader';
+import { Heatmap } from '../components/Heatmap';
+import type { HeatCell } from '../components/Heatmap';
 import { indices, sectors, breadth, gainers, losers, unusualVolume } from '../data/markets';
 import type { MoverItem } from '../data/markets';
 import { Delta } from '../components/Delta';
-import { SignalChip } from '../components/Chip';
+import { Sparkline } from '../components/Sparkline';
 import clsx from 'clsx';
 import { useStore } from '../state/store';
 import { aiSignals } from '../data/signals';
-import { pct, deltaColor } from '../utils/format';
+import { num, signalHex } from '../utils/format';
 
 export function Markets() {
+  const { openDrawer } = useStore();
+
+  const sectorCells: HeatCell[] = sectors.map((s) => ({
+    id: s.id,
+    label: s.title,
+    value: s.trend!.d1,
+    sub: s.whyShown,
+  }));
+
   return (
-    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-7">
+    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
       <header>
-        <h1 className="font-display text-[28px] text-charcoal">Markets</h1>
-        <p className="text-[13px] text-charcoal-mute mt-1">Indices, sectors, breadth, movers, unusual volume.</p>
+        <p className="label-mute">Markets</p>
+        <h1 className="h-display text-[26px] font-semibold mt-1.5">Indices, sectors & movers</h1>
       </header>
 
       <section>
-        <SectionHeader title="Indices" />
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {indices.map((i) => (
-            <TrendCard key={i.id} item={i} />
-          ))}
+        <SectionHeader title="Indices" eyebrow="Board" />
+        <div className="card overflow-hidden">
+          <table className="tbl">
+            <thead>
+              <tr>
+                <th className="pl-5">Index</th>
+                <th className="w-[110px]">Level</th>
+                <th className="w-[80px]">1D</th>
+                <th className="w-[80px]">5D</th>
+                <th className="w-[80px]">1M</th>
+                <th className="w-[120px]">Trend</th>
+                <th className="pr-5">Read</th>
+              </tr>
+            </thead>
+            <tbody>
+              {indices.map((i) => (
+                <tr key={i.id} className="row-link" onClick={() => openDrawer(aiSignals[3])}>
+                  <td className="pl-5">
+                    <div className="text-[13px] font-semibold text-charcoal">{i.title}</div>
+                    <div className="text-[10.5px] text-charcoal-mute">{i.region}</div>
+                  </td>
+                  <td className="font-display font-medium text-charcoal tabular-nums">{num(i.current as number, i.title === 'India VIX' ? 2 : 0)}</td>
+                  <td><Delta value={i.trend!.d1} /></td>
+                  <td><Delta value={i.trend!.d5} size="xs" /></td>
+                  <td><Delta value={i.trend!.m1} size="xs" /></td>
+                  <td><div className="w-[100px]"><Sparkline data={i.trend!.spark} color={signalHex(i.signal)} height={22} /></div></td>
+                  <td className="pr-5 text-[11.5px] text-charcoal-mute leading-snug">{i.whyShown}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
 
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card title="Sector heatmap" subtitle="1D % change" className="lg:col-span-2">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
-            {sectors.map((s) => {
-              const v = s.trend!.d1;
-              const intensity = Math.min(1, Math.abs(v) / 2);
-              const bg = v >= 0
-                ? `rgba(91, 174, 138, ${0.10 + intensity * 0.35})`
-                : `rgba(201, 122, 120, ${0.10 + intensity * 0.35})`;
-              return (
-                <div
-                  key={s.id}
-                  className="rounded-xl p-3 border border-bordersoft"
-                  style={{ background: bg }}
-                >
-                  <div className="text-[12px] text-charcoal-soft truncate">{s.title}</div>
-                  <div className={clsx('text-[16px] font-semibold mt-1', deltaColor(v))}>{pct(v)}</div>
-                  <div className="text-[11px] text-charcoal-mute mt-1 line-clamp-1">{s.whyShown}</div>
-                </div>
-              );
-            })}
-          </div>
+        <Card className="lg:col-span-2" title="Sector heatmap" subtitle="1D change">
+          <Heatmap cells={sectorCells} cols={4} onClick={() => openDrawer(aiSignals[3])} />
         </Card>
-
-        <Card title="Market breadth" subtitle="Advance / decline & participation">
-          <div className="grid grid-cols-2 gap-3 mt-2">
+        <Card title="Market breadth" subtitle="Advance / decline">
+          <div className="grid grid-cols-2 gap-2.5 mt-1">
             <BreadthStat label="Advancers" value={breadth.advancers} accent="text-calm-green" />
             <BreadthStat label="Decliners" value={breadth.decliners} accent="text-calm-rose" />
             <BreadthStat label="New highs" value={breadth.newHighs} accent="text-calm-green" />
             <BreadthStat label="New lows" value={breadth.newLows} accent="text-calm-rose" />
-            <BreadthStat label="% above 50D" value={`${breadth.aboveSMA50}%`} accent="text-charcoal" />
-            <BreadthStat label="% above 200D" value={`${breadth.aboveSMA200}%`} accent="text-charcoal" />
+            <BreadthStat label="% > 50D" value={`${breadth.aboveSMA50}%`} accent="text-charcoal" />
+            <BreadthStat label="% > 200D" value={`${breadth.aboveSMA200}%`} accent="text-charcoal" />
           </div>
         </Card>
       </section>
 
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <MoverList title="Top gainers" items={gainers} positive />
-        <MoverList title="Top losers" items={losers} />
-        <MoverList title="Unusual volume" items={unusualVolume} volumeFocus />
-      </section>
-
-      <section>
-        <SectionHeader title='"Why did this move?"' hint="Quick explanation cards for today's notable movers." />
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {sectors.slice(0, 4).map((s) => (
-            <Card key={s.id} title={s.title} subtitle={s.whyShown} right={<SignalChip value={s.signal} />}>
-              <div className="flex items-center gap-3 mt-1">
-                <Delta value={s.trend!.d1} label="1D" />
-                <Delta value={s.trend!.d5} label="5D" />
-                <Delta value={s.trend!.m1} label="1M" />
-              </div>
-            </Card>
-          ))}
-        </div>
+        <MoverTable title="Top gainers" items={gainers} />
+        <MoverTable title="Top losers" items={losers} />
+        <MoverTable title="Unusual volume" items={unusualVolume} volume />
       </section>
     </motion.div>
   );
@@ -90,46 +91,47 @@ export function Markets() {
 
 function BreadthStat({ label, value, accent }: { label: string; value: number | string; accent: string }) {
   return (
-    <div className="p-3 rounded-xl bg-ivory-50 border border-bordersoft">
+    <div className="p-3 rounded-lg bg-cream-deep border border-bordersoft">
       <div className="label-mute">{label}</div>
-      <div className={clsx('text-[18px] font-display font-semibold mt-1', accent)}>{value}</div>
+      <div className={clsx('text-[16px] font-display font-semibold mt-1 tabular-nums', accent)}>{value}</div>
     </div>
   );
 }
 
-function MoverList({ title, items, positive, volumeFocus }: { title: string; items: MoverItem[]; positive?: boolean; volumeFocus?: boolean }) {
+function MoverTable({ title, items, volume }: { title: string; items: MoverItem[]; volume?: boolean }) {
   const { openDrawer } = useStore();
   return (
-    <Card title={title} subtitle={positive ? 'Portfolio first, then broader' : volumeFocus ? 'Volume relative to average' : 'Portfolio first, then broader'}>
-      <ul className="mt-2 divide-y divide-bordersoft">
-        {items.map((m) => (
-          <li key={m.ticker}>
-            <button
-              onClick={() => openDrawer(aiSignals[2])}
-              className="w-full text-left py-2.5 flex items-center justify-between gap-3 hover:bg-ivory-50 rounded-lg px-2 transition"
-            >
-              <div className="min-w-0">
+    <Card title={title} subtitle="Portfolio first, broader below">
+      <table className="tbl mt-2">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th className="w-[60px]">%</th>
+            {volume && <th className="w-[40px]">Vol</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((m) => (
+            <tr key={m.ticker} className="row-link" onClick={() => openDrawer(aiSignals[2])}>
+              <td>
                 <div className="flex items-center gap-2">
-                  <div className="text-[13px] font-semibold text-charcoal">{m.ticker}</div>
+                  <span className="font-mono text-[11.5px] text-charcoal-soft bg-cream-deep border border-bordersoft px-1.5 py-0.5 rounded">{m.ticker}</span>
                   <span className={clsx(
                     'chip',
-                    m.scope === 'portfolio' ? 'bg-calm-navy-bg text-calm-navy border border-calm-navy/30'
-                      : m.scope === 'watchlist' ? 'bg-calm-violet-bg text-calm-violet border border-calm-violet/30'
-                      : 'bg-ivory-100 text-charcoal-mute border border-bordersoft'
+                    m.scope === 'portfolio' && 'bg-calm-navy-bg text-calm-navy',
+                    m.scope === 'watchlist' && 'bg-calm-violet-bg text-calm-violet',
+                    m.scope === 'broader' && 'bg-cream-deep text-charcoal-mute'
                   )}>
                     {m.scope}
                   </span>
                 </div>
-                <div className="text-[12px] text-charcoal-mute truncate">{m.reason}</div>
-              </div>
-              <div className="text-right">
-                <Delta value={m.pct} />
-                {m.volumeX && <div className="text-[11px] text-charcoal-mute">{m.volumeX}x vol</div>}
-              </div>
-            </button>
-          </li>
-        ))}
-      </ul>
+              </td>
+              <td><Delta value={m.pct} /></td>
+              {volume && <td className="text-[11.5px] text-charcoal-mute tabular-nums">{m.volumeX}x</td>}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </Card>
   );
 }

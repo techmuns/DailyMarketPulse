@@ -14,23 +14,24 @@ const LENSES: PriorityLens[] = [
 export function PriorityLensSelector() {
   const { lens, setLens } = useStore();
   return (
-    <div className="flex items-center gap-2 flex-wrap">
-      <span className="label-mute">Priority Lens</span>
-      <div className="flex items-center gap-1 bg-white border border-bordersoft rounded-xl p-1">
+    <div className="flex items-center gap-2.5">
+      <span className="label-mute hidden sm:inline">Lens</span>
+      <div className="inline-flex items-center gap-0.5 bg-cream-deep border border-bordersoft rounded-full p-0.5 shadow-soft">
         {LENSES.map((l) => {
           const active = lens === l;
+          const short = l.replace(' First', '');
           return (
             <button
               key={l}
               onClick={() => setLens(l)}
               className={clsx(
-                'px-2.5 py-1 rounded-lg text-[12.5px] transition',
+                'px-2.5 py-1 rounded-full text-[11.5px] transition-all duration-200',
                 active
-                  ? 'bg-calm-navy text-white shadow-soft'
-                  : 'text-charcoal-soft hover:text-charcoal hover:bg-ivory-100'
+                  ? 'bg-charcoal text-cream shadow-soft'
+                  : 'text-charcoal-mute hover:text-charcoal-soft'
               )}
             >
-              {l}
+              {short}
             </button>
           );
         })}
