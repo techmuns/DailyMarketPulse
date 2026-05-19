@@ -67,11 +67,16 @@ export function TopNav({ active, onChange }: Props) {
           flex items-center justify-between gap-4
           h-[68px] pl-3 pr-4 sm:pl-4 sm:pr-5
           rounded-full
-          bg-cream/75 backdrop-blur-xl
-          border border-white/70
-          ring-1 ring-bordersoft/60
-          shadow-[0_1px_0_rgba(255,255,255,0.9)_inset,0_10px_30px_-12px_rgba(76,55,120,0.18),0_4px_14px_-6px_rgba(76,55,120,0.10)]
+          border
+          backdrop-blur-[18px]
         "
+        style={{
+          background:
+            'linear-gradient(135deg, rgba(255,255,255,0.78), rgba(240,235,255,0.62), rgba(238,232,247,0.56))',
+          borderColor: 'rgba(221,214,232,0.75)',
+          boxShadow:
+            '0 1px 0 rgba(255,255,255,0.85) inset, 0 16px 45px rgba(72,55,120,0.10)',
+        }}
       >
         <div className="flex items-center gap-2.5 shrink-0 pl-1">
           <MunshotMark size={36} />
