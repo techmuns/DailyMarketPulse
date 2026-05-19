@@ -1,12 +1,17 @@
 import { AnimatePresence, motion } from 'framer-motion';
 import { useStore } from '../state/store';
-import { SignalChip, SourceChip } from './Chip';
+import { SourceChip } from './Chip';
+import { ToneDot, MeaningBadge } from './Tone';
 import { Sparkline } from './Sparkline';
 import clsx from 'clsx';
-import { signalHex } from '../utils/format';
+import { getSignalTone, toneTokens, marketMeaning, toneExplanation } from '../utils/tone';
 
 export function AISignalDrawer() {
   const { drawerSignal, closeDrawer } = useStore();
+  const tone = drawerSignal ? getSignalTone({ signal: drawerSignal.signal, impact: 80, confidence: drawerSignal.confidence, category: drawerSignal.category }) : 'neutral';
+  const tokens = toneTokens(tone);
+  const meaning = drawerSignal ? marketMeaning({ signal: drawerSignal.signal, category: drawerSignal.category }) : undefined;
+  const whyColor = drawerSignal ? toneExplanation({ signal: drawerSignal.signal, impact: 80, confidence: drawerSignal.confidence, category: drawerSignal.category, affected: drawerSignal.affected }) : '';
   return (
     <AnimatePresence>
       {drawerSignal && (
@@ -26,14 +31,18 @@ export function AISignalDrawer() {
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: 460, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 280, damping: 30 }}
-            className="fixed top-0 right-0 h-full w-[440px] max-w-[92vw] bg-cream border-l border-bordersoft shadow-lift z-50 overflow-y-auto"
+            className={clsx(
+              'fixed top-0 right-0 h-full w-[440px] max-w-[92vw] bg-cream border-l border-bordersoft shadow-lift z-50 overflow-y-auto border-l-[3px]',
+              tokens.border
+            )}
           >
             {/* Header */}
             <div className="px-5 py-4 border-b border-bordersoft flex items-start justify-between gap-3 sticky top-0 bg-cream z-10">
               <div className="min-w-0">
-                <div className="flex items-center gap-1.5 mb-2">
+                <div className="flex items-center gap-1.5 mb-2 flex-wrap">
                   <span className="chip bg-calm-violet-bg text-calm-violet">AI Signal</span>
-                  <SignalChip value={drawerSignal.signal} dot />
+                  <ToneDot tone={tone} />
+                  {meaning && <MeaningBadge tone={tone}>{meaning}</MeaningBadge>}
                 </div>
                 <h2 className="h-display text-[16px] font-semibold leading-snug">{drawerSignal.title}</h2>
               </div>
@@ -49,6 +58,15 @@ export function AISignalDrawer() {
             </div>
 
             <div className="p-5 space-y-5">
+              {/* Why this colour */}
+              <div className={clsx('rounded-xl border border-bordersoft p-3.5', tokens.cardWash || 'bg-cream-deep')}>
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="label-mute">Why this colour</span>
+                  <ToneDot tone={tone} />
+                </div>
+                <p className="text-[12.5px] text-charcoal-soft leading-relaxed">{whyColor}</p>
+              </div>
+
               {/* Trend mini-chart */}
               <div className="bg-cream-deep rounded-xl border border-bordersoft p-3.5">
                 <div className="flex items-center justify-between">
@@ -68,7 +86,7 @@ export function AISignalDrawer() {
                 <div className="mt-2 -mx-1">
                   <Sparkline
                     data={[1, 1.05, 1.12, 1.18, 1.22, 1.28, 1.32]}
-                    color={signalHex(drawerSignal.signal)}
+                    color={tokens.spark}
                     height={52}
                     strokeWidth={2}
                   />
@@ -112,7 +130,7 @@ export function AISignalDrawer() {
                   </tr>
                   <tr>
                     <td className="py-2.5 align-middle label-mute">Signal</td>
-                    <td className="py-2.5"><SignalChip value={drawerSignal.signal} /></td>
+                    <td className="py-2.5"><ToneDot tone={tone} /></td>
                   </tr>
                 </tbody>
               </table>

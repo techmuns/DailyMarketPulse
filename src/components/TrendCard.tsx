@@ -1,9 +1,11 @@
+import clsx from 'clsx';
 import { Card } from './Card';
 import { Delta } from './Delta';
 import { Sparkline } from './Sparkline';
-import { SignalChip } from './Chip';
+import { ToneDot, MeaningBadge } from './Tone';
 import type { BaseItem } from '../types';
-import { num, signalHex } from '../utils/format';
+import { num } from '../utils/format';
+import { getSignalTone, marketMeaning, toneTokens } from '../utils/tone';
 import { useStore } from '../state/store';
 import { aiSignals } from '../data/signals';
 
@@ -15,6 +17,9 @@ interface Props {
 
 export function TrendCard({ item, unit, className }: Props) {
   const { openDrawer } = useStore();
+  const tone = getSignalTone(item);
+  const tokens = toneTokens(tone);
+  const meaning = marketMeaning(item);
   const matched =
     aiSignals.find((s) => s.affected.some((a) => item.affected.includes(a))) ||
     aiSignals.find((s) => s.category === item.category) ||
@@ -23,9 +28,9 @@ export function TrendCard({ item, unit, className }: Props) {
     <Card
       strip={item.changeStrip}
       title={item.title}
-      right={<SignalChip value={item.signal} dot />}
+      right={<ToneDot tone={tone} />}
       onClick={() => openDrawer(matched)}
-      className={className}
+      className={clsx('border-l-[3px]', tokens.border, className)}
       padding="md"
     >
       <div className="flex items-end justify-between gap-4">
@@ -46,10 +51,15 @@ export function TrendCard({ item, unit, className }: Props) {
         </div>
         {item.trend && (
           <div className="w-24 shrink-0">
-            <Sparkline data={item.trend.spark} color={signalHex(item.signal)} height={42} />
+            <Sparkline data={item.trend.spark} color={tokens.spark} height={42} />
           </div>
         )}
       </div>
+      {meaning && (
+        <div className="mt-3">
+          <MeaningBadge tone={tone}>{meaning}</MeaningBadge>
+        </div>
+      )}
     </Card>
   );
 }

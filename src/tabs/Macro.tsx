@@ -2,11 +2,11 @@ import { motion } from 'framer-motion';
 import { SectionHeader } from '../components/SectionHeader';
 import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
-import { SignalChip } from '../components/Chip';
+import { ToneDot, MeaningBadge } from '../components/Tone';
 import { macro, macroPulseSummary } from '../data/macro';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
-import { signalHex } from '../utils/format';
+import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
 import clsx from 'clsx';
 
 export function Macro() {
@@ -48,24 +48,31 @@ export function Macro() {
               </tr>
             </thead>
             <tbody>
-              {macro.map((m) => (
-                <tr key={m.id} className="row-link" onClick={() => openDrawer(aiSignals.find(s => s.category === 'macro') || aiSignals[0])}>
-                  <td className="pl-5">
-                    <div className="text-[13px] font-semibold text-charcoal">{m.title}</div>
-                    <div className="text-[10.5px] text-charcoal-mute capitalize">{m.category}</div>
-                  </td>
-                  <td className="font-display font-medium text-charcoal tabular-nums">
-                    {typeof m.current === 'number' ? m.current : m.current}
-                    {m.unit && <span className="text-[10px] text-charcoal-mute ml-1">{m.unit}</span>}
-                  </td>
-                  <td><Delta value={m.trend!.d1} /></td>
-                  <td><Delta value={m.trend!.d5} size="xs" /></td>
-                  <td><Delta value={m.trend!.m1} size="xs" /></td>
-                  <td><div className="w-[90px]"><Sparkline data={m.trend!.spark} color={signalHex(m.signal)} height={24} /></div></td>
-                  <td className="text-[11.5px] text-charcoal-mute leading-snug">{m.affected.slice(0, 2).join(', ')}</td>
-                  <td className="pr-5"><SignalChip value={m.signal} dot /></td>
-                </tr>
-              ))}
+              {macro.map((m) => {
+                const tone = getSignalTone(m);
+                const meaning = marketMeaning(m);
+                return (
+                  <tr key={m.id} className={clsx('row-link', toneTokens(tone).rowClass)} onClick={() => openDrawer(aiSignals.find(s => s.category === 'macro') || aiSignals[0])}>
+                    <td className="pl-5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px] font-semibold text-charcoal">{m.title}</span>
+                        {meaning && <MeaningBadge tone={tone}>{meaning}</MeaningBadge>}
+                      </div>
+                      <div className="text-[10.5px] text-charcoal-mute capitalize mt-0.5">{m.category}</div>
+                    </td>
+                    <td className="font-display font-medium text-charcoal tabular-nums">
+                      {typeof m.current === 'number' ? m.current : m.current}
+                      {m.unit && <span className="text-[10px] text-charcoal-mute ml-1">{m.unit}</span>}
+                    </td>
+                    <td><Delta value={m.trend!.d1} /></td>
+                    <td><Delta value={m.trend!.d5} size="xs" /></td>
+                    <td><Delta value={m.trend!.m1} size="xs" /></td>
+                    <td><div className="w-[90px]"><Sparkline data={m.trend!.spark} color={toneTokens(tone).spark} height={24} /></div></td>
+                    <td className="text-[11.5px] text-charcoal-mute leading-snug">{m.affected.slice(0, 2).join(', ')}</td>
+                    <td className="pr-5"><ToneDot tone={tone} /></td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -83,7 +90,7 @@ export function Macro() {
               <div key={s.sector} className={clsx('rounded-xl p-3 border border-bordersoft', bg)}>
                 <div className="flex items-center justify-between">
                   <span className="text-[12px] font-semibold text-charcoal">{s.sector}</span>
-                  <SignalChip value={s.signal} dot />
+                  <ToneDot tone={s.signal === 'support' ? 'support' : s.signal === 'risk' ? 'risk' : 'monitor'} />
                 </div>
                 <div className="text-[11px] text-charcoal-mute mt-1.5 leading-snug">{s.note}</div>
               </div>

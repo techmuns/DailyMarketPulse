@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
 import { useState } from 'react';
-import { ChangeStripChip, SignalChip, SourceChip } from '../components/Chip';
+import { ChangeStripChip, SourceChip } from '../components/Chip';
+import { ToneDot, MeaningBadge } from '../components/Tone';
+import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
 import { news, filings } from '../data/news';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
@@ -55,8 +57,11 @@ export function NewsFilings() {
             {rows.map((r) => {
               const item = r.item;
               const tags = (item as any).affected as string[];
+              const scope = r.kind === 'news' ? (item as NewsItem).scope : 'portfolio';
+              const tone = getSignalTone({ ...item, scope });
+              const meaning = marketMeaning({ ...item, category: r.kind === 'filing' ? 'filing' : 'news' });
               return (
-                <tr key={item.id} className="row-link" onClick={() => openDrawer(aiSignals[1])}>
+                <tr key={item.id} className={clsx('row-link', toneTokens(tone).rowClass)} onClick={() => openDrawer(aiSignals[1])}>
                   <td className="pl-5 text-[11.5px] text-charcoal-mute tabular-nums whitespace-nowrap">{timeAgo(item.timestamp)}</td>
                   <td>
                     <div className="flex flex-wrap gap-1">
@@ -68,6 +73,7 @@ export function NewsFilings() {
                   <td>
                     <div className="flex items-center gap-2 flex-wrap">
                       {item.changeStrip && <ChangeStripChip value={item.changeStrip} />}
+                      {meaning && <MeaningBadge tone={tone}>{meaning}</MeaningBadge>}
                       {r.kind === 'filing' && (
                         <span className="chip bg-calm-navy-bg text-calm-navy">{(item as Filing).filingType}</span>
                       )}
@@ -75,7 +81,7 @@ export function NewsFilings() {
                     <div className="text-[13px] font-medium text-charcoal mt-1 leading-snug">{item.title}</div>
                   </td>
                   <td><SourceChip value={item.source} /></td>
-                  <td><SignalChip value={item.signal} dot /></td>
+                  <td><ToneDot tone={tone} /></td>
                   <td className="text-[11.5px] text-charcoal-mute leading-snug">{item.whyShown}</td>
                   <td className="pr-5 text-[11.5px] text-calm-violet">{item.action || '—'}</td>
                 </tr>

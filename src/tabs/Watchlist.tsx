@@ -3,11 +3,13 @@ import { Card } from '../components/Card';
 import { SectionHeader } from '../components/SectionHeader';
 import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
-import { SignalChip } from '../components/Chip';
+import { ToneDot, MeaningBadge } from '../components/Tone';
 import { watchlist } from '../data/watchlist';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
-import { signalHex, num } from '../utils/format';
+import { num } from '../utils/format';
+import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
+import clsx from 'clsx';
 
 export function Watchlist() {
   const { openDrawer } = useStore();
@@ -40,28 +42,35 @@ export function Watchlist() {
               </tr>
             </thead>
             <tbody>
-              {watchlist.map((w) => (
-                <tr key={w.id} className="row-link" onClick={() => openDrawer(aiSignals[2])}>
-                  <td className="pl-5">
-                    <div className="text-[13px] font-semibold text-charcoal">{w.title}</div>
-                    <div className="text-[10.5px] text-charcoal-mute">{w.sector}</div>
-                  </td>
-                  <td className="font-display font-medium text-charcoal tabular-nums">{num(w.current as number, 1)}</td>
-                  <td><Delta value={w.trend!.d1} /></td>
-                  <td><Delta value={w.trend!.d5} size="xs" /></td>
-                  <td><Delta value={w.trend!.m1} size="xs" /></td>
-                  <td><div className="w-[90px]"><Sparkline data={w.trend!.spark} color={signalHex(w.signal)} height={24} /></div></td>
-                  <td className="text-[11.5px] text-charcoal-mute leading-snug">{w.whyShown}</td>
-                  <td className="pr-5"><SignalChip value={w.signal} dot /></td>
-                </tr>
-              ))}
+              {watchlist.map((w) => {
+                const tone = getSignalTone({ ...w, category: 'watchlist' });
+                const meaning = marketMeaning({ ...w, category: 'watchlist' });
+                return (
+                  <tr key={w.id} className={clsx('row-link', toneTokens(tone).rowClass)} onClick={() => openDrawer(aiSignals[2])}>
+                    <td className="pl-5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px] font-semibold text-charcoal">{w.title}</span>
+                        {meaning && <MeaningBadge tone={tone}>{meaning}</MeaningBadge>}
+                      </div>
+                      <div className="text-[10.5px] text-charcoal-mute mt-0.5">{w.sector}</div>
+                    </td>
+                    <td className="font-display font-medium text-charcoal tabular-nums">{num(w.current as number, 1)}</td>
+                    <td><Delta value={w.trend!.d1} /></td>
+                    <td><Delta value={w.trend!.d5} size="xs" /></td>
+                    <td><Delta value={w.trend!.m1} size="xs" /></td>
+                    <td><div className="w-[90px]"><Sparkline data={w.trend!.spark} color={toneTokens(tone).spark} height={24} /></div></td>
+                    <td className="text-[11.5px] text-charcoal-mute leading-snug">{w.whyShown}</td>
+                    <td className="pr-5"><ToneDot tone={tone} /></td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </section>
 
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card title="Opportunity signals" right={<SignalChip value="support" dot />}>
+        <Card title="Opportunity signals" right={<ToneDot tone="support" />}>
           <ul className="mt-1 divide-y divide-bordersoft/60 text-[12.5px]">
             {opp.map((w) => (
               <li key={w.id} className="py-2 flex items-center justify-between gap-3 first:pt-0 last:pb-0">
@@ -71,7 +80,7 @@ export function Watchlist() {
             ))}
           </ul>
         </Card>
-        <Card title="Risk signals" right={<SignalChip value="risk" dot />}>
+        <Card title="Risk signals" right={<ToneDot tone="risk" />}>
           <ul className="mt-1 divide-y divide-bordersoft/60 text-[12.5px]">
             {risk.map((w) => (
               <li key={w.id} className="py-2 flex items-center justify-between gap-3 first:pt-0 last:pb-0">

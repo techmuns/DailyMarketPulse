@@ -6,8 +6,9 @@ import type { HeatCell } from '../components/Heatmap';
 import { portfolio, portfolioStats } from '../data/portfolio';
 import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
-import { SignalChip } from '../components/Chip';
-import { pct, signalHex } from '../utils/format';
+import { ToneDot, MeaningBadge } from '../components/Tone';
+import { pct } from '../utils/format';
+import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
@@ -83,24 +84,31 @@ export function Portfolio() {
               </tr>
             </thead>
             <tbody>
-              {sortedByWeight.map((h) => (
-                <tr key={h.id} className="row-link" onClick={() => openDrawer(aiSignals[0])}>
-                  <td className="pl-5">
-                    <div className="text-[13px] font-semibold text-charcoal">{h.title}</div>
-                    <div className="text-[10.5px] text-charcoal-mute">{h.sector}</div>
-                  </td>
-                  <td className="tabular-nums text-charcoal-soft text-[12px]">{h.weight}%</td>
-                  <td><Delta value={h.trend!.d1} /></td>
-                  <td>
-                    <div className="w-[80px]">
-                      <Sparkline data={h.trend!.spark} color={signalHex(h.signal)} height={22} />
-                    </div>
-                  </td>
-                  <td className="text-[11.5px] text-charcoal-mute leading-snug">{h.whyShown}</td>
-                  <td><SignalChip value={h.signal} dot /></td>
-                  <td className="pr-5 text-[11.5px] text-calm-violet">{h.action || '—'}</td>
-                </tr>
-              ))}
+              {sortedByWeight.map((h) => {
+                const tone = getSignalTone({ ...h, scope: 'portfolio' });
+                const meaning = marketMeaning({ ...h, category: 'portfolio' });
+                return (
+                  <tr key={h.id} className={clsx('row-link', toneTokens(tone).rowClass)} onClick={() => openDrawer(aiSignals[0])}>
+                    <td className="pl-5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px] font-semibold text-charcoal">{h.title}</span>
+                        {meaning && <MeaningBadge tone={tone}>{meaning}</MeaningBadge>}
+                      </div>
+                      <div className="text-[10.5px] text-charcoal-mute mt-0.5">{h.sector}</div>
+                    </td>
+                    <td className="tabular-nums text-charcoal-soft text-[12px]">{h.weight}%</td>
+                    <td><Delta value={h.trend!.d1} /></td>
+                    <td>
+                      <div className="w-[80px]">
+                        <Sparkline data={h.trend!.spark} color={toneTokens(tone).spark} height={22} />
+                      </div>
+                    </td>
+                    <td className="text-[11.5px] text-charcoal-mute leading-snug">{h.whyShown}</td>
+                    <td><ToneDot tone={tone} /></td>
+                    <td className="pr-5 text-[11.5px] text-calm-violet">{h.action || '—'}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

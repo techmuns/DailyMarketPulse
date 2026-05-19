@@ -84,4 +84,31 @@ body {
   .tbl tbody tr.row-link:hover td {
     @apply bg-hoverwash;
   }
+  /* Tone tints — subtle row washes that communicate meaning. */
+  .tbl tbody tr.tone-support td { background-color: rgba(15, 143, 111, 0.045); }
+  .tbl tbody tr.tone-support.row-link:hover td { background-color: rgba(15, 143, 111, 0.10); }
+  .tbl tbody tr.tone-risk td { background-color: rgba(200, 107, 107, 0.05); }
+  .tbl tbody tr.tone-risk.row-link:hover td { background-color: rgba(200, 107, 107, 0.11); }
+  .tbl tbody tr.tone-monitor td { background-color: rgba(215, 161, 74, 0.05); }
+  .tbl tbody tr.tone-monitor.row-link:hover td { background-color: rgba(215, 161, 74, 0.12); }
+  .tbl tbody tr.tone-ai td { background-color: rgba(140, 121, 201, 0.045); }
+  .tbl tbody tr.tone-ai.row-link:hover td { background-color: rgba(140, 121, 201, 0.11); }
+  .tbl tbody tr.tone-urgent td { background-color: rgba(185, 80, 80, 0.09); }
+  .tbl tbody tr.tone-urgent.row-link:hover td { background-color: rgba(185, 80, 80, 0.16); }
+  /* Subtle left strip on urgent rows to draw the eye without alarm red */
+  .tbl tbody tr.tone-urgent td:first-child {
+    box-shadow: inset 2px 0 0 #B95050;
+  }
+  .tbl tbody tr.tone-support td:first-child {
+    box-shadow: inset 2px 0 0 rgba(15, 143, 111, 0.45);
+  }
+  .tbl tbody tr.tone-risk td:first-child {
+    box-shadow: inset 2px 0 0 rgba(200, 107, 107, 0.4);
+  }
+  .tbl tbody tr.tone-monitor td:first-child {
+    box-shadow: inset 2px 0 0 rgba(215, 161, 74, 0.4);
+  }
+  .tbl tbody tr.tone-ai td:first-child {
+    box-shadow: inset 2px 0 0 rgba(140, 121, 201, 0.45);
+  }
 }

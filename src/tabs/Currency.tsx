@@ -3,11 +3,13 @@ import { Card } from '../components/Card';
 import { SectionHeader } from '../components/SectionHeader';
 import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
-import { SignalChip } from '../components/Chip';
+import { ToneDot, MeaningBadge } from '../components/Tone';
 import { currencies, currencySummary } from '../data/currencies';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
-import { num, signalHex } from '../utils/format';
+import { num } from '../utils/format';
+import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
+import clsx from 'clsx';
 
 export function Currency() {
   const { openDrawer } = useStore();
@@ -36,25 +38,32 @@ export function Currency() {
               </tr>
             </thead>
             <tbody>
-              {currencies.map((c) => (
-                <tr key={c.id} className="row-link" onClick={() => openDrawer(aiSignals[0])}>
-                  <td className="pl-5">
-                    <div className="text-[13px] font-semibold text-charcoal">{c.title}</div>
-                    <div className="text-[10.5px] text-charcoal-mute font-mono">{c.pair}</div>
-                  </td>
-                  <td className="font-display font-medium text-charcoal tabular-nums">{num(c.current as number, c.pair === 'JPYINR' ? 3 : 2)}</td>
-                  <td><Delta value={c.trend!.d1} /></td>
-                  <td><Delta value={c.trend!.d5} size="xs" /></td>
-                  <td><Delta value={c.trend!.m1} size="xs" /></td>
-                  <td>
-                    <div className="w-[100px]">
-                      <Sparkline data={c.trend!.spark} color={signalHex(c.signal)} height={26} />
-                    </div>
-                  </td>
-                  <td className="text-[11.5px] text-charcoal-mute leading-snug">{c.affected.slice(0, 2).join('; ')}</td>
-                  <td className="pr-5"><SignalChip value={c.signal} dot /></td>
-                </tr>
-              ))}
+              {currencies.map((c) => {
+                const tone = getSignalTone(c);
+                const meaning = marketMeaning(c);
+                return (
+                  <tr key={c.id} className={clsx('row-link', toneTokens(tone).rowClass)} onClick={() => openDrawer(aiSignals[0])}>
+                    <td className="pl-5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px] font-semibold text-charcoal">{c.title}</span>
+                        {meaning && <MeaningBadge tone={tone}>{meaning}</MeaningBadge>}
+                      </div>
+                      <div className="text-[10.5px] text-charcoal-mute font-mono mt-0.5">{c.pair}</div>
+                    </td>
+                    <td className="font-display font-medium text-charcoal tabular-nums">{num(c.current as number, c.pair === 'JPYINR' ? 3 : 2)}</td>
+                    <td><Delta value={c.trend!.d1} /></td>
+                    <td><Delta value={c.trend!.d5} size="xs" /></td>
+                    <td><Delta value={c.trend!.m1} size="xs" /></td>
+                    <td>
+                      <div className="w-[100px]">
+                        <Sparkline data={c.trend!.spark} color={toneTokens(tone).spark} height={26} />
+                      </div>
+                    </td>
+                    <td className="text-[11.5px] text-charcoal-mute leading-snug">{c.affected.slice(0, 2).join('; ')}</td>
+                    <td className="pr-5"><ToneDot tone={tone} /></td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -63,7 +72,7 @@ export function Currency() {
       <section>
         <SectionHeader title="Importer / exporter map" eyebrow="FX impact" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card title="Importers" subtitle="Stronger USD = landed input cost up" right={<SignalChip value="risk" dot />}>
+          <Card title="Importers" subtitle="Stronger USD = landed input cost up" right={<ToneDot tone="risk" />}>
             <ul className="mt-1 divide-y divide-bordersoft/60 text-[12.5px] text-charcoal-soft">
               <ImpactRow ticker="M&M" note="Steel + USD raw materials" />
               <ImpactRow ticker="MARUTI" note="JPY eased, USD intact" />
@@ -71,7 +80,7 @@ export function Currency() {
               <ImpactRow ticker="HUL" note="Palm oil + packaging" />
             </ul>
           </Card>
-          <Card title="Exporters" subtitle="Weaker INR = USD revenue tailwind" right={<SignalChip value="support" dot />}>
+          <Card title="Exporters" subtitle="Weaker INR = USD revenue tailwind" right={<ToneDot tone="support" />}>
             <ul className="mt-1 divide-y divide-bordersoft/60 text-[12.5px] text-charcoal-soft">
               <ImpactRow ticker="INFY" note="USD revenue concentration" />
               <ImpactRow ticker="TCS" note="USD revenue concentration" />

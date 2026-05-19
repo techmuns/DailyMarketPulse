@@ -3,6 +3,8 @@ import clsx from 'clsx';
 import { motion } from 'framer-motion';
 import { ChangeStripChip } from './Chip';
 import type { ChangeStrip } from '../types';
+import { toneTokens } from '../utils/tone';
+import type { Tone } from '../utils/tone';
 
 interface Props {
   children: ReactNode;
@@ -16,6 +18,8 @@ interface Props {
   bare?: boolean;
   padding?: 'sm' | 'md' | 'lg';
   variant?: 'cream' | 'deep';
+  tone?: Tone;
+  wash?: boolean;
 }
 
 export function Card({
@@ -30,11 +34,14 @@ export function Card({
   bare,
   padding = 'md',
   variant = 'cream',
+  tone,
+  wash,
 }: Props) {
   const Comp = onClick ? motion.button : motion.div;
   const pad = padding === 'lg' ? 'p-6' : padding === 'sm' ? 'p-4' : 'p-5';
   const head = padding === 'lg' ? 'px-6 pt-6 pb-2' : padding === 'sm' ? 'px-4 pt-4 pb-2' : 'px-5 pt-5 pb-2';
   const body = padding === 'lg' ? 'px-6 pb-6' : padding === 'sm' ? 'px-4 pb-4' : 'px-5 pb-5';
+  const t = tone ? toneTokens(tone) : null;
   return (
     <Comp
       type={onClick ? 'button' : undefined}
@@ -43,6 +50,9 @@ export function Card({
       transition={{ type: 'spring', stiffness: 300, damping: 24 }}
       className={clsx(
         bare ? '' : variant === 'deep' ? 'card-deep' : 'card',
+        t && 'border-l-[3px]',
+        t?.border,
+        wash && t?.cardWash,
         (hover || onClick) && 'card-hover cursor-pointer text-left',
         'block w-full',
         className

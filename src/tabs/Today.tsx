@@ -2,7 +2,9 @@ import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '../components/Card';
 import { SectionHeader } from '../components/SectionHeader';
-import { ChangeStripChip, SignalChip, Ticker } from '../components/Chip';
+import { ChangeStripChip, Ticker } from '../components/Chip';
+import { ToneDot, MeaningBadge } from '../components/Tone';
+import { getSignalTone, toneTokens } from '../utils/tone';
 import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
 import { PriorityLensSelector } from '../components/PriorityLens';
@@ -28,6 +30,9 @@ type FeedItem = {
   d1: number;
   d5: number;
   action?: string;
+  impact: number;
+  scope?: 'portfolio' | 'watchlist' | 'broader';
+  meaning?: string;
 };
 
 export function Today() {
@@ -35,13 +40,13 @@ export function Today() {
   const [showAll, setShowAll] = useState(false);
 
   const baseFeed: FeedItem[] = useMemo(() => [
-    { id: 'f-cur', group: 'currency', title: 'USD/INR weakness — 5-day trend', why: 'Importer cost pressure; exporter tailwind', affected: ['M&M', 'ASIANP', 'INFY', 'TCS'], signal: 'risk', change: '5-day trend', d1: 0.25, d5: 0.62, action: 'Add to thesis' },
-    { id: 'f-port-mm', group: 'portfolio', title: 'M&M — FX + steel double squeeze', why: 'Auto inputs rising; margin watch', affected: ['M&M'], signal: 'risk', change: 'Risk increased', d1: -1.94, d5: -3.1, action: 'Assign follow-up' },
-    { id: 'f-filing', group: 'filing', title: 'Asian Paints — 0.6% selective price hike', why: 'Pass-through retained; eases crude risk', affected: ['ASIANP'], signal: 'support', change: 'New today', d1: 0.4, d5: 0.7, action: 'Update thesis' },
-    { id: 'f-macro-cpi', group: 'macro', title: 'India CPI cools to 4.62%', why: 'Rate-cut visibility improves', affected: ['HDFCB', 'BAJFIN'], signal: 'support', change: 'Support improved', d1: -4.0, d5: -4.0 },
-    { id: 'f-com-brent', group: 'commodity', title: 'Brent crude firms above $84', why: 'Input cost pressure for paints, aviation', affected: ['ASIANP', 'Aviation'], signal: 'risk', change: 'Repeated theme', d1: 2.06, d5: 3.4, action: 'Add to thesis' },
-    { id: 'f-mkt-dmart', group: 'markets', title: 'DMART — 1.8x volume, no news', why: 'Quiet accumulation pattern', affected: ['DMART'], signal: 'monitor', change: 'New today', d1: 1.02, d5: 1.6, action: 'Read later' },
-    { id: 'f-news-rbi', group: 'news', title: 'RBI: room for accommodation', why: 'Reinforces rate-cut visibility', affected: ['Banks', 'NBFC'], signal: 'support', change: 'Changed since yesterday', d1: 0.0, d5: 0.0 },
+    { id: 'f-cur', group: 'currency', title: 'USD/INR weakness — 5-day trend', why: 'Importer cost pressure; exporter tailwind', affected: ['M&M', 'ASIANP', 'INFY', 'TCS'], signal: 'risk', change: '5-day trend', d1: 0.25, d5: 0.62, action: 'Add to thesis', impact: 85, scope: 'portfolio', meaning: 'FX Pressure' },
+    { id: 'f-port-mm', group: 'portfolio', title: 'M&M — FX + steel double squeeze', why: 'Auto inputs rising; margin watch', affected: ['M&M'], signal: 'risk', change: 'Risk increased', d1: -1.94, d5: -3.1, action: 'Assign follow-up', impact: 81, scope: 'portfolio', meaning: 'Margin Risk' },
+    { id: 'f-filing', group: 'filing', title: 'Asian Paints — 0.6% selective price hike', why: 'Pass-through retained; eases crude risk', affected: ['ASIANP'], signal: 'support', change: 'New today', d1: 0.4, d5: 0.7, action: 'Update thesis', impact: 62, scope: 'portfolio', meaning: 'Input Cost Relief' },
+    { id: 'f-macro-cpi', group: 'macro', title: 'India CPI cools to 4.62%', why: 'Rate-cut visibility improves', affected: ['HDFCB', 'BAJFIN'], signal: 'support', change: 'Support improved', d1: -4.0, d5: -4.0, impact: 78, scope: 'portfolio', meaning: 'Rate Support' },
+    { id: 'f-com-brent', group: 'commodity', title: 'Brent crude firms above $84', why: 'Input cost pressure for paints, aviation', affected: ['ASIANP', 'Aviation'], signal: 'risk', change: 'Repeated theme', d1: 2.06, d5: 3.4, action: 'Add to thesis', impact: 82, scope: 'portfolio', meaning: 'Input Cost ↑' },
+    { id: 'f-mkt-dmart', group: 'markets', title: 'DMART — 1.8x volume, no news', why: 'Quiet accumulation pattern', affected: ['DMART'], signal: 'monitor', change: 'New today', d1: 1.02, d5: 1.6, action: 'Read later', impact: 55, scope: 'watchlist', meaning: 'Volume Breakout' },
+    { id: 'f-news-rbi', group: 'news', title: 'RBI: room for accommodation', why: 'Reinforces rate-cut visibility', affected: ['Banks', 'NBFC'], signal: 'support', change: 'Changed since yesterday', d1: 0.0, d5: 0.0, impact: 76, scope: 'broader', meaning: 'Rate Support' },
   ], []);
 
   const feed = useMemo(() => {
@@ -76,7 +81,7 @@ export function Today() {
       headline: `${portfolioBiggestDown.ticker} drag, ${portfolioBiggestUp.ticker} support`,
       delta: portfolioStats.todayChange,
       spark: [50, 51, 52, 51, 50, 49, 49],
-      signal: 'monitor',
+      tone: 'risk',
     },
     {
       key: 'markets',
@@ -84,7 +89,7 @@ export function Today() {
       headline: 'NIFTY flat, midcaps quietly lead',
       delta: -0.22,
       spark: [24620, 24680, 24752, 24868, 24820, 24800, 24812],
-      signal: 'monitor',
+      tone: 'monitor',
     },
     {
       key: 'currency',
@@ -92,7 +97,7 @@ export function Today() {
       headline: 'INR weak — 5D trend',
       delta: 0.25,
       spark: [83.71, 83.92, 84.10, 84.28, 84.41, 84.55, 84.62],
-      signal: 'risk',
+      tone: 'urgent',
     },
     {
       key: 'commodities',
@@ -100,7 +105,7 @@ export function Today() {
       headline: 'Brent firm, gold breakout',
       delta: 2.06,
       spark: [80.1, 81.0, 81.8, 82.5, 83.1, 83.7, 84.2],
-      signal: 'risk',
+      tone: 'risk',
     },
     {
       key: 'events',
@@ -108,7 +113,7 @@ export function Today() {
       headline: 'ASIANP Q4 + US CPI tomorrow',
       delta: 0,
       spark: [1, 1, 2, 2, 3, 3, 4],
-      signal: 'monitor',
+      tone: 'ai',
     },
   ];
 
@@ -157,34 +162,38 @@ export function Today() {
               </tr>
             </thead>
             <tbody>
-              {visible.map((f, i) => (
-                <tr
-                  key={f.id}
-                  className="row-link"
-                  onClick={() => openDrawer(aiSignals[i % aiSignals.length])}
-                >
-                  <td className="pl-5 font-mono text-[11px] text-charcoal-mute tabular-nums">{String(i + 1).padStart(2, '0')}</td>
-                  <td>
-                    <div className="flex items-center gap-2">
-                      {f.change && <ChangeStripChip value={f.change as any} />}
-                      <span className="text-[13px] font-medium text-charcoal">{f.title}</span>
-                    </div>
-                    <div className="text-[11.5px] text-charcoal-mute mt-0.5">{f.why}</div>
-                  </td>
-                  <td><Delta value={f.d1} /></td>
-                  <td><Delta value={f.d5} size="xs" /></td>
-                  <td>
-                    <div className="flex flex-wrap gap-1">
-                      {f.affected.slice(0, 2).map((a) => <Ticker key={a}>{a}</Ticker>)}
-                      {f.affected.length > 2 && (
-                        <span className="text-[10.5px] text-charcoal-mute self-center">+{f.affected.length - 2}</span>
-                      )}
-                    </div>
-                  </td>
-                  <td><SignalChip value={f.signal} dot /></td>
-                  <td className="pr-5 text-[11.5px] text-calm-violet">{f.action || '—'}</td>
-                </tr>
-              ))}
+              {visible.map((f, i) => {
+                const tone = getSignalTone(f);
+                return (
+                  <tr
+                    key={f.id}
+                    className={clsx('row-link', toneTokens(tone).rowClass)}
+                    onClick={() => openDrawer(aiSignals[i % aiSignals.length])}
+                  >
+                    <td className="pl-5 font-mono text-[11px] text-charcoal-mute tabular-nums">{String(i + 1).padStart(2, '0')}</td>
+                    <td>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {f.change && <ChangeStripChip value={f.change as any} />}
+                        {f.meaning && <MeaningBadge tone={tone}>{f.meaning}</MeaningBadge>}
+                        <span className="text-[13px] font-medium text-charcoal">{f.title}</span>
+                      </div>
+                      <div className="text-[11.5px] text-charcoal-mute mt-0.5">{f.why}</div>
+                    </td>
+                    <td><Delta value={f.d1} /></td>
+                    <td><Delta value={f.d5} size="xs" /></td>
+                    <td>
+                      <div className="flex flex-wrap gap-1">
+                        {f.affected.slice(0, 2).map((a) => <Ticker key={a}>{a}</Ticker>)}
+                        {f.affected.length > 2 && (
+                          <span className="text-[10.5px] text-charcoal-mute self-center">+{f.affected.length - 2}</span>
+                        )}
+                      </div>
+                    </td>
+                    <td><ToneDot tone={tone} /></td>
+                    <td className="pr-5 text-[11.5px] text-calm-violet">{f.action || '—'}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

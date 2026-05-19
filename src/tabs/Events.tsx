@@ -1,7 +1,8 @@
 import { motion } from 'framer-motion';
 import { Card } from '../components/Card';
 import { events } from '../data/events';
-import { SignalChip } from '../components/Chip';
+import { ToneDot } from '../components/Tone';
+import { getSignalTone, toneTokens } from '../utils/tone';
 import clsx from 'clsx';
 
 const WHENS: Array<{ key: 'today' | 'tomorrow' | 'this-week'; label: string }> = [
@@ -50,32 +51,35 @@ export function Events() {
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map((e) => (
-                    <tr key={e.id}>
-                      <td className="pl-5">
-                        <span
-                          className={clsx(
-                            'chip capitalize',
-                            e.eventType === 'result' && 'bg-calm-navy-bg text-calm-navy',
-                            e.eventType === 'concall' && 'bg-calm-violet-bg text-calm-violet',
-                            e.eventType === 'policy' && 'bg-calm-amber-bg text-calm-amber',
-                            e.eventType === 'macro' && 'bg-calm-green-bg text-calm-green',
-                            e.eventType === 'corporate' && 'bg-cream-deep text-charcoal-mute'
-                          )}
-                        >
-                          {e.eventType}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="text-[13px] font-medium text-charcoal">{e.title}</div>
-                      </td>
-                      <td className="text-[11.5px] text-charcoal-mute">
-                        {e.company || e.affected[0]}
-                      </td>
-                      <td><SignalChip value={e.signal} dot /></td>
-                      <td className="pr-5 text-[11.5px] text-charcoal-mute leading-snug">{e.whyShown}</td>
-                    </tr>
-                  ))}
+                  {items.map((e) => {
+                    const tone = e.impact >= 75 ? 'monitor' : getSignalTone(e);
+                    return (
+                      <tr key={e.id} className={toneTokens(tone).rowClass}>
+                        <td className="pl-5">
+                          <span
+                            className={clsx(
+                              'chip capitalize',
+                              e.eventType === 'result' && 'bg-calm-navy-bg text-calm-navy',
+                              e.eventType === 'concall' && 'bg-calm-violet-bg text-calm-violet',
+                              e.eventType === 'policy' && 'bg-calm-amber-bg text-calm-amber',
+                              e.eventType === 'macro' && 'bg-calm-emerald-bg text-calm-emerald',
+                              e.eventType === 'corporate' && 'bg-cream-deep text-charcoal-mute'
+                            )}
+                          >
+                            {e.eventType}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="text-[13px] font-medium text-charcoal">{e.title}</div>
+                        </td>
+                        <td className="text-[11.5px] text-charcoal-mute">
+                          {e.company || e.affected[0]}
+                        </td>
+                        <td><ToneDot tone={tone} /></td>
+                        <td className="pr-5 text-[11.5px] text-charcoal-mute leading-snug">{e.whyShown}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

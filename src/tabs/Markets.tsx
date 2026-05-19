@@ -10,7 +10,8 @@ import { Sparkline } from '../components/Sparkline';
 import clsx from 'clsx';
 import { useStore } from '../state/store';
 import { aiSignals } from '../data/signals';
-import { num, signalHex } from '../utils/format';
+import { num } from '../utils/format';
+import { getSignalTone, toneTokens } from '../utils/tone';
 
 export function Markets() {
   const { openDrawer } = useStore();
@@ -45,20 +46,23 @@ export function Markets() {
               </tr>
             </thead>
             <tbody>
-              {indices.map((i) => (
-                <tr key={i.id} className="row-link" onClick={() => openDrawer(aiSignals[3])}>
-                  <td className="pl-5">
-                    <div className="text-[13px] font-semibold text-charcoal">{i.title}</div>
-                    <div className="text-[10.5px] text-charcoal-mute">{i.region}</div>
-                  </td>
-                  <td className="font-display font-medium text-charcoal tabular-nums">{num(i.current as number, i.title === 'India VIX' ? 2 : 0)}</td>
-                  <td><Delta value={i.trend!.d1} /></td>
-                  <td><Delta value={i.trend!.d5} size="xs" /></td>
-                  <td><Delta value={i.trend!.m1} size="xs" /></td>
-                  <td><div className="w-[100px]"><Sparkline data={i.trend!.spark} color={signalHex(i.signal)} height={22} /></div></td>
-                  <td className="pr-5 text-[11.5px] text-charcoal-mute leading-snug">{i.whyShown}</td>
-                </tr>
-              ))}
+              {indices.map((i) => {
+                const tone = getSignalTone(i);
+                return (
+                  <tr key={i.id} className={clsx('row-link', toneTokens(tone).rowClass)} onClick={() => openDrawer(aiSignals[3])}>
+                    <td className="pl-5">
+                      <div className="text-[13px] font-semibold text-charcoal">{i.title}</div>
+                      <div className="text-[10.5px] text-charcoal-mute">{i.region}</div>
+                    </td>
+                    <td className="font-display font-medium text-charcoal tabular-nums">{num(i.current as number, i.title === 'India VIX' ? 2 : 0)}</td>
+                    <td><Delta value={i.trend!.d1} /></td>
+                    <td><Delta value={i.trend!.d5} size="xs" /></td>
+                    <td><Delta value={i.trend!.m1} size="xs" /></td>
+                    <td><div className="w-[100px]"><Sparkline data={i.trend!.spark} color={toneTokens(tone).spark} height={22} /></div></td>
+                    <td className="pr-5 text-[11.5px] text-charcoal-mute leading-snug">{i.whyShown}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -111,25 +115,28 @@ function MoverTable({ title, items, volume }: { title: string; items: MoverItem[
           </tr>
         </thead>
         <tbody>
-          {items.map((m) => (
-            <tr key={m.ticker} className="row-link" onClick={() => openDrawer(aiSignals[2])}>
-              <td>
-                <div className="flex items-center gap-2">
-                  <span className="font-mono text-[11.5px] text-charcoal-soft bg-cream-deep border border-bordersoft px-1.5 py-0.5 rounded">{m.ticker}</span>
-                  <span className={clsx(
-                    'chip',
-                    m.scope === 'portfolio' && 'bg-calm-navy-bg text-calm-navy',
-                    m.scope === 'watchlist' && 'bg-calm-violet-bg text-calm-violet',
-                    m.scope === 'broader' && 'bg-cream-deep text-charcoal-mute'
-                  )}>
-                    {m.scope}
-                  </span>
-                </div>
-              </td>
-              <td><Delta value={m.pct} /></td>
-              {volume && <td className="text-[11.5px] text-charcoal-mute tabular-nums">{m.volumeX}x</td>}
-            </tr>
-          ))}
+          {items.map((m) => {
+            const tone = volume ? 'monitor' : m.pct >= 0 ? 'support' : 'risk';
+            return (
+              <tr key={m.ticker} className={clsx('row-link', toneTokens(tone).rowClass)} onClick={() => openDrawer(aiSignals[2])}>
+                <td>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[11.5px] text-charcoal-soft bg-cream-deep border border-bordersoft px-1.5 py-0.5 rounded">{m.ticker}</span>
+                    <span className={clsx(
+                      'chip',
+                      m.scope === 'portfolio' && 'bg-calm-navy-bg text-calm-navy',
+                      m.scope === 'watchlist' && 'bg-calm-violet-bg text-calm-violet',
+                      m.scope === 'broader' && 'bg-cream-deep text-charcoal-mute'
+                    )}>
+                      {m.scope}
+                    </span>
+                  </div>
+                </td>
+                <td><Delta value={m.pct} /></td>
+                {volume && <td className="text-[11.5px] text-charcoal-mute tabular-nums">{m.volumeX}x</td>}
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </Card>

@@ -3,13 +3,15 @@ import { Card } from '../components/Card';
 import { SectionHeader } from '../components/SectionHeader';
 import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
-import { SignalChip } from '../components/Chip';
+import { ToneDot, MeaningBadge } from '../components/Tone';
 import { Heatmap } from '../components/Heatmap';
+import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
+import clsx from 'clsx';
 import type { HeatCell } from '../components/Heatmap';
 import { commodities, commoditySummary } from '../data/commodities';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
-import { num, signalHex } from '../utils/format';
+import { num } from '../utils/format';
 
 export function Commodities() {
   const { openDrawer } = useStore();
@@ -50,25 +52,32 @@ export function Commodities() {
               </tr>
             </thead>
             <tbody>
-              {commodities.map((c) => (
-                <tr key={c.id} className="row-link" onClick={() => openDrawer(aiSignals[0])}>
-                  <td className="pl-5">
-                    <div className="text-[13px] font-semibold text-charcoal">{c.title}</div>
-                    <div className="text-[10.5px] text-charcoal-mute">{c.unit}</div>
-                  </td>
-                  <td className="font-display font-medium text-charcoal tabular-nums">{num(c.current as number, 0)}</td>
-                  <td><Delta value={c.trend!.d1} /></td>
-                  <td><Delta value={c.trend!.d5} size="xs" /></td>
-                  <td><Delta value={c.trend!.m1} size="xs" /></td>
-                  <td>
-                    <div className="w-[100px]">
-                      <Sparkline data={c.trend!.spark} color={signalHex(c.signal)} height={26} />
-                    </div>
-                  </td>
-                  <td className="text-[11.5px] text-charcoal-mute leading-snug">{c.affected.slice(0, 2).join('; ')}</td>
-                  <td className="pr-5"><SignalChip value={c.signal} dot /></td>
-                </tr>
-              ))}
+              {commodities.map((c) => {
+                const tone = getSignalTone(c);
+                const meaning = marketMeaning(c);
+                return (
+                  <tr key={c.id} className={clsx('row-link', toneTokens(tone).rowClass)} onClick={() => openDrawer(aiSignals[0])}>
+                    <td className="pl-5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px] font-semibold text-charcoal">{c.title}</span>
+                        {meaning && <MeaningBadge tone={tone}>{meaning}</MeaningBadge>}
+                      </div>
+                      <div className="text-[10.5px] text-charcoal-mute mt-0.5">{c.unit}</div>
+                    </td>
+                    <td className="font-display font-medium text-charcoal tabular-nums">{num(c.current as number, 0)}</td>
+                    <td><Delta value={c.trend!.d1} /></td>
+                    <td><Delta value={c.trend!.d5} size="xs" /></td>
+                    <td><Delta value={c.trend!.m1} size="xs" /></td>
+                    <td>
+                      <div className="w-[100px]">
+                        <Sparkline data={c.trend!.spark} color={toneTokens(tone).spark} height={26} />
+                      </div>
+                    </td>
+                    <td className="text-[11.5px] text-charcoal-mute leading-snug">{c.affected.slice(0, 2).join('; ')}</td>
+                    <td className="pr-5"><ToneDot tone={tone} /></td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
