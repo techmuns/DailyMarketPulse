@@ -4,7 +4,8 @@ import { SectionHeader } from '../components/SectionHeader';
 import { PulseBrief } from '../components/PulseBrief';
 import { Heatmap } from '../components/Heatmap';
 import type { HeatCell } from '../components/Heatmap';
-import { indices, sectors, breadth, gainers, losers, unusualVolume } from '../data/markets';
+import { indices as mockIndices, sectors, breadth, gainers, losers, unusualVolume } from '../data/markets';
+import { useLiveOverlay } from '../state/liveData';
 import type { MoverItem } from '../data/markets';
 import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
@@ -16,6 +17,7 @@ import { getSignalTone, toneTokens } from '../utils/tone';
 
 export function Markets() {
   const { openDrawer } = useStore();
+  const indices = useLiveOverlay(mockIndices, 'indices');
 
   const sectorCells: HeatCell[] = sectors.map((s) => ({
     id: s.id,

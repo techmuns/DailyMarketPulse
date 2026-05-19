@@ -1,0 +1,56 @@
+name: Refresh market data
+
+# 01:30 UTC = 07:00 IST  (first refresh of the day)
+# 13:30 UTC = 19:00 IST  (second refresh, +12h)
+# Scheduled events only run on the default branch — merge to main for
+# the cron to take effect. workflow_dispatch lets you trigger manually
+# from any branch via the GitHub UI.
+on:
+  schedule:
+    - cron: '30 1,13 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund --ignore-scripts
+
+      - name: Fetch market data
+        run: node scripts/fetch-data.mjs
+
+      - name: Commit if changed
+        run: |
+          set -e
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/data/live.json
+          if git diff --staged --quiet; then
+            echo "No data changes — skipping commit."
+            exit 0
+          fi
+          ts=$(date -u +%Y-%m-%dT%H:%MZ)
+          git commit -m "chore(data): refresh market data ${ts}"
+          for i in 1 2 3 4; do
+            if git push; then exit 0; fi
+            echo "push failed, retrying in $((i*i*2))s..."
+            sleep $((i*i*2))
+          done
+          exit 1

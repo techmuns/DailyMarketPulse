@@ -3,7 +3,8 @@ import { Card } from '../components/Card';
 import { SectionHeader } from '../components/SectionHeader';
 import { Heatmap } from '../components/Heatmap';
 import type { HeatCell } from '../components/Heatmap';
-import { portfolio, portfolioStats } from '../data/portfolio';
+import { portfolio as mockPortfolio, portfolioStats } from '../data/portfolio';
+import { useLiveOverlay } from '../state/liveData';
 import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
 import { ToneDot, MeaningBadge } from '../components/Tone';
@@ -17,6 +18,7 @@ import clsx from 'clsx';
 
 export function Portfolio() {
   const { openDrawer } = useStore();
+  const portfolio = useLiveOverlay(mockPortfolio, 'holdings');
   const sortedByWeight = [...portfolio].sort((a, b) => b.weight - a.weight);
 
   const heat: HeatCell[] = sortedByWeight.map((h) => ({

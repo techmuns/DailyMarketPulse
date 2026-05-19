@@ -5,7 +5,8 @@ import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
 import { ToneDot, MeaningBadge } from '../components/Tone';
 import { PulseBrief } from '../components/PulseBrief';
-import { watchlist } from '../data/watchlist';
+import { watchlist as mockWatchlist } from '../data/watchlist';
+import { useLiveOverlay } from '../state/liveData';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
 import { num } from '../utils/format';
@@ -14,6 +15,7 @@ import clsx from 'clsx';
 
 export function Watchlist() {
   const { openDrawer } = useStore();
+  const watchlist = useLiveOverlay(mockWatchlist, 'holdings');
   const opp = watchlist.filter((w) => w.signal === 'support' || w.signal === 'monitor');
   const risk = watchlist.filter((w) => w.signal === 'risk');
   const correctedNoNews = watchlist.filter((w) => w.trend!.d1 < 0);

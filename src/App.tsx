@@ -4,6 +4,7 @@ import { TopNav } from './components/TopNav';
 import type { TabKey } from './components/TopNav';
 import { AISignalDrawer } from './components/AISignalDrawer';
 import { StoreProvider } from './state/store';
+import { LiveDataProvider } from './state/liveData';
 import { Today } from './tabs/Today';
 import { Macro } from './tabs/Macro';
 import { Markets } from './tabs/Markets';
@@ -33,6 +34,7 @@ function renderTab(tab: TabKey) {
 function App() {
   const [tab, setTab] = useState<TabKey>('Today');
   return (
+    <LiveDataProvider>
     <StoreProvider>
       <div className="min-h-screen text-charcoal">
         <TopNav active={tab} onChange={setTab} />
@@ -55,6 +57,7 @@ function App() {
         <AISignalDrawer />
       </div>
     </StoreProvider>
+    </LiveDataProvider>
   );
 }
 

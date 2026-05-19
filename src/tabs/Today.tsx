@@ -17,6 +17,7 @@ import { marketTemperature } from '../data/markets';
 import { actions } from '../data/actions';
 import { useStore } from '../state/store';
 import { todayLong, pct } from '../utils/format';
+import { useLive, formatFreshness } from '../state/liveData';
 import clsx from 'clsx';
 import type { Signal } from '../types';
 
@@ -39,6 +40,7 @@ type FeedItem = {
 export function Today() {
   const { lens, openDrawer } = useStore();
   const [showAll, setShowAll] = useState(false);
+  const liveFetchedAt = useLive().data?.fetchedAt ?? null;
 
   const baseFeed: FeedItem[] = useMemo(() => [
     { id: 'f-cur', group: 'currency', title: 'USD/INR weakness — 5-day trend', why: 'Importer cost pressure; exporter tailwind', affected: ['M&M', 'ASIANP', 'INFY', 'TCS'], signal: 'risk', change: '5-day trend', d1: 0.25, d5: 0.62, action: 'Add to thesis', impact: 85, scope: 'portfolio', meaning: 'FX Pressure' },
@@ -121,7 +123,7 @@ export function Today() {
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
       {/* A — Newspaper masthead */}
-      <Masthead />
+      <Masthead liveFetchedAt={liveFetchedAt} />
 
       <PulseBrief tabKey="Today" />
 
@@ -328,7 +330,7 @@ function FeaturedAISignal() {
   );
 }
 
-function Masthead() {
+function Masthead({ liveFetchedAt }: { liveFetchedAt: string | null }) {
   const dateStr = todayLong();
   return (
     <header className="relative">
@@ -393,7 +395,7 @@ function Masthead() {
           </Meta>
           <Sep />
           <Meta label="Data">
-            <span className="text-charcoal-soft font-medium">Fresh · 3m ago</span>
+            <span className="text-charcoal-soft font-medium">{formatFreshness(liveFetchedAt)}</span>
           </Meta>
         </div>
         <PriorityLensSelector />

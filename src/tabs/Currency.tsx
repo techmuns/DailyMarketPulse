@@ -5,7 +5,8 @@ import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
 import { ToneDot, MeaningBadge } from '../components/Tone';
 import { PulseBrief } from '../components/PulseBrief';
-import { currencies, currencySummary } from '../data/currencies';
+import { currencies as mockCurrencies, currencySummary } from '../data/currencies';
+import { useLiveOverlay } from '../state/liveData';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
 import { num } from '../utils/format';
@@ -14,6 +15,7 @@ import clsx from 'clsx';
 
 export function Currency() {
   const { openDrawer } = useStore();
+  const currencies = useLiveOverlay(mockCurrencies, 'currencies');
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
       <PulseBrief tabKey="Currency" />

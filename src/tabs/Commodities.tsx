@@ -9,13 +9,15 @@ import { PulseBrief } from '../components/PulseBrief';
 import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
 import clsx from 'clsx';
 import type { HeatCell } from '../components/Heatmap';
-import { commodities, commoditySummary } from '../data/commodities';
+import { commodities as mockCommodities, commoditySummary } from '../data/commodities';
+import { useLiveOverlay } from '../state/liveData';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
 import { num } from '../utils/format';
 
 export function Commodities() {
   const { openDrawer } = useStore();
+  const commodities = useLiveOverlay(mockCommodities, 'commodities');
 
   const pressureCells: HeatCell[] = [
     { id: 'h-asianp', label: 'ASIANP — Paints', value: -1.51, sub: 'Crude + TiO2' },
