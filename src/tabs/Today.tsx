@@ -11,15 +11,17 @@ import { Sparkline } from '../components/Sparkline';
 import { PriorityLensSelector } from '../components/PriorityLens';
 import { SnapshotStrip } from '../components/SnapshotStrip';
 import type { SnapshotItem } from '../components/SnapshotStrip';
+import { HeadlineStrip } from '../components/HeadlineStrip';
 import { aiSignals, featuredSignal } from '../data/signals';
 import { portfolio, portfolioStats } from '../data/portfolio';
 import { marketTemperature } from '../data/markets';
 import { actions } from '../data/actions';
+import { lensHeadlines } from '../data/lensHeadlines';
 import { useStore } from '../state/store';
 import { todayLong, pct } from '../utils/format';
 import { useLive, formatFreshness } from '../state/liveData';
 import clsx from 'clsx';
-import type { Signal } from '../types';
+import type { LensType, Signal } from '../types';
 
 type FeedItem = {
   id: string;
@@ -56,12 +58,13 @@ export function Today() {
     const groupRank: Record<string, number> = {
       portfolio: 0, macro: 1, markets: 2, currency: 3, commodity: 4, filing: 5, news: 6,
     };
+    // Map the new lens semantic onto the feed groups so the "Top changes"
+    // table still reorders in a sensible way. Global → macro/news; Sectoral
+    // → markets; Portfolio Related / Custom → portfolio.
     const lensFocus: Record<string, FeedItem['group']> = {
-      'Portfolio First': 'portfolio',
-      'Macro First': 'macro',
-      'Markets First': 'markets',
-      'News First': 'news',
-      'Watchlist First': 'markets',
+      Global: 'macro',
+      Sectoral: 'markets',
+      'Portfolio Related': 'portfolio',
       Custom: 'portfolio',
     };
     const focus = lensFocus[lens];
@@ -71,6 +74,19 @@ export function Today() {
       return groupRank[a.group] + af - (groupRank[b.group] + bf);
     });
   }, [baseFeed, lens]);
+
+  const lensType: LensType =
+    lens === 'Global' ? 'global'
+      : lens === 'Sectoral' ? 'sectoral'
+      : lens === 'Portfolio Related' ? 'portfolio'
+      : 'custom';
+  const stripHeadlines = lensHeadlines.filter((h) => h.lensType === lensType);
+  const stripTitle: Record<LensType, string> = {
+    global: 'Top global headlines',
+    sectoral: 'Sector headlines',
+    portfolio: 'Headlines linked to your book',
+    custom: 'Custom feed',
+  };
 
   const visible = showAll ? feed : feed.slice(0, 3);
 
@@ -127,6 +143,16 @@ export function Today() {
 
       <PulseBrief tabKey="Today" />
 
+      {/* Lens-driven headline strip */}
+      <section>
+        <SectionHeader
+          title={stripTitle[lensType]}
+          eyebrow={`${lens} lens`}
+          hint="Tap a card to open the full read."
+        />
+        <HeadlineStrip items={stripHeadlines} />
+      </section>
+
       {/* B — Hero row: 2 cards only */}
       <section className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         <MarketTemperatureCard />
@@ -143,7 +169,7 @@ export function Today() {
       <section>
         <SectionHeader
           title="Top changes since yesterday"
-          eyebrow={`Reordered by ${lens.replace(' First', '')} lens`}
+          eyebrow={`Reordered by ${lens} lens`}
           right={
             <button
               onClick={() => setShowAll((v) => !v)}

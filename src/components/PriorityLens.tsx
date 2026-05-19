@@ -2,36 +2,34 @@ import clsx from 'clsx';
 import type { PriorityLens } from '../types';
 import { useStore } from '../state/store';
 
-const LENSES: PriorityLens[] = [
-  'Portfolio First',
-  'Macro First',
-  'Markets First',
-  'News First',
-  'Watchlist First',
-  'Custom',
-];
+const LENSES: PriorityLens[] = ['Global', 'Sectoral', 'Portfolio Related', 'Custom'];
 
 export function PriorityLensSelector() {
   const { lens, setLens } = useStore();
   return (
     <div className="flex items-center gap-2.5">
       <span className="label-mute hidden sm:inline">Lens</span>
-      <div className="inline-flex items-center gap-0.5 bg-cream-deep border border-bordersoft rounded-full p-0.5 shadow-soft">
+      <div
+        role="tablist"
+        aria-label="Priority lens"
+        className="inline-flex items-center gap-0.5 bg-ivory-100/80 border border-bordersoft rounded-full p-0.5 shadow-soft"
+      >
         {LENSES.map((l) => {
           const active = lens === l;
-          const short = l.replace(' First', '');
           return (
             <button
               key={l}
+              role="tab"
+              aria-selected={active}
               onClick={() => setLens(l)}
               className={clsx(
-                'px-2.5 py-1 rounded-full text-[11.5px] transition-all duration-200',
+                'px-3 py-1 rounded-full text-[11.5px] transition-all duration-200 whitespace-nowrap',
                 active
-                  ? 'bg-calm-emerald text-white shadow-soft'
+                  ? 'bg-gradient-to-b from-calm-emerald to-[#0C7A5E] text-white font-semibold shadow-[0_1px_0_rgba(255,255,255,0.25)_inset,0_2px_6px_-2px_rgba(15,143,111,0.45)]'
                   : 'text-charcoal-mute hover:text-charcoal-soft'
               )}
             >
-              {short}
+              {l}
             </button>
           );
         })}

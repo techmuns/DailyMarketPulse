@@ -20,12 +20,28 @@ export type SourceLabel =
   | 'Low confidence';
 
 export type PriorityLens =
-  | 'Portfolio First'
-  | 'Macro First'
-  | 'Markets First'
-  | 'News First'
-  | 'Watchlist First'
+  | 'Global'
+  | 'Sectoral'
+  | 'Portfolio Related'
   | 'Custom';
+
+export type LensType = 'global' | 'sectoral' | 'portfolio' | 'custom';
+
+export interface LensHeadline {
+  id: string;
+  lensType: LensType;
+  category: string;
+  headline: string;
+  shortContext: string;
+  fullContext: string;
+  whyItMatters: string;
+  signal: Signal;
+  affectedCompanies: string[];
+  affectedSectors: string[];
+  sourceType: SourceLabel;
+  action: string;
+  timestamp: string;
+}
 
 export interface Trend {
   d1: number; // 1-day % change

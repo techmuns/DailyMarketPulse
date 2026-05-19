@@ -68,7 +68,7 @@ export function TopNav({ active, onChange }: Props) {
         "
         style={{
           background:
-            'linear-gradient(135deg, rgba(252,250,255,0.72), rgba(232,224,250,0.74), rgba(224,213,242,0.70))',
+            'linear-gradient(135deg, rgba(250,247,255,0.74), rgba(226,216,250,0.80), rgba(216,203,240,0.76))',
           borderColor: 'rgba(221,214,232,0.75)',
           boxShadow:
             '0 1px 0 rgba(255,255,255,0.85) inset, 0 16px 45px rgba(72,55,120,0.10)',
