@@ -50,7 +50,7 @@ function App() {
           </AnimatePresence>
         </main>
         <footer className="max-w-[1320px] mx-auto px-6 pb-10 pt-4 text-[10.5px] text-charcoal-mute tracking-wider uppercase border-t border-bordersoft/60 mt-10">
-          Daily Market Pulse · Calm Alpha · Mock data
+          Daily Market Pulse · By Munshot · Mock data
         </footer>
         <AISignalDrawer />
       </div>
