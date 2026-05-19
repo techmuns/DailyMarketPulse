@@ -9,6 +9,7 @@ import { getSignalTone, toneTokens } from '../utils/tone';
 import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
 import { PriorityLensSelector } from '../components/PriorityLens';
+import { MunshotMark } from '../components/TopNav';
 import { SnapshotStrip } from '../components/SnapshotStrip';
 import type { SnapshotItem } from '../components/SnapshotStrip';
 import { aiSignals, featuredSignal } from '../data/signals';
@@ -349,7 +350,12 @@ function Masthead() {
       </div>
 
       {/* Top hairline */}
-      <div className="h-[3px] bg-charcoal/90 rounded-full mb-4" />
+      <div className="h-[3px] bg-charcoal/90 rounded-full mb-5" />
+
+      {/* Publication mark */}
+      <div className="flex justify-center mb-2">
+        <MunshotMark size={28} />
+      </div>
 
       {/* Masthead title */}
       <h1 className="h-masthead text-center text-[38px] sm:text-[54px] md:text-[68px] lg:text-[80px] leading-[0.94] uppercase">

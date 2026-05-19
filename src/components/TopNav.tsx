@@ -1,5 +1,6 @@
 import clsx from 'clsx';
 import { motion } from 'framer-motion';
+import logoUrl from '../assets/munshot-logo.png';
 
 export type TabKey =
   | 'Today'
@@ -31,14 +32,39 @@ interface Props {
   onChange: (t: TabKey) => void;
 }
 
+/**
+ * Munshot mark — crops the wordmark off the supplied lockup so the
+ * gold "M" symbol stands alone as a publication badge.
+ * Image natural size: 399 × 178; the M occupies roughly the left 40%.
+ */
+export function MunshotMark({ size = 28, className }: { size?: number; className?: string }) {
+  const naturalAspect = 399 / 178;
+  // Scale the image to the box's height (auto width).
+  const imgWidth = size * naturalAspect;
+  // Show only the leftmost square portion (the M symbol).
+  return (
+    <div
+      className={clsx('shrink-0 overflow-hidden flex items-center justify-start', className)}
+      style={{ width: size, height: size }}
+      aria-label="Munshot"
+    >
+      <img
+        src={logoUrl}
+        alt=""
+        style={{ height: size, width: imgWidth, maxWidth: 'none', objectFit: 'contain' }}
+        className="block select-none pointer-events-none"
+        draggable={false}
+      />
+    </div>
+  );
+}
+
 export function TopNav({ active, onChange }: Props) {
   return (
     <nav className="sticky top-0 z-30 bg-ivory-50/85 backdrop-blur-md border-b border-bordersoft">
       <div className="max-w-[1320px] mx-auto px-6 flex items-center justify-between gap-6 h-[60px]">
         <div className="flex items-center gap-2.5 shrink-0">
-          <div className="w-7 h-7 rounded-lg bg-calm-emerald grid place-items-center text-white text-[12px] font-semibold font-masthead">
-            DP
-          </div>
+          <MunshotMark size={30} />
           <div className="leading-none">
             <div className="font-masthead text-[14px] font-bold tracking-tight">Daily Market Pulse</div>
             <div className="text-[9.5px] text-charcoal-mute mt-1 tracking-[0.22em] uppercase font-semibold">By Munshot</div>

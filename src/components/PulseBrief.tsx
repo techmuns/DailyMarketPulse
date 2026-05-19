@@ -1,8 +1,11 @@
+import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import clsx from 'clsx';
 import { pulseBriefs } from '../data/pulseBriefs';
+import { topChanges } from '../data/topChanges';
 import type { TabKey } from './TopNav';
 import { useSpeech } from '../utils/useSpeech';
+import { buildSpokenBrief } from '../utils/spokenBrief';
 import { toneTokens } from '../utils/tone';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
@@ -18,7 +21,19 @@ export function PulseBrief({ tabKey, className }: Props) {
   const { openDrawer } = useStore();
   const tokens = toneTokens(brief.tone);
 
-  const text = `${brief.headline} ${brief.bullets.join(' ')}`;
+  // Stop any active speech when the tab changes — no audio bleed.
+  useEffect(() => {
+    stop();
+    return () => stop();
+  }, [tabKey, stop]);
+
+  const onListen = () => {
+    if (isSpeaking) {
+      stop();
+      return;
+    }
+    speak(buildSpokenBrief(tabKey, brief, topChanges));
+  };
 
   return (
     <AnimatePresence mode="wait">
@@ -58,12 +73,12 @@ export function PulseBrief({ tabKey, className }: Props) {
               ))}
             </ul>
           </div>
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex flex-col items-end gap-1.5 shrink-0">
             {supported ? (
               <button
-                onClick={() => (isSpeaking ? stop() : speak(text))}
+                onClick={onListen}
                 className={clsx(
-                  'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-semibold transition shadow-soft',
+                  'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12px] font-semibold transition shadow-soft',
                   isSpeaking
                     ? 'bg-calm-rose-bg text-calm-rose hover:bg-calm-rose-bg/70'
                     : 'bg-calm-emerald text-white hover:bg-[#0CA67F]'
@@ -75,9 +90,14 @@ export function PulseBrief({ tabKey, className }: Props) {
             ) : (
               <span className="text-[10.5px] text-charcoal-mute italic">Audio not supported in this browser</span>
             )}
+            {supported && (
+              <span className="text-[10px] tracking-[0.18em] uppercase text-charcoal-mute font-semibold">
+                5-minute audio brief
+              </span>
+            )}
             <button
               onClick={() => openDrawer(aiSignals[0])}
-              className="hidden md:inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[12px] text-calm-violet bg-calm-violet-bg/70 hover:bg-calm-violet-bg transition"
+              className="hidden md:inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11.5px] text-calm-violet bg-calm-violet-bg/70 hover:bg-calm-violet-bg transition"
             >
               Open signal →
             </button>
