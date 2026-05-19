@@ -337,7 +337,7 @@ function Masthead() {
       <div className="h-[3px] bg-charcoal/90 rounded-full mb-4" />
 
       {/* Masthead title */}
-      <h1 className="h-masthead text-center text-[44px] sm:text-[64px] md:text-[80px] lg:text-[92px] leading-[0.92] uppercase">
+      <h1 className="h-masthead text-center text-[38px] sm:text-[54px] md:text-[68px] lg:text-[80px] leading-[0.94] uppercase">
         Daily Market Pulse
       </h1>
 
@@ -358,6 +358,11 @@ function Masthead() {
       {/* Descriptor */}
       <p className="text-center text-[10.5px] md:text-[11px] tracking-[0.28em] uppercase text-charcoal-mute font-medium">
         Macro · Markets · Currency · Commodities · Filings · Portfolio Impact
+      </p>
+
+      {/* Publication mark */}
+      <p className="mt-3 text-center text-[10px] tracking-[0.32em] uppercase font-semibold text-charcoal-soft">
+        By <span className="text-calm-emerald">Munshot</span>
       </p>
 
       {/* Metadata row */}

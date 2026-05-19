@@ -41,7 +41,7 @@ export function TopNav({ active, onChange }: Props) {
           </div>
           <div className="leading-none">
             <div className="font-masthead text-[14px] font-bold tracking-tight">Daily Market Pulse</div>
-            <div className="text-[9.5px] text-charcoal-mute mt-1 tracking-[0.22em] uppercase font-semibold">Emerald · Lavender Mist</div>
+            <div className="text-[9.5px] text-charcoal-mute mt-1 tracking-[0.22em] uppercase font-semibold">By Munshot</div>
           </div>
         </div>
         <div className="flex items-center overflow-x-auto no-scrollbar">
