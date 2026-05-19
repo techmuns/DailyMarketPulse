@@ -84,9 +84,10 @@ export function useSpeech(): UseSpeechReturn {
         u.voice = voice;
         u.lang = voice.lang;
       }
-      // Bright but professional: slightly elevated pitch, natural rate.
-      u.rate = 1.03;
-      u.pitch = 1.12;
+      // Bright but professional. Used only as a fallback when the
+      // premium TTS layer is unavailable.
+      u.rate = 1.02;
+      u.pitch = 1.10;
       u.volume = 1.0;
       u.onstart = () => setIsSpeaking(true);
       u.onend = () => setIsSpeaking(false);

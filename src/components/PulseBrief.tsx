@@ -1,11 +1,12 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import clsx from 'clsx';
 import { pulseBriefs } from '../data/pulseBriefs';
 import { topChanges } from '../data/topChanges';
 import type { TabKey } from './TopNav';
 import { useSpeech } from '../utils/useSpeech';
-import { buildSpokenBrief } from '../utils/spokenBrief';
+import { buildTopFiveAudioScript } from '../utils/topFiveScript';
+import { generateTopFiveAudio, revokeAudio } from '../services/audioService';
 import { toneTokens } from '../utils/tone';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
@@ -15,25 +16,85 @@ interface Props {
   className?: string;
 }
 
+type PlayState = 'idle' | 'loading' | 'playing';
+
 export function PulseBrief({ tabKey, className }: Props) {
   const brief = pulseBriefs[tabKey];
-  const { speak, stop, isSpeaking, supported } = useSpeech();
+  const { speak, stop: stopBrowser, isSpeaking, supported } = useSpeech();
   const { openDrawer } = useStore();
   const tokens = toneTokens(brief.tone);
 
-  // Stop any active speech when the tab changes — no audio bleed.
-  useEffect(() => {
-    stop();
-    return () => stop();
-  }, [tabKey, stop]);
+  const [state, setState] = useState<PlayState>('idle');
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const lastUrlRef = useRef<string | null>(null);
 
-  const onListen = () => {
-    if (isSpeaking) {
-      stop();
+  const stopAudio = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current.onended = null;
+      audioRef.current = null;
+    }
+    stopBrowser();
+    setState('idle');
+  }, [stopBrowser]);
+
+  // Stop everything on tab change / unmount.
+  useEffect(() => {
+    return () => {
+      stopAudio();
+      revokeAudio(lastUrlRef.current);
+      lastUrlRef.current = null;
+    };
+  }, [tabKey, stopAudio]);
+
+  // If the browser TTS finishes (or errors) on its own, reset state.
+  useEffect(() => {
+    if (state === 'playing' && !audioRef.current && !isSpeaking) {
+      setState('idle');
+    }
+  }, [isSpeaking, state]);
+
+  const onPlay = useCallback(async () => {
+    if (state === 'playing' || state === 'loading') {
+      stopAudio();
       return;
     }
-    speak(buildSpokenBrief(topChanges));
-  };
+    const script = buildTopFiveAudioScript(topChanges);
+    setState('loading');
+
+    // Try premium first.
+    const premium = await generateTopFiveAudio(script);
+    if (premium?.url) {
+      revokeAudio(lastUrlRef.current);
+      lastUrlRef.current = premium.url;
+      const audio = new Audio(premium.url);
+      audio.onended = () => setState('idle');
+      audio.onerror = () => {
+        setState('idle');
+      };
+      audioRef.current = audio;
+      try {
+        await audio.play();
+        setState('playing');
+      } catch {
+        setState('idle');
+      }
+      return;
+    }
+
+    // Fall back to browser speech.
+    if (supported) {
+      speak(script);
+      setState('playing');
+    } else {
+      setState('idle');
+    }
+  }, [state, stopAudio, supported, speak]);
+
+  const audioCapable = supported || isPremiumModeEnabled();
+  const label =
+    state === 'loading' ? 'Preparing audio…' : state === 'playing' ? 'Stop' : 'Play Today’s Top 5';
 
   return (
     <AnimatePresence mode="wait">
@@ -74,25 +135,26 @@ export function PulseBrief({ tabKey, className }: Props) {
             </ul>
           </div>
           <div className="flex flex-col items-end gap-1.5 shrink-0">
-            {supported ? (
+            {audioCapable ? (
               <button
-                onClick={onListen}
+                onClick={onPlay}
+                disabled={state === 'loading'}
                 className={clsx(
                   'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12px] font-semibold transition shadow-soft',
-                  isSpeaking
-                    ? 'bg-calm-rose-bg text-calm-rose hover:bg-calm-rose-bg/70'
-                    : 'bg-calm-emerald text-white hover:bg-[#0CA67F]'
+                  state === 'playing' && 'bg-calm-rose-bg text-calm-rose hover:bg-calm-rose-bg/70',
+                  state === 'loading' && 'bg-calm-violet-bg text-calm-violet cursor-wait',
+                  state === 'idle' && 'bg-calm-emerald text-white hover:bg-[#0CA67F]'
                 )}
               >
-                {isSpeaking ? <StopIcon /> : <SpeakerIcon />}
-                {isSpeaking ? 'Stop' : 'Listen to Top 5'}
+                {state === 'loading' ? <SpinnerIcon /> : state === 'playing' ? <StopIcon /> : <SpeakerIcon />}
+                {label}
               </button>
             ) : (
               <span className="text-[10.5px] text-charcoal-mute italic">Audio not supported in this browser</span>
             )}
-            {supported && (
+            {audioCapable && (
               <span className="text-[10px] tracking-[0.18em] uppercase text-charcoal-mute font-semibold">
-                Today's top 5 · audio
+                Today&rsquo;s top 5 &middot; audio
               </span>
             )}
             <button
@@ -106,6 +168,10 @@ export function PulseBrief({ tabKey, className }: Props) {
       </motion.section>
     </AnimatePresence>
   );
+}
+
+function isPremiumModeEnabled(): boolean {
+  return (import.meta.env.VITE_AUDIO_MODE ?? 'browser').toLowerCase() === 'premium';
 }
 
 function PulseIcon() {
@@ -130,6 +196,14 @@ function StopIcon() {
   return (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
       <rect x="6" y="6" width="12" height="12" rx="1.5" />
+    </svg>
+  );
+}
+
+function SpinnerIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" className="animate-spin">
+      <path d="M21 12a9 9 0 1 1-6.3-8.58" />
     </svg>
   );
 }
