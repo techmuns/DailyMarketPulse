@@ -9,28 +9,44 @@ interface UseSpeechReturn {
 
 /**
  * Pick a bright, clear female English voice from the available list.
- * Preference order: en-IN female → en-GB female → en-US female →
- * any English female → any English → any.
+ * Preference order: en-US female → en-GB female → any English female
+ * → any English → first voice. en-IN voices are deliberately
+ * deprioritised and only used when no other English voice exists.
  */
 export function selectPreferredVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
   if (!voices || voices.length === 0) return null;
 
-  // Names that are reliably female across common platforms.
   const femalePattern =
-    /(heera|zira|samantha|karen|veena|tessa|fiona|moira|kate|serena|allison|susan|female|google uk english female|google us english|priya|raveena|aaliyah)/i;
+    /(samantha|zira|karen|tessa|fiona|moira|kate|serena|allison|susan|female|google us english|google uk english female|aria|jenny|sonia)/i;
   const malePattern = /(male|david|mark|alex|fred|daniel|james|google uk english male|microsoft mark|microsoft david)/i;
 
-  const enIN = voices.filter((v) => /en[-_]IN/i.test(v.lang));
-  const enGB = voices.filter((v) => /en[-_]GB/i.test(v.lang));
-  const enUS = voices.filter((v) => /en[-_]US/i.test(v.lang));
-  const enAny = voices.filter((v) => /^en/i.test(v.lang));
+  const isLang = (v: SpeechSynthesisVoice, code: string) => new RegExp(`^${code}([-_]|$)`, 'i').test(v.lang);
+  const enUS = voices.filter((v) => isLang(v, 'en[-_]US'));
+  const enGB = voices.filter((v) => isLang(v, 'en[-_]GB'));
+  const enAU = voices.filter((v) => isLang(v, 'en[-_]AU'));
+  const enCA = voices.filter((v) => isLang(v, 'en[-_]CA'));
+  const enOther = voices.filter(
+    (v) => /^en/i.test(v.lang) && !/en[-_](US|GB|AU|CA|IN)/i.test(v.lang)
+  );
+  const enIN = voices.filter((v) => isLang(v, 'en[-_]IN'));
 
-  const pools = [enIN, enGB, enUS, enAny];
+  // Pools in priority order. Inside each pool: explicit-female → not-male.
+  const pools = [enUS, enGB, enAU, enCA, enOther];
   for (const pool of pools) {
     const explicitFemale = pool.find((v) => femalePattern.test(v.name));
     if (explicitFemale) return explicitFemale;
+  }
+  for (const pool of pools) {
     const notMale = pool.find((v) => !malePattern.test(v.name));
     if (notMale) return notMale;
+  }
+  // Only fall back to en-IN if no other English voice exists at all.
+  if (enIN.length > 0) {
+    const femaleIN = enIN.find((v) => femalePattern.test(v.name));
+    if (femaleIN) return femaleIN;
+    const notMaleIN = enIN.find((v) => !malePattern.test(v.name));
+    if (notMaleIN) return notMaleIN;
+    return enIN[0];
   }
   return voices[0] ?? null;
 }
@@ -69,7 +85,7 @@ export function useSpeech(): UseSpeechReturn {
         u.lang = voice.lang;
       }
       // Bright but professional: slightly elevated pitch, natural rate.
-      u.rate = 1.02;
+      u.rate = 1.03;
       u.pitch = 1.12;
       u.volume = 1.0;
       u.onstart = () => setIsSpeaking(true);

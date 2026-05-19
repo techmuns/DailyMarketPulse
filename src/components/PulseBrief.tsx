@@ -32,7 +32,7 @@ export function PulseBrief({ tabKey, className }: Props) {
       stop();
       return;
     }
-    speak(buildSpokenBrief(tabKey, brief, topChanges));
+    speak(buildSpokenBrief(topChanges));
   };
 
   return (
@@ -85,14 +85,14 @@ export function PulseBrief({ tabKey, className }: Props) {
                 )}
               >
                 {isSpeaking ? <StopIcon /> : <SpeakerIcon />}
-                {isSpeaking ? 'Stop' : 'Listen'}
+                {isSpeaking ? 'Stop' : 'Listen to Top 5'}
               </button>
             ) : (
               <span className="text-[10.5px] text-charcoal-mute italic">Audio not supported in this browser</span>
             )}
             {supported && (
               <span className="text-[10px] tracking-[0.18em] uppercase text-charcoal-mute font-semibold">
-                5-minute audio brief
+                Today's top 5 · audio
               </span>
             )}
             <button
