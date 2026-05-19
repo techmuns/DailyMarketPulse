@@ -320,16 +320,19 @@ function Masthead() {
   const dateStr = todayLong();
   return (
     <header className="relative">
-      {/* Eyebrow / volume */}
+      {/* Eyebrow strip */}
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2">
-          <span className="w-1.5 h-1.5 rounded-full bg-calm-emerald" />
-          <span className="text-[10.5px] tracking-[0.22em] uppercase text-charcoal-mute font-semibold">
-            Vol. I · Edition · IST
+          <span className="relative flex w-1.5 h-1.5">
+            <span className="animate-ping absolute inline-flex w-full h-full rounded-full bg-calm-emerald opacity-60" />
+            <span className="relative inline-flex rounded-full w-1.5 h-1.5 bg-calm-emerald" />
+          </span>
+          <span className="text-[10.5px] tracking-[0.22em] uppercase text-charcoal-soft font-semibold">
+            Live Market Brief · India / Global · 08:25 IST
           </span>
         </div>
-        <span className="text-[10.5px] tracking-[0.22em] uppercase text-charcoal-mute font-semibold hidden md:inline">
-          The Investor's Morning Cockpit
+        <span className="text-[10.5px] tracking-[0.22em] uppercase text-calm-emerald font-semibold hidden md:inline">
+          5-Minute Market Edge
         </span>
       </div>
 
