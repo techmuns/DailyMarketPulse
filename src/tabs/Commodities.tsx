@@ -5,6 +5,7 @@ import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
 import { ToneDot, MeaningBadge } from '../components/Tone';
 import { Heatmap } from '../components/Heatmap';
+import { PulseBrief } from '../components/PulseBrief';
 import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
 import clsx from 'clsx';
 import type { HeatCell } from '../components/Heatmap';
@@ -29,6 +30,8 @@ export function Commodities() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
+      <PulseBrief tabKey="Commodities" />
+
       <header>
         <p className="label-mute">Commodities</p>
         <h1 className="h-display text-[26px] font-semibold mt-1.5">Input-cost board</h1>
@@ -36,7 +39,7 @@ export function Commodities() {
       </header>
 
       <section>
-        <SectionHeader title="Commodity board" eyebrow="Pressure & support" />
+        <SectionHeader title="Commodity Pressure Board" eyebrow="Pressure & support" hint="Input-cost moves, portfolio impact, and sector pressure." />
         <div className="card overflow-hidden">
           <table className="tbl">
             <thead>

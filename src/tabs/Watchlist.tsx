@@ -4,6 +4,7 @@ import { SectionHeader } from '../components/SectionHeader';
 import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
 import { ToneDot, MeaningBadge } from '../components/Tone';
+import { PulseBrief } from '../components/PulseBrief';
 import { watchlist } from '../data/watchlist';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
@@ -19,6 +20,8 @@ export function Watchlist() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
+      <PulseBrief tabKey="Watchlist" />
+
       <header>
         <p className="label-mute">Watchlist</p>
         <h1 className="h-display text-[26px] font-semibold mt-1.5">On the radar</h1>
@@ -26,7 +29,7 @@ export function Watchlist() {
       </header>
 
       <section>
-        <SectionHeader title="Watchlist board" eyebrow="Today" />
+        <SectionHeader title="Watchlist Signal Board" eyebrow="Today" hint="Movers, opportunity setups, risk signals, and no-news corrections." />
         <div className="card overflow-hidden">
           <table className="tbl">
             <thead>

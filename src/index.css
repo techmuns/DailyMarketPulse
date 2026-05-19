@@ -70,7 +70,13 @@ body {
     @apply w-full text-left text-[13px];
   }
   .tbl thead th {
-    @apply label-mute font-medium pb-2.5 pr-3 align-bottom border-b border-bordersoft/70;
+    @apply text-[12px] font-bold uppercase tracking-[0.08em] text-charcoal-soft py-3.5 pr-3 align-middle bg-ivory-100/75 border-b-2 border-bordersoft;
+  }
+  .tbl thead th:first-child {
+    @apply pl-5;
+  }
+  .tbl thead th:last-child {
+    @apply pr-5;
   }
   .tbl tbody td {
     @apply py-2.5 pr-3 border-b border-bordersoft/50 align-middle text-charcoal-soft;

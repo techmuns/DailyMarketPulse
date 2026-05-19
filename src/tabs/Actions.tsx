@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { useMemo, useState } from 'react';
 import { Card } from '../components/Card';
+import { PulseBrief } from '../components/PulseBrief';
 import { actions } from '../data/actions';
 import { timeAgo } from '../utils/format';
 import clsx from 'clsx';
@@ -49,10 +50,12 @@ export function Actions() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-7">
+      <PulseBrief tabKey="Actions" />
+
       <header className="flex items-end justify-between gap-3 flex-wrap">
         <div>
           <p className="label-mute">Actions</p>
-          <h1 className="h-display text-[26px] font-semibold mt-1.5">Task board</h1>
+          <h1 className="h-display text-[26px] font-semibold mt-1.5">Action Queue Board</h1>
           <p className="text-[12.5px] text-charcoal-mute mt-1.5">Triage your day — keep the flow short.</p>
         </div>
         <div className="inline-flex items-center gap-0.5 bg-cream-deep border border-bordersoft rounded-full p-0.5 shadow-soft">

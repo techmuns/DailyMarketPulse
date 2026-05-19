@@ -4,6 +4,7 @@ import { SectionHeader } from '../components/SectionHeader';
 import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
 import { ToneDot, MeaningBadge } from '../components/Tone';
+import { PulseBrief } from '../components/PulseBrief';
 import { currencies, currencySummary } from '../data/currencies';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
@@ -15,6 +16,8 @@ export function Currency() {
   const { openDrawer } = useStore();
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
+      <PulseBrief tabKey="Currency" />
+
       <header>
         <p className="label-mute">Currency</p>
         <h1 className="h-display text-[26px] font-semibold mt-1.5">FX board</h1>
@@ -22,7 +25,7 @@ export function Currency() {
       </header>
 
       <section>
-        <SectionHeader title="Pairs" eyebrow="Today" />
+        <SectionHeader title="Currency Pressure Board" eyebrow="Pairs" hint="Rate, 1D / 5D / 1M moves, trend, and portfolio impact." />
         <div className="card overflow-hidden">
           <table className="tbl">
             <thead>

@@ -7,6 +7,7 @@ import { portfolio, portfolioStats } from '../data/portfolio';
 import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
 import { ToneDot, MeaningBadge } from '../components/Tone';
+import { PulseBrief } from '../components/PulseBrief';
 import { pct } from '../utils/format';
 import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
 import { aiSignals } from '../data/signals';
@@ -32,6 +33,8 @@ export function Portfolio() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
+      <PulseBrief tabKey="Portfolio" />
+
       <header>
         <p className="label-mute">Portfolio</p>
         <h1 className="h-display text-[26px] font-semibold mt-1.5">Your book</h1>
@@ -69,7 +72,7 @@ export function Portfolio() {
       </section>
 
       <section>
-        <SectionHeader title="Holdings" eyebrow="Detail" />
+        <SectionHeader title="Portfolio Impact Board" eyebrow="Holdings" hint="Weight, today's move, 5D trend, impact driver and action." />
         <div className="card overflow-hidden">
           <table className="tbl">
             <thead>

@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Card } from '../components/Card';
 import { events } from '../data/events';
 import { ToneDot } from '../components/Tone';
+import { PulseBrief } from '../components/PulseBrief';
 import { getSignalTone, toneTokens } from '../utils/tone';
 import clsx from 'clsx';
 
@@ -14,9 +15,11 @@ const WHENS: Array<{ key: 'today' | 'tomorrow' | 'this-week'; label: string }> =
 export function Events() {
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
+      <PulseBrief tabKey="Events" />
+
       <header>
         <p className="label-mute">Events</p>
-        <h1 className="h-display text-[26px] font-semibold mt-1.5">Calendar</h1>
+        <h1 className="h-display text-[26px] font-semibold mt-1.5">Event Risk Board</h1>
         <p className="text-[12.5px] text-charcoal-mute mt-1.5">Results, concalls, policy and macro events affecting your book.</p>
       </header>
 

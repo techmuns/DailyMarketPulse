@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { SectionHeader } from '../components/SectionHeader';
+import { PulseBrief } from '../components/PulseBrief';
 import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
 import { ToneDot, MeaningBadge } from '../components/Tone';
@@ -25,6 +26,8 @@ export function Macro() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
+      <PulseBrief tabKey="Macro" />
+
       <header>
         <p className="label-mute">Macro</p>
         <h1 className="h-display text-[26px] font-semibold mt-1.5">Pulse</h1>
@@ -32,7 +35,7 @@ export function Macro() {
       </header>
 
       <section>
-        <SectionHeader title="Indicators" eyebrow="Board" />
+        <SectionHeader title="Macro Pressure Board" eyebrow="Indicators" hint="Inflation, rates, liquidity and policy moves since yesterday." />
         <div className="card overflow-hidden">
           <table className="tbl">
             <thead>

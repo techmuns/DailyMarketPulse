@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Card } from '../components/Card';
 import { SectionHeader } from '../components/SectionHeader';
+import { PulseBrief } from '../components/PulseBrief';
 import { Heatmap } from '../components/Heatmap';
 import type { HeatCell } from '../components/Heatmap';
 import { indices, sectors, breadth, gainers, losers, unusualVolume } from '../data/markets';
@@ -25,13 +26,15 @@ export function Markets() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
+      <PulseBrief tabKey="Markets" />
+
       <header>
         <p className="label-mute">Markets</p>
         <h1 className="h-display text-[26px] font-semibold mt-1.5">Indices, sectors & movers</h1>
       </header>
 
       <section>
-        <SectionHeader title="Indices" eyebrow="Board" />
+        <SectionHeader title="Market Movers Board" eyebrow="Indices" hint="Index levels, 1D / 5D / 1M reads, and where today's flow is leaning." />
         <div className="card overflow-hidden">
           <table className="tbl">
             <thead>

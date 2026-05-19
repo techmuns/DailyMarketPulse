@@ -4,6 +4,7 @@ import { Card } from '../components/Card';
 import { SectionHeader } from '../components/SectionHeader';
 import { ChangeStripChip, Ticker } from '../components/Chip';
 import { ToneDot, MeaningBadge } from '../components/Tone';
+import { PulseBrief } from '../components/PulseBrief';
 import { getSignalTone, toneTokens } from '../utils/tone';
 import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
@@ -121,6 +122,8 @@ export function Today() {
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
       {/* A — Newspaper masthead */}
       <Masthead />
+
+      <PulseBrief tabKey="Today" />
 
       {/* B — Hero row: 2 cards only */}
       <section className="grid grid-cols-1 lg:grid-cols-5 gap-4">

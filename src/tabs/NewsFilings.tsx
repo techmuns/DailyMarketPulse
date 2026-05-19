@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { useState } from 'react';
 import { ChangeStripChip, SourceChip } from '../components/Chip';
 import { ToneDot, MeaningBadge } from '../components/Tone';
+import { PulseBrief } from '../components/PulseBrief';
 import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
 import { news, filings } from '../data/news';
 import { aiSignals } from '../data/signals';
@@ -31,10 +32,12 @@ export function NewsFilings() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-7">
+      <PulseBrief tabKey="News & Filings" />
+
       <header className="flex items-end justify-between gap-3 flex-wrap">
         <div>
           <p className="label-mute">News & Filings</p>
-          <h1 className="h-display text-[26px] font-semibold mt-1.5">Wire</h1>
+          <h1 className="h-display text-[26px] font-semibold mt-1.5">News & Filing Impact Board</h1>
           <p className="text-[12.5px] text-charcoal-mute mt-1.5">Portfolio first, then watchlist, then broader. Every item shows "Why shown" and a source label.</p>
         </div>
         <ScopeSelector value={scope} onChange={setScope} />
