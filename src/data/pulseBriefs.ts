@@ -1,7 +1,24 @@
 // MOCK DATA — Pulse Brief per tab.
 // Short analyst-style summary that opens each tab.
+//
+// Keyed by an internal BriefKey union rather than TabKey so that
+// shipping/hiding a tab in the navbar doesn't require deleting the
+// underlying brief copy. Book composes the Portfolio + Watchlist
+// briefs under the new merged tab.
 import type { Tone } from '../utils/tone';
-import type { TabKey } from '../components/TopNav';
+
+export type BriefKey =
+  | 'Today'
+  | 'Macro'
+  | 'Markets'
+  | 'Currency'
+  | 'Commodities'
+  | 'News & Filings'
+  | 'Portfolio'
+  | 'Watchlist'
+  | 'Book'
+  | 'Events'
+  | 'Actions';
 
 export interface PulseBrief {
   headline: string;
@@ -9,7 +26,7 @@ export interface PulseBrief {
   tone: Tone;
 }
 
-export const pulseBriefs: Record<TabKey, PulseBrief> = {
+export const pulseBriefs: Record<BriefKey, PulseBrief> = {
   Today: {
     headline: 'Risk-on under the surface, but autos and paints are dragging.',
     bullets: [
@@ -81,6 +98,15 @@ export const pulseBriefs: Record<TabKey, PulseBrief> = {
       'Zomato risk is rising on quick-commerce competitive intensity.',
     ],
     tone: 'support',
+  },
+  Book: {
+    headline: 'Book is mixed — holdings drag, watchlist setups building.',
+    bullets: [
+      'M&M is the biggest drag — FX plus steel cost squeeze.',
+      'IT exporters (Infosys) provide offset on durable INR weakness.',
+      'DMART quiet accumulation and Pidilite no-news correction worth a look.',
+    ],
+    tone: 'ai',
   },
   Events: {
     headline: 'Two events tomorrow touch your book directly.',

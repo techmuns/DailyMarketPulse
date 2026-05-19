@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import clsx from 'clsx';
 import { pulseBriefs } from '../data/pulseBriefs';
+import type { BriefKey } from '../data/pulseBriefs';
 import { topChanges } from '../data/topChanges';
-import type { TabKey } from './TopNav';
 import { useSpeech } from '../utils/useSpeech';
 import { buildTopFiveAudioScript } from '../utils/topFiveScript';
 import { generateTopFiveAudio, revokeAudio } from '../services/audioService';
@@ -12,7 +12,7 @@ import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
 
 interface Props {
-  tabKey: TabKey;
+  tabKey: BriefKey;
   className?: string;
 }
 

@@ -9,10 +9,8 @@ export type TabKey =
   | 'Currency'
   | 'Commodities'
   | 'News & Filings'
-  | 'Portfolio'
-  | 'Watchlist'
-  | 'Events'
-  | 'Actions';
+  | 'Book'
+  | 'Events';
 
 const TABS: TabKey[] = [
   'Today',
@@ -21,10 +19,8 @@ const TABS: TabKey[] = [
   'Currency',
   'Commodities',
   'News & Filings',
-  'Portfolio',
-  'Watchlist',
+  'Book',
   'Events',
-  'Actions',
 ];
 
 interface Props {

@@ -12,10 +12,8 @@ import { Markets } from './tabs/Markets';
 import { Currency } from './tabs/Currency';
 import { Commodities } from './tabs/Commodities';
 import { NewsFilings } from './tabs/NewsFilings';
-import { Portfolio } from './tabs/Portfolio';
-import { Watchlist } from './tabs/Watchlist';
+import { Book } from './tabs/Book';
 import { Events } from './tabs/Events';
-import { Actions } from './tabs/Actions';
 
 function renderTab(tab: TabKey) {
   switch (tab) {
@@ -25,10 +23,8 @@ function renderTab(tab: TabKey) {
     case 'Currency': return <Currency />;
     case 'Commodities': return <Commodities />;
     case 'News & Filings': return <NewsFilings />;
-    case 'Portfolio': return <Portfolio />;
-    case 'Watchlist': return <Watchlist />;
+    case 'Book': return <Book />;
     case 'Events': return <Events />;
-    case 'Actions': return <Actions />;
   }
 }
 

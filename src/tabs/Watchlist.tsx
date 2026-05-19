@@ -13,7 +13,7 @@ import { num } from '../utils/format';
 import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
 import clsx from 'clsx';
 
-export function Watchlist() {
+export function Watchlist({ hideBrief = false }: { hideBrief?: boolean } = {}) {
   const { openDrawer } = useStore();
   const watchlist = useLiveOverlay(mockWatchlist, 'holdings');
   const opp = watchlist.filter((w) => w.signal === 'support' || w.signal === 'monitor');
@@ -22,7 +22,7 @@ export function Watchlist() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
-      <PulseBrief tabKey="Watchlist" />
+      {!hideBrief && <PulseBrief tabKey="Watchlist" />}
 
       <header>
         <p className="label-mute">Watchlist</p>
