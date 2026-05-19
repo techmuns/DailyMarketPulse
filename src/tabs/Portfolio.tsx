@@ -55,10 +55,10 @@ export function Portfolio() {
               <BarChart data={contribData} layout="vertical" margin={{ left: 0, right: 12, top: 4, bottom: 4 }}>
                 <XAxis type="number" hide />
                 <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#7A7A82' }} width={56} />
-                <ReferenceLine x={0} stroke="#D6CCB4" />
+                <ReferenceLine x={0} stroke="#DDD6E8" />
                 <Bar dataKey="value" radius={[3, 3, 3, 3]} barSize={10}>
                   {contribData.map((d) => (
-                    <Cell key={d.name} fill={d.value >= 0 ? '#6FAE92' : '#BF7E78'} />
+                    <Cell key={d.name} fill={d.value >= 0 ? '#0F8F6F' : '#C86B6B'} />
                   ))}
                 </Bar>
               </BarChart>

@@ -33,15 +33,15 @@ interface Props {
 
 export function TopNav({ active, onChange }: Props) {
   return (
-    <nav className="sticky top-0 z-30 bg-ivory-50/80 backdrop-blur-md border-b border-bordersoft">
+    <nav className="sticky top-0 z-30 bg-ivory-50/85 backdrop-blur-md border-b border-bordersoft">
       <div className="max-w-[1320px] mx-auto px-6 flex items-center justify-between gap-6 h-[60px]">
         <div className="flex items-center gap-2.5 shrink-0">
-          <div className="w-7 h-7 rounded-lg bg-charcoal grid place-items-center text-cream text-[12px] font-semibold font-display">
+          <div className="w-7 h-7 rounded-lg bg-calm-emerald grid place-items-center text-white text-[12px] font-semibold font-masthead">
             DP
           </div>
           <div className="leading-none">
-            <div className="h-display text-[14px] font-semibold">Daily Market Pulse</div>
-            <div className="text-[10px] text-charcoal-mute mt-1 tracking-[0.15em] uppercase">Calm Alpha</div>
+            <div className="font-masthead text-[14px] font-bold tracking-tight">Daily Market Pulse</div>
+            <div className="text-[9.5px] text-charcoal-mute mt-1 tracking-[0.22em] uppercase font-semibold">Emerald · Lavender Mist</div>
           </div>
         </div>
         <div className="flex items-center overflow-x-auto no-scrollbar">
@@ -71,8 +71,8 @@ export function TopNav({ active, onChange }: Props) {
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span className="chip bg-cream border border-bordersoft text-charcoal-soft">
-            <span className="w-1.5 h-1.5 rounded-full bg-calm-green inline-block" />
+          <span className="chip bg-calm-emerald-bg text-calm-emerald">
+            <span className="w-1.5 h-1.5 rounded-full bg-calm-emerald inline-block" />
             Live · mock
           </span>
         </div>

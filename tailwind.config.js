@@ -4,41 +4,50 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Calm Alpha v2 — warmer, slightly deeper, easier on the eyes
+        // Calm Alpha — Emerald + Lavender Mist
         ivory: {
-          50: '#ECE5D6', // page background — warm taupe
-          100: '#E3DAC6',
-          200: '#D9CFB6',
+          50: '#F4F1FA',  // page background — lavender mist
+          100: '#EEE8F7', // secondary section tint
+          200: '#E5DDEF',
         },
-        cream: '#F4EEDF',        // primary card surface
-        'cream-deep': '#EEE6D2', // secondary surface (header, kanban)
+        cream: '#FFFDF9',        // primary card background
+        'cream-deep': '#F8F5EF', // elevated / secondary surface
         charcoal: {
-          DEFAULT: '#2D2E36',
-          soft: '#454751',
-          mute: '#7A7A82',
+          DEFAULT: '#1F2933',
+          soft: '#3F4754',
+          mute: '#667085',
         },
         calm: {
-          green: '#6FAE92',
-          'green-bg': '#DDE7DC',
-          rose: '#BF7E78',
-          'rose-bg': '#EEDAD4',
-          amber: '#B79257',
-          'amber-bg': '#EADDBE',
-          navy: '#3F5C7A',
-          'navy-bg': '#D6DEE7',
-          violet: '#8C82B0',
-          'violet-bg': '#DDD8E6',
+          // Emerald (brand / active / support)
+          emerald: '#0F8F6F',
+          'emerald-bg': '#E6F7F0',
+          green: '#36A379',
+          'green-bg': '#E8F7EF',
+          // Negative
+          rose: '#C86B6B',
+          'rose-bg': '#F9EAEA',
+          // Watch / neutral
+          amber: '#D7A14A',
+          'amber-bg': '#FFF3DD',
+          // Cool slate (portfolio / filings context)
+          navy: '#4F5D7A',
+          'navy-bg': '#E2E6EF',
+          // Lavender (AI insight)
+          violet: '#8C79C9',
+          'violet-bg': '#F0EBFF',
         },
-        bordersoft: '#D6CCB4',
-        borderstrong: '#C5B998',
+        bordersoft: '#DDD6E8',
+        tabinactive: '#F3F0F7',
+        hoverwash: '#EDF6F3',
       },
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['"Source Serif Pro"', '"Source Serif 4"', 'Georgia', 'serif'],
+        display: ['"Newsreader"', '"Source Serif 4"', 'Georgia', 'serif'],
+        masthead: ['"Playfair Display"', '"Newsreader"', 'Georgia', 'serif'],
       },
       boxShadow: {
-        soft: '0 1px 2px rgba(60, 50, 30, 0.05), 0 6px 18px rgba(60, 50, 30, 0.04)',
-        lift: '0 2px 4px rgba(60, 50, 30, 0.07), 0 14px 32px rgba(60, 50, 30, 0.07)',
+        soft: '0 1px 2px rgba(31, 41, 51, 0.04), 0 6px 18px rgba(31, 41, 51, 0.04)',
+        lift: '0 2px 4px rgba(31, 41, 51, 0.06), 0 14px 32px rgba(31, 41, 51, 0.07)',
       },
       borderRadius: {
         xl2: '1.25rem',

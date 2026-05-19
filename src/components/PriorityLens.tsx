@@ -27,7 +27,7 @@ export function PriorityLensSelector() {
               className={clsx(
                 'px-2.5 py-1 rounded-full text-[11.5px] transition-all duration-200',
                 active
-                  ? 'bg-charcoal text-cream shadow-soft'
+                  ? 'bg-calm-emerald text-white shadow-soft'
                   : 'text-charcoal-mute hover:text-charcoal-soft'
               )}
             >

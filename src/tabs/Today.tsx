@@ -114,15 +114,8 @@ export function Today() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
-      {/* A — Compact header */}
-      <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="text-[11px] text-charcoal-mute tracking-[0.18em] uppercase">Good morning</p>
-          <h1 className="h-display text-[30px] font-semibold mt-1.5 leading-tight">Daily Market Pulse</h1>
-          <p className="text-[12.5px] text-charcoal-mute mt-1.5">{todayLong()} · Markets open · Data fresh 08:25 IST</p>
-        </div>
-        <PriorityLensSelector />
-      </header>
+      {/* A — Newspaper masthead */}
+      <Masthead />
 
       {/* B — Hero row: 2 cards only */}
       <section className="grid grid-cols-1 lg:grid-cols-5 gap-4">
@@ -280,7 +273,7 @@ function MarketTemperatureCard() {
       </div>
       <p className="mt-3 text-[14px] text-charcoal-soft leading-snug">{oneLine}</p>
       <div className="-mx-2 mt-4">
-        <Sparkline data={spark} color="#3F5C7A" height={52} strokeWidth={2} />
+        <Sparkline data={spark} color="#0F8F6F" height={52} strokeWidth={2} />
       </div>
       <div className="mt-3 flex items-center gap-5 text-[11.5px] text-charcoal-mute">
         <span>1D <span className="text-charcoal-soft font-medium ml-1 tabular-nums">+2.10%</span></span>
@@ -323,9 +316,88 @@ function FeaturedAISignal() {
   );
 }
 
+function Masthead() {
+  const dateStr = todayLong();
+  return (
+    <header className="relative">
+      {/* Eyebrow / volume */}
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-2">
+          <span className="w-1.5 h-1.5 rounded-full bg-calm-emerald" />
+          <span className="text-[10.5px] tracking-[0.22em] uppercase text-charcoal-mute font-semibold">
+            Vol. I · Edition · IST
+          </span>
+        </div>
+        <span className="text-[10.5px] tracking-[0.22em] uppercase text-charcoal-mute font-semibold hidden md:inline">
+          The Investor's Morning Cockpit
+        </span>
+      </div>
+
+      {/* Top hairline */}
+      <div className="h-[3px] bg-charcoal/90 rounded-full mb-4" />
+
+      {/* Masthead title */}
+      <h1 className="h-masthead text-center text-[44px] sm:text-[64px] md:text-[80px] lg:text-[92px] leading-[0.92] uppercase">
+        Daily Market Pulse
+      </h1>
+
+      {/* Subtitle */}
+      <p className="font-display italic text-center text-[15px] md:text-[17px] text-charcoal-soft mt-4">
+        What changed overnight. <span className="text-calm-emerald">What matters now.</span>
+      </p>
+
+      {/* Ornamental divider */}
+      <div className="my-5 flex items-center gap-3">
+        <div className="flex-1 h-px bg-bordersoft" />
+        <span className="w-1 h-1 rounded-full bg-calm-emerald" />
+        <span className="w-1.5 h-1.5 rounded-full bg-calm-violet" />
+        <span className="w-1 h-1 rounded-full bg-calm-emerald" />
+        <div className="flex-1 h-px bg-bordersoft" />
+      </div>
+
+      {/* Descriptor */}
+      <p className="text-center text-[10.5px] md:text-[11px] tracking-[0.28em] uppercase text-charcoal-mute font-medium">
+        Macro · Markets · Currency · Commodities · Filings · Portfolio Impact
+      </p>
+
+      {/* Metadata row */}
+      <div className="mt-6 pt-4 border-t border-bordersoft flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3 md:gap-5 flex-wrap text-[11.5px]">
+          <Meta label="Date" value={dateStr} />
+          <Sep />
+          <Meta label="Market">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-calm-emerald" />
+              <span className="text-charcoal-soft font-medium">Open</span>
+            </span>
+          </Meta>
+          <Sep />
+          <Meta label="Data">
+            <span className="text-charcoal-soft font-medium">Fresh · 3m ago</span>
+          </Meta>
+        </div>
+        <PriorityLensSelector />
+      </div>
+    </header>
+  );
+}
+
+function Meta({ label, value, children }: { label: string; value?: string; children?: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-baseline gap-2">
+      <span className="label-mute">{label}</span>
+      {value ? <span className="text-charcoal-soft font-medium">{value}</span> : children}
+    </span>
+  );
+}
+
+function Sep() {
+  return <span className="text-charcoal-mute/40 select-none">|</span>;
+}
+
 function MiniScore({ label, value, dir, sub }: { label: string; value: string; dir: number; sub: string }) {
   const accent =
-    dir > 0 ? 'border-l-calm-green' : dir < 0 ? 'border-l-calm-rose' : 'border-l-bordersoft';
+    dir > 0 ? 'border-l-calm-emerald' : dir < 0 ? 'border-l-calm-rose' : 'border-l-bordersoft';
   return (
     <div className={clsx('bg-cream border border-bordersoft border-l-[3px] rounded-xl p-3.5 shadow-soft', accent)}>
       <div className="label-mute">{label}</div>

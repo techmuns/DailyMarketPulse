@@ -30,13 +30,13 @@ export function signalColor(
 export function signalHex(s: Signal): string {
   switch (s) {
     case 'risk':
-      return '#BF7E78';
+      return '#C86B6B';
     case 'support':
-      return '#6FAE92';
+      return '#0F8F6F';
     case 'monitor':
-      return '#B79257';
+      return '#D7A14A';
     case 'noise':
-      return '#9F968A';
+      return '#9CA0AA';
   }
 }
 
