@@ -1,0 +1,52 @@
+name: Refresh moneycontrol data
+
+# 02:00 UTC = 07:30 IST  (pre-open snapshot)
+# 14:00 UTC = 19:30 IST  (post-close: FII/DII numbers are published)
+# Scheduled events only run on the default branch — merge to main for
+# the cron to take effect. workflow_dispatch lets you trigger manually
+# from any branch via the GitHub UI.
+on:
+  schedule:
+    - cron: '0 2,14 * * 1-5'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-moneycontrol
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Fetch moneycontrol data
+        run: node scripts/fetch-moneycontrol.mjs
+
+      - name: Commit if changed
+        run: |
+          set -e
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/data/moneycontrol.json
+          if git diff --staged --quiet; then
+            echo "No moneycontrol changes — skipping commit."
+            exit 0
+          fi
+          ts=$(date -u +%Y-%m-%dT%H:%MZ)
+          git commit -m "chore(data): refresh moneycontrol ${ts}"
+          for i in 1 2 3 4; do
+            if git push; then exit 0; fi
+            echo "push failed, retrying in $((i*i*2))s..."
+            sleep $((i*i*2))
+          done
+          exit 1
