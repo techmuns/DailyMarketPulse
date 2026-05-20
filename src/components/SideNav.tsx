@@ -43,15 +43,13 @@ export function MunshotMark({ size = 28, className }: { size?: number; className
 type IconProps = { className?: string };
 const Icon = ({ className, children }: IconProps & { children: React.ReactNode }) => (
   <svg
-    width="16"
-    height="16"
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
     strokeWidth="1.8"
     strokeLinecap="round"
     strokeLinejoin="round"
-    className={clsx('shrink-0', className)}
+    className={clsx('shrink-0 w-[15px] h-[15px]', className)}
     aria-hidden
   >
     {children}
@@ -139,11 +137,11 @@ const CAPSULE_GLASS_STYLE: React.CSSProperties = {
 
 function Brand() {
   return (
-    <div className="flex items-center gap-2.5 pl-1">
-      <MunshotMark size={34} />
+    <div className="flex items-center gap-2 pl-0.5">
+      <MunshotMark size={28} />
       <div className="leading-none min-w-0">
-        <div className="font-masthead text-[13px] font-bold tracking-tight truncate">Daily Market Pulse</div>
-        <div className="text-[9px] text-charcoal-mute mt-1 tracking-[0.22em] uppercase font-semibold">By Munshot</div>
+        <div className="font-masthead text-[11.5px] font-bold tracking-tight truncate">Daily Market Pulse</div>
+        <div className="text-[8.5px] text-charcoal-mute mt-1 tracking-[0.22em] uppercase font-semibold">By Munshot</div>
       </div>
     </div>
   );
@@ -151,8 +149,8 @@ function Brand() {
 
 function StatusBadge() {
   return (
-    <span className="chip bg-calm-emerald-bg text-calm-emerald w-full justify-center">
-      <span className="w-1.5 h-1.5 rounded-full bg-calm-emerald inline-block" />
+    <span className="inline-flex items-center justify-center gap-1.5 px-2 py-0.5 rounded-full bg-calm-emerald-bg text-calm-emerald text-[9.5px] font-medium tracking-wide w-full">
+      <span className="w-1 h-1 rounded-full bg-calm-emerald inline-block" />
       Live · mock
     </span>
   );
@@ -168,7 +166,7 @@ function NavList({
   layoutScope: string;
 }) {
   return (
-    <ul className="flex flex-col gap-1">
+    <ul className="flex flex-col gap-0.5">
       {ITEMS.map(({ key, label, Icon: ItemIcon }) => {
         const isActive = key === active;
         return (
@@ -177,7 +175,7 @@ function NavList({
               type="button"
               onClick={() => onChange(key)}
               className={clsx(
-                'relative w-full flex items-center gap-2.5 px-3 py-1.5 rounded-full text-[12.5px] transition',
+                'relative w-full flex items-center gap-2 px-2.5 py-1.5 rounded-full text-[12px] transition',
                 isActive
                   ? 'text-calm-emerald font-semibold'
                   : 'text-charcoal-mute hover:text-charcoal-soft hover:bg-cream/55'
@@ -190,7 +188,7 @@ function NavList({
                   transition={{ type: 'spring', stiffness: 380, damping: 32 }}
                 />
               )}
-              <ItemIcon className="relative z-10" />
+              <ItemIcon className="relative z-10 w-[14px] h-[14px]" />
               <span className="relative z-10 truncate">{label}</span>
             </button>
           </li>
@@ -226,7 +224,7 @@ export function SideNav({ active, onChange }: Props) {
 
       {/* Desktop floating sidebar */}
       <aside
-        className="hidden md:flex fixed left-4 top-1/2 -translate-y-1/2 z-30 w-[200px] flex-col gap-3.5 p-4 rounded-[36px] border backdrop-blur-[18px] h-[min(78vh,620px)] min-h-[520px] max-h-[calc(100vh-2.5rem)]"
+        className="hidden md:flex fixed left-5 top-1/2 -translate-y-1/2 z-30 w-[168px] flex-col gap-3 p-3 rounded-[42px] border backdrop-blur-[18px] h-[min(70vh,560px)] min-h-[470px] max-h-[calc(100vh-4rem)]"
         style={CAPSULE_GLASS_STYLE}
       >
         <Brand />

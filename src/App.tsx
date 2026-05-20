@@ -36,7 +36,7 @@ function App() {
     <StoreProvider>
       <div className="min-h-screen text-charcoal">
         <SideNav active={tab} onChange={setTab} />
-        <div className="md:pl-[224px]">
+        <div className="md:pl-[204px]">
           <main className="max-w-[1320px] mx-auto px-6 py-10">
             <AnimatePresence mode="wait">
               <motion.div
