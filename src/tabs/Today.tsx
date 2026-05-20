@@ -159,20 +159,8 @@ export function Today() {
         </div>
       </section>
 
-      {/* Featured AI Signal stands on its own row now that the Hero
-          grid is gone. Width-capped on wide viewports so it doesn't
-          stretch edge-to-edge. */}
-      <section className="w-full lg:max-w-[760px]">
-        <FeaturedAISignal />
-      </section>
-
-      {/* D — Snapshot strip */}
-      <section>
-        <SectionHeader title="Across your cockpit" eyebrow="Snapshot" />
-        <SnapshotStrip items={snapshot} />
-      </section>
-
-      {/* C — Top changes (3 by default) */}
+      {/* Top changes since yesterday — moved up to sit directly under
+          the Market Weather + Headlines block. */}
       <section>
         <SectionHeader
           title="Top changes since yesterday"
@@ -235,6 +223,19 @@ export function Today() {
             </tbody>
           </table>
         </div>
+      </section>
+
+      {/* Featured AI Signal stands on its own row now that the Hero
+          grid is gone. Width-capped on wide viewports so it doesn't
+          stretch edge-to-edge. */}
+      <section className="w-full lg:max-w-[760px]">
+        <FeaturedAISignal />
+      </section>
+
+      {/* D — Snapshot strip */}
+      <section>
+        <SectionHeader title="Across your cockpit" eyebrow="Snapshot" />
+        <SnapshotStrip items={snapshot} />
       </section>
 
       {/* Portfolio Impact (compact scorecards + heatmap) */}
@@ -340,11 +341,15 @@ function MarketWeatherCard() {
   const live = useLiveOverlay(indices, 'indices');
   const nifty = live.find((i) => i.id === 'i-nifty')!;
   const sensex = live.find((i) => i.id === 'i-sensex')!;
-  const midcap = live.find((i) => i.id === 'i-niftymid');
+  const midcap = live.find((i) => i.id === 'i-niftym');
+  const nasdaq = live.find((i) => i.id === 'i-nasdaq')!;
+  const spx = live.find((i) => i.id === 'i-spx')!;
   const moodKey = deriveMood([
     nifty.trend?.d1 ?? 0,
     sensex.trend?.d1 ?? 0,
     ...(midcap ? [midcap.trend?.d1 ?? 0] : []),
+    nasdaq.trend?.d1 ?? 0,
+    spx.trend?.d1 ?? 0,
   ]);
   const mood = MOOD[moodKey];
 
@@ -363,12 +368,17 @@ function MarketWeatherCard() {
 
       <p className="mt-3 text-[13.5px] text-charcoal-soft leading-snug">{oneLine}</p>
 
-      <div className="mt-4 grid grid-cols-2 gap-3">
+      <div className="mt-4 grid grid-cols-2 gap-2.5">
         <IndexRow name="NIFTY 50" value={nifty.current as number} change={nifty.trend!.d1} />
         <IndexRow name="SENSEX" value={sensex.current as number} change={sensex.trend!.d1} />
+        <IndexRow name="NASDAQ" value={nasdaq.current as number} change={nasdaq.trend!.d1} />
+        <IndexRow name="S&P 500" value={spx.current as number} change={spx.trend!.d1} />
       </div>
 
-      <div className="-mx-2 mt-4">
+      <div className="mt-4 text-[9.5px] tracking-[0.22em] uppercase font-semibold text-charcoal-mute">
+        Market Pulse Trend
+      </div>
+      <div className="-mx-2 mt-1">
         <Sparkline
           data={nifty.trend?.spark ?? spark}
           color={mood.spark}

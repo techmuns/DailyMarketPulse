@@ -68,6 +68,22 @@ export const indices: MarketIndex[] = [
     timestamp: '2026-05-19T08:25:00+05:30',
   },
   {
+    id: 'i-nasdaq',
+    title: 'NASDAQ Composite (overnight)',
+    region: 'US',
+    category: 'index',
+    current: 18540.2,
+    previous: 18404.6,
+    trend: { d1: 0.74, d5: 1.6, m1: 3.8, spark: [18120, 18260, 18380, 18420, 18470, 18510, 18540] },
+    signal: 'support',
+    impact: 58,
+    affected: ['Global tech', 'IT exporters'],
+    whyShown: 'AI capex re-acceleration; tailwind for India IT.',
+    source: 'Reliable media',
+    confidence: 80,
+    timestamp: '2026-05-19T08:25:00+05:30',
+  },
+  {
     id: 'i-vix',
     title: 'India VIX',
     region: 'India',
@@ -142,6 +158,6 @@ export const marketTemperature: {
   spark: number[];
 } = {
   status: 'mixed',
-  oneLine: 'Risk-on under the surface — IT, metals, midcaps lead; autos and NBFC lag.',
+  oneLine: 'India is mixed while global tech keeps a firm bid — autos and NBFC lag, IT gets support.',
   spark: [49, 52, 54, 55, 53, 56, 58],
 };

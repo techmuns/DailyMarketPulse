@@ -11,6 +11,7 @@ export const SYMBOLS = {
     { id: 'i-sensex', yahoo: '^BSESN' },
     { id: 'i-niftym', yahoo: '^NSEMDCP50' },
     { id: 'i-spx',    yahoo: '^GSPC' },
+    { id: 'i-nasdaq', yahoo: '^IXIC' },
     { id: 'i-vix',    yahoo: '^INDIAVIX' },
   ],
   currencies: [
