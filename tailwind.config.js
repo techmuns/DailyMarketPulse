@@ -13,8 +13,8 @@ export default {
           100: '#F2EDFB', // soft section band tint
           200: '#E8DFF1', // table header / elevated tint
         },
-        cream: '#FFFDF9',        // primary card background
-        'cream-deep': '#F6F1E8', // elevated / secondary surface
+        cream: '#FFFFFF',        // primary card background — clean modern white
+        'cream-deep': '#FCFBFF', // elevated / secondary surface — cool pearl
         charcoal: {
           DEFAULT: '#1F2933',
           soft: '#3F4754',
@@ -39,7 +39,7 @@ export default {
           violet: '#8C79C9',
           'violet-bg': '#F0EBFF',
         },
-        bordersoft: '#D6CCE3',
+        bordersoft: '#DDD6E8',
         tabinactive: '#F3F0F7',
         hoverwash: '#EDF6F3',
       },
@@ -49,10 +49,11 @@ export default {
         masthead: ['"Playfair Display"', '"Newsreader"', 'Georgia', 'serif'],
       },
       boxShadow: {
-        // Violet-tinted secondary shadow so cards separate from the
-        // lavender page wash without going visually neutral.
-        soft: '0 1px 2px rgba(31, 41, 51, 0.05), 0 8px 22px rgba(76, 55, 120, 0.08)',
-        lift: '0 2px 4px rgba(31, 41, 51, 0.07), 0 16px 36px rgba(76, 55, 120, 0.11)',
+        // Soft modern depth — violet-tinted drop instead of neutral
+        // grey so cards lift off the lavender canvas with a clean
+        // glow rather than a dated grey halo.
+        soft: '0 1px 2px rgba(31, 41, 51, 0.04), 0 14px 34px rgba(72, 55, 120, 0.08)',
+        lift: '0 2px 6px rgba(31, 41, 51, 0.05), 0 22px 48px rgba(72, 55, 120, 0.12)',
       },
       borderRadius: {
         xl2: '1.25rem',

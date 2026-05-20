@@ -147,8 +147,13 @@ export function Today() {
           section shell so it reads as a distinct editorial module
           rather than free-floating cards on the page. */}
       <section
-        className="relative rounded-[28px] border bg-cream shadow-lift overflow-hidden px-4 pt-5 pb-4 sm:px-6 sm:pt-6 sm:pb-5"
-        style={{ borderColor: 'rgba(140,121,201,0.22)' }}
+        className="relative rounded-[28px] border overflow-hidden px-4 pt-5 pb-4 sm:px-6 sm:pt-6 sm:pb-5"
+        style={{
+          background:
+            'linear-gradient(135deg, #FFFFFF 0%, #FCFBFF 65%, #F4F0FF 100%)',
+          borderColor: 'rgba(140,121,201,0.18)',
+          boxShadow: '0 18px 45px rgba(72,55,120,0.08)',
+        }}
       >
         <div
           className="absolute inset-x-0 top-0 h-[3px] opacity-80"

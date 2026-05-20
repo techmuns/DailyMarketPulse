@@ -7,34 +7,14 @@ interface Props {
   items: LensHeadline[];
 }
 
-// Soft semantic tints. The user wanted calmer cards with fewer
-// colorful chips, so the signal now reads as: a thin left rail + a
-// small tone-coloured label paired with a dot — no filled badge.
-const TONE: Record<Signal, { wash: string; rail: string; text: string; label: string }> = {
-  support: {
-    wash: 'bg-[#F1FAF5]/70',
-    rail: 'bg-calm-green',
-    text: 'text-calm-green',
-    label: 'Support',
-  },
-  risk: {
-    wash: 'bg-[#FBF2F2]/70',
-    rail: 'bg-calm-rose',
-    text: 'text-calm-rose',
-    label: 'Risk',
-  },
-  monitor: {
-    wash: 'bg-[#FBF5E8]/70',
-    rail: 'bg-calm-amber',
-    text: 'text-calm-amber',
-    label: 'Monitor',
-  },
-  noise: {
-    wash: 'bg-[#F5F1FB]/70',
-    rail: 'bg-calm-violet',
-    text: 'text-calm-violet',
-    label: 'Neutral',
-  },
+// Cards stay on a clean white surface. Tone is carried by the left
+// rail + a small tone-coloured dot/label only — no full-card pastel
+// fill, which read as dated.
+const TONE: Record<Signal, { rail: string; text: string; label: string }> = {
+  support: { rail: 'bg-calm-green', text: 'text-calm-green', label: 'Support' },
+  risk: { rail: 'bg-calm-rose', text: 'text-calm-rose', label: 'Risk' },
+  monitor: { rail: 'bg-calm-amber', text: 'text-calm-amber', label: 'Monitor' },
+  noise: { rail: 'bg-calm-violet', text: 'text-calm-violet', label: 'Neutral' },
 };
 
 export function HeadlineStrip({ items }: Props) {
@@ -93,8 +73,7 @@ export function HeadlineStrip({ items }: Props) {
                 'overflow-hidden bg-cream'
               )}
             >
-              <div className={clsx('absolute inset-y-0 left-0 w-[2.5px]', tone.rail)} aria-hidden />
-              <div className={clsx('absolute inset-0 pointer-events-none', tone.wash)} aria-hidden />
+              <div className={clsx('absolute inset-y-0 left-0 w-[3px]', tone.rail)} aria-hidden />
               <div className="relative px-[18px] py-4 flex flex-col gap-2.5 min-h-[218px]">
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[10px] tracking-[0.22em] uppercase font-semibold text-charcoal-mute">
