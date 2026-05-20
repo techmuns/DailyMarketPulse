@@ -135,22 +135,6 @@ export function AISignalDrawer() {
                 </tbody>
               </table>
 
-              {/* Suggested actions */}
-              <div>
-                <div className="label-mute mb-2">Suggested actions</div>
-                <div className="flex flex-col gap-1.5">
-                  {drawerSignal.suggestedActions.map((a) => (
-                    <button
-                      key={a}
-                      className="text-left text-[13px] px-3 py-2 rounded-lg bg-cream-deep border border-bordersoft hover:border-calm-violet/40 hover:bg-calm-violet-bg/60 transition flex items-center justify-between gap-2"
-                    >
-                      <span className="text-charcoal-soft">{a}</span>
-                      <span className="text-calm-violet text-[12px]">+</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               <div className="text-[10.5px] text-charcoal-mute pt-3 border-t border-bordersoft tracking-wide">
                 Demo data · generated for the Daily Market Pulse MVP.
               </div>
