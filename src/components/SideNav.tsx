@@ -131,10 +131,10 @@ const ITEMS: { key: TabKey; label: string; Icon: React.FC<IconProps> }[] = [
 
 const CAPSULE_GLASS_STYLE: React.CSSProperties = {
   background:
-    'linear-gradient(160deg, rgba(250,247,255,0.74), rgba(226,216,250,0.80), rgba(216,203,240,0.76))',
+    'linear-gradient(180deg, rgba(255,255,255,0.78), rgba(240,235,255,0.66), rgba(238,232,247,0.58))',
   borderColor: 'rgba(221,214,232,0.75)',
   boxShadow:
-    '0 1px 0 rgba(255,255,255,0.85) inset, 0 16px 45px rgba(72,55,120,0.10)',
+    '0 1px 0 rgba(255,255,255,0.85) inset, 0 18px 50px rgba(72,55,120,0.14)',
 };
 
 function Brand() {
@@ -168,7 +168,7 @@ function NavList({
   layoutScope: string;
 }) {
   return (
-    <ul className="flex flex-col gap-0.5">
+    <ul className="flex flex-col gap-1">
       {ITEMS.map(({ key, label, Icon: ItemIcon }) => {
         const isActive = key === active;
         return (
@@ -177,8 +177,10 @@ function NavList({
               type="button"
               onClick={() => onChange(key)}
               className={clsx(
-                'relative w-full flex items-center gap-2.5 px-3 py-2 rounded-full text-[12.5px] transition',
-                isActive ? 'text-calm-emerald font-semibold' : 'text-charcoal-mute hover:text-charcoal-soft'
+                'relative w-full flex items-center gap-2.5 px-3 py-1.5 rounded-full text-[12.5px] transition',
+                isActive
+                  ? 'text-calm-emerald font-semibold'
+                  : 'text-charcoal-mute hover:text-charcoal-soft hover:bg-cream/55'
               )}
             >
               {isActive && (
@@ -224,7 +226,7 @@ export function SideNav({ active, onChange }: Props) {
 
       {/* Desktop floating sidebar */}
       <aside
-        className="hidden md:flex fixed left-4 top-5 z-30 w-[200px] flex-col gap-4 p-4 rounded-[28px] border backdrop-blur-[18px] max-h-[calc(100vh-2.5rem)]"
+        className="hidden md:flex fixed left-4 top-1/2 -translate-y-1/2 z-30 w-[200px] flex-col gap-3.5 p-4 rounded-[36px] border backdrop-blur-[18px] h-[min(78vh,620px)] min-h-[520px] max-h-[calc(100vh-2.5rem)]"
         style={CAPSULE_GLASS_STYLE}
       >
         <Brand />
