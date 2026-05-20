@@ -6,7 +6,7 @@ interface Props {
   items: LensHeadline[];
 }
 
-// Same tone vocabulary as HeadlineStrip — tone read via left rail
+// Same tone vocabulary used elsewhere — tone is read via the left rail
 // + a small tone-coloured dot/label, on a clean white card.
 const TONE: Record<Signal, { rail: string; text: string; label: string }> = {
   support: { rail: 'bg-calm-green', text: 'text-calm-green', label: 'Support' },
@@ -27,76 +27,49 @@ export function HeadlineStack({ items }: Props) {
   }
 
   return (
-    <ul className="flex flex-col gap-3.5">
-      {items.map((h) => {
+    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+      {items.map((h, i) => {
         const tone = TONE[h.signal];
-        const affected = [...h.affectedSectors, ...h.affectedCompanies].slice(0, 3);
+        const affected = [...h.affectedSectors, ...h.affectedCompanies].slice(0, 2);
+        const isLastOdd = items.length % 2 === 1 && i === items.length - 1;
         return (
-          <li key={h.id}>
-            <article
-              className={clsx(
-                'group relative rounded-2xl border border-bordersoft/70 bg-cream shadow-soft hover:shadow-lift transition-shadow overflow-hidden'
-              )}
-            >
+          <li key={h.id} className={clsx(isLastOdd && 'sm:col-span-2')}>
+            <article className="group relative rounded-2xl border border-bordersoft/70 bg-cream shadow-soft hover:shadow-lift transition-shadow overflow-hidden h-full flex flex-col">
               <div className={clsx('absolute inset-y-0 left-0 w-[3px]', tone.rail)} aria-hidden />
-              <div className="relative flex flex-col sm:flex-row">
-                {/* Left — article content (~65-70%) */}
-                <div className="flex-1 min-w-0 pl-5 pr-4 py-3.5 sm:pr-5 sm:border-r sm:border-bordersoft/60">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-[9.5px] tracking-[0.22em] uppercase font-semibold text-charcoal-mute truncate">
-                      {h.category}
-                    </span>
-                    {/* Mobile-only signal badge — on desktop it lives in the right column. */}
-                    <span
-                      className={clsx(
-                        'sm:hidden inline-flex items-center gap-1.5 text-[9.5px] tracking-[0.16em] uppercase font-semibold shrink-0',
-                        tone.text
-                      )}
-                    >
-                      <span className={clsx('w-1.5 h-1.5 rounded-full', tone.rail)} aria-hidden />
-                      {tone.label}
-                    </span>
-                  </div>
-
-                  <h3 className="mt-1.5 font-display text-[15.5px] font-medium text-charcoal leading-[1.25] tracking-[-0.005em] line-clamp-2">
-                    {h.headline}
-                  </h3>
-
-                  <p className="mt-1 text-[11.5px] text-charcoal-soft leading-relaxed line-clamp-1">
-                    {h.shortContext}
-                  </p>
-
-                  {affected.length > 0 && (
-                    <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-charcoal-mute">
-                      {affected.map((a, i) => (
-                        <span key={a} className="inline-flex items-center gap-2">
-                          <span className="truncate">{a}</span>
-                          {i < affected.length - 1 && <span className="text-charcoal-mute/40">·</span>}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Mobile-only Read more, right-aligned at the bottom of the content column. */}
-                  <div className="sm:hidden mt-2 flex justify-end">
-                    <ReadMoreButton onClick={() => openHeadline(h)} />
-                  </div>
-                </div>
-
-                {/* Right — signal / action column (~28-30%) */}
-                <div className="hidden sm:flex w-[160px] shrink-0 flex-col justify-between py-3.5 pl-4 pr-5">
+              <div className="relative pl-4 pr-3.5 py-3.5 flex flex-col gap-1.5 flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[9.5px] tracking-[0.22em] uppercase font-semibold text-charcoal-mute truncate">
+                    {h.category}
+                  </span>
                   <span
                     className={clsx(
-                      'inline-flex items-center gap-1.5 text-[10px] tracking-[0.18em] uppercase font-semibold',
+                      'inline-flex items-center gap-1.5 text-[9.5px] tracking-[0.16em] uppercase font-semibold shrink-0',
                       tone.text
                     )}
                   >
                     <span className={clsx('w-1.5 h-1.5 rounded-full', tone.rail)} aria-hidden />
                     {tone.label}
                   </span>
-                  <div className="flex justify-end">
-                    <ReadMoreButton onClick={() => openHeadline(h)} />
+                </div>
+
+                <h3 className="font-display text-[14.5px] font-medium text-charcoal leading-[1.25] tracking-[-0.005em] line-clamp-2">
+                  {h.headline}
+                </h3>
+
+                <p className="text-[11.5px] text-charcoal-soft leading-relaxed line-clamp-1">
+                  {h.shortContext}
+                </p>
+
+                <div className="mt-auto pt-1.5 flex items-end justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-x-2 text-[10px] text-charcoal-mute min-w-0">
+                    {affected.map((a, j) => (
+                      <span key={a} className="inline-flex items-center gap-2">
+                        <span className="truncate">{a}</span>
+                        {j < affected.length - 1 && <span className="text-charcoal-mute/40">·</span>}
+                      </span>
+                    ))}
                   </div>
+                  <ReadMoreButton onClick={() => openHeadline(h)} />
                 </div>
               </div>
             </article>
@@ -111,7 +84,7 @@ function ReadMoreButton({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="inline-flex items-center gap-1 text-[11.5px] font-medium text-calm-emerald hover:text-calm-emerald/80 transition"
+      className="inline-flex items-center gap-1 text-[11.5px] font-medium text-calm-emerald hover:text-calm-emerald/80 transition shrink-0"
     >
       Read more
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
