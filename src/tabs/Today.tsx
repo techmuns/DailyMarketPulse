@@ -143,8 +143,18 @@ export function Today() {
 
       <PulseBrief tabKey="Today" />
 
-      {/* Lens-driven headline strip */}
-      <section>
+      {/* Lens-driven headline strip — wrapped in a newsletter-style
+          section shell so it reads as a distinct editorial module
+          rather than free-floating cards on the page. */}
+      <section
+        className="relative rounded-[28px] border bg-cream shadow-lift overflow-hidden px-4 pt-5 pb-4 sm:px-6 sm:pt-6 sm:pb-5"
+        style={{ borderColor: 'rgba(140,121,201,0.22)' }}
+      >
+        <div
+          className="absolute inset-x-0 top-0 h-[3px] opacity-80"
+          style={{ background: 'linear-gradient(90deg, #0B7E61 0%, #8C79C9 55%, #0B7E61 100%)' }}
+          aria-hidden
+        />
         <SectionHeader
           title={stripTitle[lensType]}
           eyebrow={`${lens} lens`}

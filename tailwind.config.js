@@ -5,21 +5,23 @@ export default {
     extend: {
       colors: {
         // Calm Alpha — Emerald + Lavender Mist
-        // (slightly deeper / richer pass — see CHANGELOG below)
+        // Page canvas leans near-white now; lavender is used as a
+        // selective accent (Pulse Brief, lens section, section bands,
+        // hover states), not the base.
         ivory: {
-          50: '#ECE3F4',  // page background — lavender mist (was #F4F1FA)
-          100: '#E4DAEF', // secondary section tint    (was #EEE8F7)
-          200: '#D9CDE7',
+          50: '#FAF8FF',  // page background — near-white with hint of lavender
+          100: '#F2EDFB', // soft section band tint
+          200: '#E8DFF1', // table header / elevated tint
         },
-        cream: '#FFFDF9',        // primary card background — keep near-white for separation
-        'cream-deep': '#F6F1E8', // elevated / secondary surface — a touch warmer
+        cream: '#FFFDF9',        // primary card background
+        'cream-deep': '#F6F1E8', // elevated / secondary surface
         charcoal: {
           DEFAULT: '#1F2933',
           soft: '#3F4754',
           mute: '#667085',
         },
         calm: {
-          // Emerald (brand / active / support) — ~10% richer
+          // Emerald (brand / active / support)
           emerald: '#0B7E61',
           'emerald-bg': '#DAF1E5',
           green: '#36A379',
@@ -37,7 +39,7 @@ export default {
           violet: '#8C79C9',
           'violet-bg': '#F0EBFF',
         },
-        bordersoft: '#CEC4E1',
+        bordersoft: '#D6CCE3',
         tabinactive: '#F3F0F7',
         hoverwash: '#EDF6F3',
       },
