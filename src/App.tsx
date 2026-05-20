@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { TopNav } from './components/TopNav';
-import type { TabKey } from './components/TopNav';
+import { SideNav } from './components/SideNav';
+import type { TabKey } from './components/SideNav';
 import { AISignalDrawer } from './components/AISignalDrawer';
 import { HeadlineDrawer } from './components/HeadlineDrawer';
 import watermarkUrl from './assets/logos/munshot-logo.png';
@@ -24,7 +24,7 @@ function renderTab(tab: TabKey) {
     case 'Currency': return <Currency />;
     case 'Commodities': return <Commodities />;
     case 'News & Filings': return <NewsFilings />;
-    case 'Book': return <Book />;
+    case 'Portfolio Management': return <Book />;
     case 'Events': return <Events />;
   }
 }
@@ -35,23 +35,25 @@ function App() {
     <LiveDataProvider>
     <StoreProvider>
       <div className="min-h-screen text-charcoal">
-        <TopNav active={tab} onChange={setTab} />
-        <main className="max-w-[1320px] mx-auto px-6 py-10">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={tab}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.22 }}
-            >
-              {renderTab(tab)}
-            </motion.div>
-          </AnimatePresence>
-        </main>
-        <footer className="max-w-[1320px] mx-auto px-6 pb-10 pt-4 text-[10.5px] text-charcoal-mute tracking-wider uppercase border-t border-bordersoft/60 mt-10">
-          Daily Market Pulse · By Munshot · Mock data
-        </footer>
+        <SideNav active={tab} onChange={setTab} />
+        <div className="md:pl-[224px]">
+          <main className="max-w-[1320px] mx-auto px-6 py-10">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={tab}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.22 }}
+              >
+                {renderTab(tab)}
+              </motion.div>
+            </AnimatePresence>
+          </main>
+          <footer className="max-w-[1320px] mx-auto px-6 pb-10 pt-4 text-[10.5px] text-charcoal-mute tracking-wider uppercase border-t border-bordersoft/60 mt-10">
+            Daily Market Pulse · By Munshot · Mock data
+          </footer>
+        </div>
         <AISignalDrawer />
         <HeadlineDrawer />
         <div
