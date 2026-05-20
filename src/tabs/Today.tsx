@@ -19,7 +19,7 @@ import { actions } from '../data/actions';
 import { lensHeadlines } from '../data/lensHeadlines';
 import { useStore } from '../state/store';
 import { todayLong, pct } from '../utils/format';
-import { useLive, formatFreshness } from '../state/liveData';
+import { useLive, useLiveOverlay, formatFreshness } from '../state/liveData';
 import clsx from 'clsx';
 import type { LensType, Signal } from '../types';
 
@@ -299,17 +299,54 @@ export function Today() {
   );
 }
 
-const MOOD = {
-  'risk-on':  { label: 'Breezy Uptrend', chip: 'bg-calm-emerald-bg text-calm-emerald', glyph: '☀', spark: '#0B7E61' },
-  'risk-off': { label: 'Storm Watch',    chip: 'bg-calm-rose-bg text-calm-rose',       glyph: '⛈', spark: '#C86B6B' },
-  'mixed':    { label: 'Mixed',          chip: 'bg-calm-amber-bg text-calm-amber',     glyph: '⛅', spark: '#D7A14A' },
-} as const;
+type MoodKey =
+  | 'heat-alert'
+  | 'breezy-uptrend'
+  | 'sunny'
+  | 'mixed'
+  | 'cloudy'
+  | 'storm-watch';
+
+const MOOD: Record<MoodKey, { label: string; chip: string; glyph: string; spark: string }> = {
+  'heat-alert':     { label: 'Heat Alert',     chip: 'bg-calm-emerald-bg text-calm-emerald', glyph: '🔥', spark: '#0B7E61' },
+  'breezy-uptrend': { label: 'Breezy Uptrend', chip: 'bg-calm-emerald-bg text-calm-emerald', glyph: '☀',  spark: '#0B7E61' },
+  'sunny':          { label: 'Sunny',          chip: 'bg-calm-green-bg text-calm-green',     glyph: '🌤', spark: '#36A379' },
+  'mixed':          { label: 'Mixed',          chip: 'bg-calm-amber-bg text-calm-amber',     glyph: '⛅', spark: '#D7A14A' },
+  'cloudy':         { label: 'Cloudy',         chip: 'bg-calm-navy-bg text-calm-navy',       glyph: '☁',  spark: '#4F5D7A' },
+  'storm-watch':    { label: 'Storm Watch',    chip: 'bg-calm-rose-bg text-calm-rose',       glyph: '⛈', spark: '#C86B6B' },
+};
+
+// Map live index 1-day moves to a weather mood. Uses NIFTY 50, SENSEX,
+// and (when present) NIFTY Midcap; if breadth disagrees we fall back
+// to "mixed" regardless of magnitude.
+function deriveMood(moves: number[]): MoodKey {
+  const valid = moves.filter((v): v is number => typeof v === 'number' && Number.isFinite(v));
+  if (valid.length === 0) return 'mixed';
+  const ups = valid.filter((m) => m > 0.05).length;
+  const downs = valid.filter((m) => m < -0.05).length;
+  const avg = valid.reduce((s, v) => s + v, 0) / valid.length;
+  // Breadth disagrees (some up + some down) → mixed.
+  if (ups > 0 && downs > 0) return 'mixed';
+  if (avg >= 1.0) return 'heat-alert';
+  if (avg >= 0.4) return 'breezy-uptrend';
+  if (avg >= 0.05) return 'sunny';
+  if (avg <= -0.6) return 'storm-watch';
+  if (avg <= -0.05) return 'cloudy';
+  return 'mixed';
+}
 
 function MarketWeatherCard() {
-  const { status, oneLine, spark } = marketTemperature;
-  const mood = MOOD[status];
-  const nifty = indices.find((i) => i.id === 'i-nifty')!;
-  const sensex = indices.find((i) => i.id === 'i-sensex')!;
+  const { oneLine, spark } = marketTemperature;
+  const live = useLiveOverlay(indices, 'indices');
+  const nifty = live.find((i) => i.id === 'i-nifty')!;
+  const sensex = live.find((i) => i.id === 'i-sensex')!;
+  const midcap = live.find((i) => i.id === 'i-niftymid');
+  const moodKey = deriveMood([
+    nifty.trend?.d1 ?? 0,
+    sensex.trend?.d1 ?? 0,
+    ...(midcap ? [midcap.trend?.d1 ?? 0] : []),
+  ]);
+  const mood = MOOD[moodKey];
 
   return (
     <Card padding="lg">
@@ -332,15 +369,32 @@ function MarketWeatherCard() {
       </div>
 
       <div className="-mx-2 mt-4">
-        <Sparkline data={spark} color={mood.spark} height={48} strokeWidth={2} />
+        <Sparkline
+          data={nifty.trend?.spark ?? spark}
+          color={mood.spark}
+          height={48}
+          strokeWidth={2}
+        />
       </div>
 
       <div className="mt-3 flex items-center gap-5 text-[11.5px] text-charcoal-mute">
-        <span>1D <span className="text-charcoal-soft font-medium ml-1 tabular-nums">+2.10%</span></span>
-        <span>5D <span className="text-charcoal-soft font-medium ml-1 tabular-nums">+4.60%</span></span>
-        <span>1M <span className="text-charcoal-soft font-medium ml-1 tabular-nums">+7.20%</span></span>
+        <TrendStat label="1D" value={nifty.trend?.d1} />
+        <TrendStat label="5D" value={nifty.trend?.d5} />
+        <TrendStat label="1M" value={nifty.trend?.m1} />
       </div>
     </Card>
+  );
+}
+
+function TrendStat({ label, value }: { label: string; value?: number }) {
+  const v = typeof value === 'number' && Number.isFinite(value) ? value : null;
+  return (
+    <span>
+      {label}{' '}
+      <span className="text-charcoal-soft font-medium ml-1 tabular-nums">
+        {v == null ? '—' : pct(v)}
+      </span>
+    </span>
   );
 }
 
