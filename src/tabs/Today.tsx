@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { SectionHeader } from '../components/SectionHeader';
 import { ChangeStripChip, Ticker } from '../components/Chip';
@@ -36,7 +36,6 @@ type FeedItem = {
 
 export function Today() {
   const { lens, openDrawer } = useStore();
-  const [showAll, setShowAll] = useState(false);
   const liveFetchedAt = useLive().data?.fetchedAt ?? null;
 
   const baseFeed: FeedItem[] = useMemo(() => [
@@ -83,8 +82,6 @@ export function Today() {
     custom: 'Custom feed',
   };
 
-  const visible = showAll ? feed : feed.slice(0, 3);
-
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
       {/* A — Newspaper masthead */}
@@ -114,14 +111,6 @@ export function Today() {
         <SectionHeader
           title="Top changes since yesterday"
           eyebrow={`Reordered by ${lens} lens`}
-          right={
-            <button
-              onClick={() => setShowAll((v) => !v)}
-              className="text-[12px] text-charcoal-mute hover:text-charcoal-soft underline-offset-4 hover:underline transition"
-            >
-              {showAll ? `Show top 3` : `View all changes (${feed.length})`}
-            </button>
-          }
         />
         <div className="card overflow-hidden">
           <table className="tbl">
@@ -137,7 +126,7 @@ export function Today() {
               </tr>
             </thead>
             <tbody>
-              {visible.map((f, i) => {
+              {feed.map((f, i) => {
                 const tone = getSignalTone(f);
                 return (
                   <tr

@@ -16,7 +16,7 @@ interface StoreCtx {
 const Ctx = createContext<StoreCtx | null>(null);
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [lens, setLens] = useState<PriorityLens>('Portfolio Related');
+  const [lens, setLens] = useState<PriorityLens>('Global');
   const [drawerSignal, setDrawerSignal] = useState<AISignal | null>(null);
   const [headlineDrawer, setHeadlineDrawer] = useState<LensHeadline | null>(null);
 
