@@ -105,12 +105,25 @@ export function PulseBrief({ tabKey, className }: Props) {
         exit={{ opacity: 0, y: -4 }}
         transition={{ duration: 0.28, ease: 'easeOut' }}
         className={clsx(
-          'relative rounded-2xl border border-bordersoft bg-calm-violet-bg/40 shadow-soft overflow-hidden',
-          'border-l-[3px] border-l-calm-emerald',
+          'relative rounded-[24px] overflow-hidden border-l-[4px] border-l-calm-emerald',
           className
         )}
+        style={{
+          background: '#FFFFFF',
+          border: '1px solid rgba(221,214,232,0.85)',
+          borderLeft: '4px solid #0B7E61',
+          boxShadow:
+            '0 18px 45px rgba(72,55,120,0.12), 0 2px 8px rgba(15,143,111,0.05)',
+        }}
       >
-        <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-calm-violet/15 blur-2xl pointer-events-none" />
+        <div
+          className="absolute inset-0 pointer-events-none"
+          aria-hidden
+          style={{
+            background:
+              'radial-gradient(circle at 90% 20%, rgba(140,121,201,0.10) 0%, transparent 35%)',
+          }}
+        />
         <div className="relative px-5 py-4 md:px-6 md:py-5 flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
