@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Card } from '../components/Card';
 import { SectionHeader } from '../components/SectionHeader';
 import { ChangeStripChip, Ticker } from '../components/Chip';
 import { ToneDot, MeaningBadge } from '../components/Tone';
@@ -217,6 +216,9 @@ function deriveMood(moves: number[]): MoodKey {
 
 function MarketWeatherCard() {
   const { oneLine, spark } = marketTemperature;
+  const liveCtx = useLive();
+  const fetchedAt = liveCtx.data?.fetchedAt ?? null;
+  const isLive = !!fetchedAt;
   const live = useLiveOverlay(indices, 'indices');
   const nifty = live.find((i) => i.id === 'i-nifty')!;
   const sensex = live.find((i) => i.id === 'i-sensex')!;
@@ -233,31 +235,50 @@ function MarketWeatherCard() {
   const mood = MOOD[moodKey];
 
   return (
-    <Card padding="lg">
-      <div className="flex items-start justify-between gap-3">
+    <div
+      className="relative rounded-[28px] border overflow-hidden p-5 sm:p-6"
+      style={{
+        background:
+          'linear-gradient(135deg, #FFFFFF 0%, #FCFBFF 65%, #F1ECFF 100%)',
+        borderColor: 'rgba(15,143,111,0.22)',
+        boxShadow: '0 18px 45px rgba(72,55,120,0.12)',
+      }}
+    >
+      <div
+        aria-hidden
+        className="absolute inset-x-0 top-0 h-[3px] opacity-75"
+        style={{ background: 'linear-gradient(90deg, #0B7E61 0%, #8C79C9 60%, transparent 100%)' }}
+      />
+
+      <div className="relative flex items-start justify-between gap-3">
         <div>
           <span className="label-mute">Market Weather</span>
           <div className="mt-1 text-[10.5px] text-charcoal-mute">Today's market mood</div>
+          <div className="mt-2">
+            <span className={clsx('chip', mood.chip)}>
+              <span aria-hidden>{mood.glyph}</span>
+              {mood.label}
+            </span>
+          </div>
         </div>
-        <span className={clsx('chip', mood.chip)}>
-          <span aria-hidden>{mood.glyph}</span>
-          {mood.label}
-        </span>
+        <LiveChip isLive={isLive} fetchedAt={fetchedAt} />
       </div>
 
-      <p className="mt-3 text-[13.5px] text-charcoal-soft leading-snug">{oneLine}</p>
+      <p className="relative mt-4 font-display italic text-[14px] md:text-[14.5px] text-charcoal-soft leading-snug">
+        {oneLine}
+      </p>
 
-      <div className="mt-4 grid grid-cols-2 gap-2.5">
+      <div className="relative mt-4 grid grid-cols-2 gap-2.5">
         <IndexRow name="NIFTY 50" value={nifty.current as number} change={nifty.trend!.d1} />
         <IndexRow name="SENSEX" value={sensex.current as number} change={sensex.trend!.d1} />
         <IndexRow name="NASDAQ" value={nasdaq.current as number} change={nasdaq.trend!.d1} />
         <IndexRow name="S&P 500" value={spx.current as number} change={spx.trend!.d1} />
       </div>
 
-      <div className="mt-4 text-[9.5px] tracking-[0.22em] uppercase font-semibold text-charcoal-mute">
+      <div className="relative mt-4 text-[9.5px] tracking-[0.22em] uppercase font-semibold text-charcoal-mute">
         Market Pulse Trend
       </div>
-      <div className="-mx-2 mt-1">
+      <div className="relative -mx-2 mt-1">
         <Sparkline
           data={nifty.trend?.spark ?? spark}
           color={mood.spark}
@@ -266,12 +287,33 @@ function MarketWeatherCard() {
         />
       </div>
 
-      <div className="mt-3 flex items-center gap-5 text-[11.5px] text-charcoal-mute">
+      <div className="relative mt-3 flex items-center gap-5 text-[11.5px] text-charcoal-mute">
         <TrendStat label="1D" value={nifty.trend?.d1} />
         <TrendStat label="5D" value={nifty.trend?.d5} />
         <TrendStat label="1M" value={nifty.trend?.m1} />
       </div>
-    </Card>
+    </div>
+  );
+}
+
+function LiveChip({ isLive, fetchedAt }: { isLive: boolean; fetchedAt: string | null }) {
+  if (isLive) {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-calm-emerald-bg/70 ring-1 ring-calm-emerald/25 text-[9.5px] tracking-[0.18em] uppercase font-semibold text-calm-emerald shrink-0">
+        <span className="relative inline-flex w-1.5 h-1.5">
+          <span className="absolute inset-0 rounded-full bg-calm-emerald opacity-60 animate-ping" />
+          <span className="relative w-1.5 h-1.5 rounded-full bg-calm-emerald" />
+        </span>
+        Live
+      </span>
+    );
+  }
+  const label = formatFreshness(fetchedAt);
+  return (
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-cream-deep ring-1 ring-bordersoft text-[9.5px] tracking-[0.18em] uppercase font-semibold text-charcoal-mute shrink-0">
+      <span className="w-1.5 h-1.5 rounded-full bg-charcoal-mute/60" />
+      {label === 'Mock data' ? 'Mock data' : `Delayed · ${label}`}
+    </span>
   );
 }
 
@@ -288,17 +330,34 @@ function TrendStat({ label, value }: { label: string; value?: number }) {
 }
 
 function IndexRow({ name, value, change }: { name: string; value: number; change: number }) {
-  const up = change >= 0;
+  const up = change > 0;
+  const down = change < 0;
+  const rail = up
+    ? 'border-l-calm-green'
+    : down
+    ? 'border-l-calm-rose'
+    : 'border-l-bordersoft';
   return (
-    <div className="rounded-xl border border-bordersoft bg-cream-deep/40 px-3 py-2">
+    <div
+      className={clsx(
+        'rounded-xl border border-bordersoft bg-white px-3 py-2 border-l-[3px]',
+        rail
+      )}
+    >
       <div className="label-mute">{name}</div>
       <div className="mt-1 flex items-baseline justify-between gap-2">
         <span className="font-display text-[15px] font-semibold tabular-nums text-charcoal">
           {value.toLocaleString('en-IN', { maximumFractionDigits: 1 })}
         </span>
         <Delta value={change} size="xs" />
-        <span aria-hidden className={clsx('text-[10px]', up ? 'text-calm-green' : 'text-calm-rose')}>
-          {up ? '▲' : '▼'}
+        <span
+          aria-hidden
+          className={clsx(
+            'text-[10px]',
+            up ? 'text-calm-green' : down ? 'text-calm-rose' : 'text-charcoal-mute'
+          )}
+        >
+          {up ? '▲' : down ? '▼' : '◆'}
         </span>
       </div>
     </div>
