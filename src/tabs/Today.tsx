@@ -9,13 +9,9 @@ import { getSignalTone, toneTokens } from '../utils/tone';
 import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
 import { PriorityLensSelector } from '../components/PriorityLens';
-import { SnapshotStrip } from '../components/SnapshotStrip';
-import type { SnapshotItem } from '../components/SnapshotStrip';
 import { HeadlineStack } from '../components/HeadlineStack';
-import { aiSignals, featuredSignal } from '../data/signals';
-import { portfolio, portfolioStats } from '../data/portfolio';
+import { aiSignals } from '../data/signals';
 import { marketTemperature, indices } from '../data/markets';
-import { actions } from '../data/actions';
 import { lensHeadlines } from '../data/lensHeadlines';
 import { useStore } from '../state/store';
 import { todayLong, pct } from '../utils/format';
@@ -89,52 +85,6 @@ export function Today() {
   };
 
   const visible = showAll ? feed : feed.slice(0, 3);
-
-  const portfolioBiggestUp = [...portfolio].sort((a, b) => b.trend!.d1 - a.trend!.d1)[0];
-  const portfolioBiggestDown = [...portfolio].sort((a, b) => a.trend!.d1 - b.trend!.d1)[0];
-
-  const snapshot: SnapshotItem[] = [
-    {
-      key: 'portfolio',
-      label: 'Portfolio',
-      headline: `${portfolioBiggestDown.ticker} drag, ${portfolioBiggestUp.ticker} support`,
-      delta: portfolioStats.todayChange,
-      spark: [50, 51, 52, 51, 50, 49, 49],
-      tone: 'risk',
-    },
-    {
-      key: 'markets',
-      label: 'Markets',
-      headline: 'NIFTY flat, midcaps quietly lead',
-      delta: -0.22,
-      spark: [24620, 24680, 24752, 24868, 24820, 24800, 24812],
-      tone: 'monitor',
-    },
-    {
-      key: 'currency',
-      label: 'Currency',
-      headline: 'INR weak — 5D trend',
-      delta: 0.25,
-      spark: [83.71, 83.92, 84.10, 84.28, 84.41, 84.55, 84.62],
-      tone: 'urgent',
-    },
-    {
-      key: 'commodities',
-      label: 'Commodities',
-      headline: 'Brent firm, gold breakout',
-      delta: 2.06,
-      spark: [80.1, 81.0, 81.8, 82.5, 83.1, 83.7, 84.2],
-      tone: 'risk',
-    },
-    {
-      key: 'events',
-      label: 'Events',
-      headline: 'ASIANP Q4 + US CPI tomorrow',
-      delta: 0,
-      spark: [1, 1, 2, 2, 3, 3, 4],
-      tone: 'ai',
-    },
-  ];
 
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
@@ -225,77 +175,6 @@ export function Today() {
         </div>
       </section>
 
-      {/* Featured AI Signal stands on its own row now that the Hero
-          grid is gone. Width-capped on wide viewports so it doesn't
-          stretch edge-to-edge. */}
-      <section className="w-full lg:max-w-[760px]">
-        <FeaturedAISignal />
-      </section>
-
-      {/* D — Snapshot strip */}
-      <section>
-        <SectionHeader title="Across your cockpit" eyebrow="Snapshot" />
-        <SnapshotStrip items={snapshot} />
-      </section>
-
-      {/* Portfolio Impact (compact scorecards + heatmap) */}
-      <section>
-        <SectionHeader title="Portfolio impact" eyebrow="Your book" />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <MiniScore
-            label="Today"
-            value={pct(portfolioStats.todayChange)}
-            dir={portfolioStats.todayChange}
-            sub="₹4.82 Cr book"
-          />
-          <MiniScore
-            label="5-day"
-            value={pct(portfolioStats.d5Change)}
-            dir={portfolioStats.d5Change}
-            sub={`1M ${pct(portfolioStats.m1Change)}`}
-          />
-          <MiniScore
-            label="Top +"
-            value={portfolioBiggestUp.ticker}
-            dir={portfolioBiggestUp.trend!.d1}
-            sub={pct(portfolioBiggestUp.trend!.d1)}
-          />
-          <MiniScore
-            label="Top −"
-            value={portfolioBiggestDown.ticker}
-            dir={portfolioBiggestDown.trend!.d1}
-            sub={pct(portfolioBiggestDown.trend!.d1)}
-          />
-        </div>
-      </section>
-
-      {/* E — Action queue: calm, compact, low priority visually */}
-      <section>
-        <SectionHeader title="Action queue" eyebrow="Quick triage" />
-        <Card padding="md">
-          <ul className="divide-y divide-bordersoft/60">
-            {actions.slice(0, 4).map((a) => (
-              <li key={a.id} className="py-2.5 flex items-center justify-between gap-3 first:pt-0 last:pb-0">
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className={clsx(
-                    'w-1.5 h-1.5 rounded-full shrink-0',
-                    a.type === 'Add to thesis' && 'bg-calm-green',
-                    a.type === 'Assign follow-up' && 'bg-calm-navy',
-                    a.type === 'Read later' && 'bg-calm-amber',
-                    a.type === 'Mark noise' && 'bg-charcoal-mute',
-                    a.type === 'Escalate to PM' && 'bg-calm-rose'
-                  )} />
-                  <div className="min-w-0">
-                    <div className="text-[13px] text-charcoal font-medium truncate">{a.title}</div>
-                    <div className="text-[11.5px] text-charcoal-mute truncate">{a.type} · {a.owner}</div>
-                  </div>
-                </div>
-                <span className="text-[11px] text-charcoal-mute capitalize">{a.status.replace('-', ' ')}</span>
-              </li>
-            ))}
-          </ul>
-        </Card>
-      </section>
     </motion.div>
   );
 }
@@ -423,38 +302,6 @@ function IndexRow({ name, value, change }: { name: string; value: number; change
         </span>
       </div>
     </div>
-  );
-}
-
-function FeaturedAISignal() {
-  const { openDrawer } = useStore();
-  return (
-    <button
-      onClick={() => openDrawer(featuredSignal)}
-      className="lg:col-span-3 group relative text-left rounded-2xl border border-calm-violet/30 bg-gradient-to-br from-calm-violet-bg/70 via-cream to-cream-deep p-6 shadow-soft hover:shadow-lift transition-all duration-300 overflow-hidden"
-    >
-      <div className="absolute -top-16 -right-16 w-44 h-44 rounded-full bg-calm-violet/15 blur-3xl pointer-events-none" />
-      <div className="relative flex flex-col h-full">
-        <div className="flex items-center gap-2 mb-3">
-          <span className="chip bg-calm-violet text-cream">AI Signal · Featured</span>
-          <span className="chip bg-calm-amber-bg text-calm-amber">5-day trend</span>
-        </div>
-        <h2 className="h-display text-[20px] font-semibold leading-snug">{featuredSignal.title}</h2>
-        <p className="text-[13px] text-charcoal-soft mt-2 leading-relaxed line-clamp-2">
-          {featuredSignal.whyItMatters}
-        </p>
-        <div className="mt-auto pt-4 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 text-[11.5px] text-charcoal-mute">
-            <span>Confidence <span className="text-charcoal-soft font-medium">{featuredSignal.confidence}%</span></span>
-            <span className="opacity-40">·</span>
-            <span>{featuredSignal.source}</span>
-          </div>
-          <span className="text-[12px] text-calm-violet font-medium group-hover:translate-x-0.5 transition-transform">
-            Open signal drawer →
-          </span>
-        </div>
-      </div>
-    </button>
   );
 }
 
@@ -592,14 +439,3 @@ function PulseTagline({ fragments }: { fragments: string[] }) {
   );
 }
 
-function MiniScore({ label, value, dir, sub }: { label: string; value: string; dir: number; sub: string }) {
-  const accent =
-    dir > 0 ? 'border-l-calm-emerald' : dir < 0 ? 'border-l-calm-rose' : 'border-l-bordersoft';
-  return (
-    <div className={clsx('bg-cream border border-bordersoft border-l-[3px] rounded-xl p-3.5 shadow-soft', accent)}>
-      <div className="label-mute">{label}</div>
-      <div className="mt-1.5 font-display text-[18px] font-semibold text-charcoal leading-tight tabular-nums">{value}</div>
-      <div className="mt-0.5 text-[11.5px] text-charcoal-mute tabular-nums">{sub}</div>
-    </div>
-  );
-}
