@@ -14,7 +14,7 @@ import { marketTemperature, indices } from '../data/markets';
 import { lensHeadlines } from '../data/lensHeadlines';
 import { useStore } from '../state/store';
 import { todayLong, pct } from '../utils/format';
-import { useLive, useLiveOverlay, formatFreshness } from '../state/liveData';
+import { useLive, formatFreshness } from '../state/liveData';
 import clsx from 'clsx';
 import type { LensType, Signal } from '../types';
 
@@ -198,6 +198,37 @@ const MOOD: Record<MoodKey, { label: string; chip: string; glyph: string; spark:
 // Map live index 1-day moves to a weather mood. Uses NIFTY 50, SENSEX,
 // and (when present) NIFTY Midcap; if breadth disagrees we fall back
 // to "mixed" regardless of magnitude.
+
+// Data-state machinery for the Market Weather card.
+// Production must export VITE_DATA_MODE=live (set in the Cloudflare
+// Pages environment) to opt into the live overlay. Local dev / any
+// build without the variable defaults to mock mode so the dashboard
+// renders against bundled data.
+const MOCK_MODE = import.meta.env.VITE_DATA_MODE !== 'live';
+const FRESH_MS = 4 * 60 * 60 * 1000;
+
+type DataState = 'live' | 'delayed' | 'mock' | 'unavailable';
+
+function resolveDataState(fetchedAt: string | null): {
+  state: DataState;
+  ageMs: number | null;
+} {
+  if (MOCK_MODE) return { state: 'mock', ageMs: null };
+  if (!fetchedAt) return { state: 'unavailable', ageMs: null };
+  const t = Date.parse(fetchedAt);
+  if (Number.isNaN(t)) return { state: 'unavailable', ageMs: null };
+  const ageMs = Date.now() - t;
+  return { state: ageMs <= FRESH_MS ? 'live' : 'delayed', ageMs };
+}
+
+function formatAge(ageMs: number): string {
+  const mins = Math.max(0, Math.floor(ageMs / 60000));
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  return `${hrs}h ago`;
+}
+
 function deriveMood(moves: number[]): MoodKey {
   const valid = moves.filter((v): v is number => typeof v === 'number' && Number.isFinite(v));
   if (valid.length === 0) return 'mixed';
@@ -214,25 +245,63 @@ function deriveMood(moves: number[]): MoodKey {
   return 'mixed';
 }
 
+interface ResolvedIndex {
+  value: number | null;
+  change: number | null;
+  d5: number | null;
+  m1: number | null;
+  spark: number[] | null;
+}
+
 function MarketWeatherCard() {
   const { oneLine, spark } = marketTemperature;
   const liveCtx = useLive();
   const fetchedAt = liveCtx.data?.fetchedAt ?? null;
-  const isLive = !!fetchedAt;
-  const live = useLiveOverlay(indices, 'indices');
-  const nifty = live.find((i) => i.id === 'i-nifty')!;
-  const sensex = live.find((i) => i.id === 'i-sensex')!;
-  const midcap = live.find((i) => i.id === 'i-niftym');
-  const nasdaq = live.find((i) => i.id === 'i-nasdaq')!;
-  const spx = live.find((i) => i.id === 'i-spx')!;
-  const moodKey = deriveMood([
-    nifty.trend?.d1 ?? 0,
-    sensex.trend?.d1 ?? 0,
-    ...(midcap ? [midcap.trend?.d1 ?? 0] : []),
-    nasdaq.trend?.d1 ?? 0,
-    spx.trend?.d1 ?? 0,
-  ]);
+  const { state, ageMs } = resolveDataState(fetchedAt);
+
+  // Index resolver — mock numbers in mock mode, real overlay values
+  // in live mode, nulls when the live feed is missing a particular id.
+  function pickIndex(id: string): ResolvedIndex {
+    if (MOCK_MODE) {
+      const m = indices.find((i) => i.id === id);
+      if (!m || !m.trend) return { value: null, change: null, d5: null, m1: null, spark: null };
+      return {
+        value: m.current as number,
+        change: m.trend.d1,
+        d5: m.trend.d5,
+        m1: m.trend.m1,
+        spark: m.trend.spark,
+      };
+    }
+    const l = liveCtx.data?.indices.find((i) => i.id === id);
+    if (!l) return { value: null, change: null, d5: null, m1: null, spark: null };
+    return {
+      value: l.current,
+      change: l.trend.d1,
+      d5: l.trend.d5,
+      m1: l.trend.m1,
+      spark: l.trend.spark,
+    };
+  }
+
+  const nifty = pickIndex('i-nifty');
+  const sensex = pickIndex('i-sensex');
+  const midcap = pickIndex('i-niftym');
+  const nasdaq = pickIndex('i-nasdaq');
+  const spx = pickIndex('i-spx');
+
+  // Feed deriveMood only finite numbers so its existing breadth logic
+  // gracefully ignores tiles that are "—" in unavailable mode.
+  const moodInputs = [nifty.change, sensex.change, midcap.change, nasdaq.change, spx.change]
+    .filter((v): v is number => typeof v === 'number' && Number.isFinite(v));
+  const moodKey = moodInputs.length === 0 ? 'mixed' : deriveMood(moodInputs);
   const mood = MOOD[moodKey];
+
+  // Sparkline source rules (per spec): mock spark is allowed ONLY in
+  // mock mode. In live mode an unavailable feed must NOT fall back to
+  // marketTemperature.spark — we render a muted placeholder strip
+  // instead.
+  const sparkData: number[] | null = nifty.spark ?? (MOCK_MODE ? spark : null);
 
   return (
     <div
@@ -261,7 +330,7 @@ function MarketWeatherCard() {
             </span>
           </div>
         </div>
-        <LiveChip isLive={isLive} fetchedAt={fetchedAt} />
+        <DataStateChip state={state} ageMs={ageMs} />
       </div>
 
       <p className="relative mt-4 font-display italic text-[14px] md:text-[14.5px] text-charcoal-soft leading-snug">
@@ -269,51 +338,70 @@ function MarketWeatherCard() {
       </p>
 
       <div className="relative mt-4 grid grid-cols-2 gap-2.5">
-        <IndexRow name="NIFTY 50" value={nifty.current as number} change={nifty.trend!.d1} />
-        <IndexRow name="SENSEX" value={sensex.current as number} change={sensex.trend!.d1} />
-        <IndexRow name="NASDAQ" value={nasdaq.current as number} change={nasdaq.trend!.d1} />
-        <IndexRow name="S&P 500" value={spx.current as number} change={spx.trend!.d1} />
+        <IndexRow name="NIFTY 50" value={nifty.value} change={nifty.change} />
+        <IndexRow name="SENSEX" value={sensex.value} change={sensex.change} />
+        <IndexRow name="NASDAQ" value={nasdaq.value} change={nasdaq.change} />
+        <IndexRow name="S&P 500" value={spx.value} change={spx.change} />
       </div>
 
       <div className="relative mt-4 text-[9.5px] tracking-[0.22em] uppercase font-semibold text-charcoal-mute">
         Market Pulse Trend
       </div>
       <div className="relative -mx-2 mt-1">
-        <Sparkline
-          data={nifty.trend?.spark ?? spark}
-          color={mood.spark}
-          height={48}
-          strokeWidth={2}
-        />
+        {sparkData ? (
+          <Sparkline
+            data={sparkData}
+            color={mood.spark}
+            height={48}
+            strokeWidth={2}
+          />
+        ) : (
+          <SparklinePlaceholder />
+        )}
       </div>
 
       <div className="relative mt-3 flex items-center gap-5 text-[11.5px] text-charcoal-mute">
-        <TrendStat label="1D" value={nifty.trend?.d1} />
-        <TrendStat label="5D" value={nifty.trend?.d5} />
-        <TrendStat label="1M" value={nifty.trend?.m1} />
+        <TrendStat label="1D" value={nifty.change ?? undefined} />
+        <TrendStat label="5D" value={nifty.d5 ?? undefined} />
+        <TrendStat label="1M" value={nifty.m1 ?? undefined} />
       </div>
     </div>
   );
 }
 
-function LiveChip({ isLive, fetchedAt }: { isLive: boolean; fetchedAt: string | null }) {
-  if (isLive) {
+function DataStateChip({ state, ageMs }: { state: DataState; ageMs: number | null }) {
+  if (state === 'live') {
     return (
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-calm-emerald-bg/70 ring-1 ring-calm-emerald/25 text-[9.5px] tracking-[0.18em] uppercase font-semibold text-calm-emerald shrink-0">
         <span className="relative inline-flex w-1.5 h-1.5">
           <span className="absolute inset-0 rounded-full bg-calm-emerald opacity-60 animate-ping" />
           <span className="relative w-1.5 h-1.5 rounded-full bg-calm-emerald" />
         </span>
-        Live
+        Live · updated {formatAge(ageMs ?? 0)}
       </span>
     );
   }
-  const label = formatFreshness(fetchedAt);
+  if (state === 'delayed') {
+    return (
+      <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-calm-amber-bg ring-1 ring-calm-amber/30 text-[9.5px] tracking-[0.18em] uppercase font-semibold text-calm-amber shrink-0">
+        <span className="w-1.5 h-1.5 rounded-full bg-calm-amber" />
+        Delayed · updated {formatAge(ageMs ?? 0)}
+      </span>
+    );
+  }
   return (
     <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-cream-deep ring-1 ring-bordersoft text-[9.5px] tracking-[0.18em] uppercase font-semibold text-charcoal-mute shrink-0">
       <span className="w-1.5 h-1.5 rounded-full bg-charcoal-mute/60" />
-      {label === 'Mock data' ? 'Mock data' : `Delayed · ${label}`}
+      {state === 'mock' ? 'Mock data' : 'Data unavailable'}
     </span>
+  );
+}
+
+function SparklinePlaceholder() {
+  return (
+    <div className="h-12 mx-2 flex items-center justify-center rounded-md border border-dashed border-bordersoft bg-cream-deep/40 text-[10.5px] tracking-[0.18em] uppercase font-semibold text-charcoal-mute">
+      Market feed unavailable
+    </div>
   );
 }
 
@@ -329,14 +417,15 @@ function TrendStat({ label, value }: { label: string; value?: number }) {
   );
 }
 
-function IndexRow({ name, value, change }: { name: string; value: number; change: number }) {
-  const up = change > 0;
-  const down = change < 0;
+function IndexRow({ name, value, change }: { name: string; value: number | null; change: number | null }) {
+  const up = change != null && change > 0;
+  const down = change != null && change < 0;
   const rail = up
     ? 'border-l-calm-green'
     : down
     ? 'border-l-calm-rose'
     : 'border-l-bordersoft';
+  const missing = value == null || change == null;
   return (
     <div
       className={clsx(
@@ -347,18 +436,24 @@ function IndexRow({ name, value, change }: { name: string; value: number; change
       <div className="label-mute">{name}</div>
       <div className="mt-1 flex items-baseline justify-between gap-2">
         <span className="font-display text-[15px] font-semibold tabular-nums text-charcoal">
-          {value.toLocaleString('en-IN', { maximumFractionDigits: 1 })}
+          {value == null ? '—' : value.toLocaleString('en-IN', { maximumFractionDigits: 1 })}
         </span>
-        <Delta value={change} size="xs" />
-        <span
-          aria-hidden
-          className={clsx(
-            'text-[10px]',
-            up ? 'text-calm-green' : down ? 'text-calm-rose' : 'text-charcoal-mute'
-          )}
-        >
-          {up ? '▲' : down ? '▼' : '◆'}
-        </span>
+        {missing ? (
+          <span className="text-[11px] text-charcoal-mute">—</span>
+        ) : (
+          <>
+            <Delta value={change!} size="xs" />
+            <span
+              aria-hidden
+              className={clsx(
+                'text-[10px]',
+                up ? 'text-calm-green' : down ? 'text-calm-rose' : 'text-charcoal-mute'
+              )}
+            >
+              {up ? '▲' : down ? '▼' : '◆'}
+            </span>
+          </>
+        )}
       </div>
     </div>
   );

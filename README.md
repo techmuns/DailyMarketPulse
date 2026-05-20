@@ -72,3 +72,26 @@ Every data file under `src/data/` exports typed arrays matching the
 shared types in `src/types/index.ts`. Swap the in-file constants with
 the result of a live fetch (or a TanStack Query hook) — UI components
 read against the type contract, not the source.
+
+## Production environment
+
+The Market Weather card decides between mock and live data via the
+`VITE_DATA_MODE` build-time environment variable:
+
+- **Production (Cloudflare Pages):** set `VITE_DATA_MODE=live` in the
+  project's environment variables (Cloudflare Pages → Settings →
+  Environment variables → Production). Without it, the deployed
+  dashboard shows the "Mock data" chip even when `public/data/live.json`
+  is present.
+- **Local development / `npm run dev` / `npm run build` without the
+  variable:** defaults to mock mode so the dashboard renders against
+  bundled `src/data/*` without needing a fetched feed.
+
+State labels:
+
+- `Live · updated Xm/Xh ago` — `VITE_DATA_MODE=live` and
+  `public/data/live.json` is fresh (≤ 4h old).
+- `Delayed · updated Xh ago` — live mode with stale data (> 4h).
+- `Mock data` — mock mode (default).
+- `Data unavailable` — live mode but no `live.json` was loaded.
+
