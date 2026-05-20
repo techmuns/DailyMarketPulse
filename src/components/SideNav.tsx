@@ -40,8 +40,8 @@ export function MunshotMark({ size = 28, className }: { size?: number; className
 
 // Light-weight inline icons (no extra dep). Stroke-based so they pick
 // up the surrounding text colour cleanly.
-type IconProps = { className?: string };
-const Icon = ({ className, children }: IconProps & { children: React.ReactNode }) => (
+type IconProps = { className?: string; style?: React.CSSProperties };
+const Icon = ({ className, style, children }: IconProps & { children: React.ReactNode }) => (
   <svg
     viewBox="0 0 24 24"
     fill="none"
@@ -50,6 +50,7 @@ const Icon = ({ className, children }: IconProps & { children: React.ReactNode }
     strokeLinecap="round"
     strokeLinejoin="round"
     className={clsx('shrink-0 w-[15px] h-[15px]', className)}
+    style={style}
     aria-hidden
   >
     {children}
@@ -116,32 +117,34 @@ const Icons = {
   ),
 };
 
-const ITEMS: { key: TabKey; label: string; Icon: React.FC<IconProps> }[] = [
-  { key: 'Today', label: 'Today', Icon: Icons.Today },
-  { key: 'Macro', label: 'Macro', Icon: Icons.Macro },
-  { key: 'Markets', label: 'Markets', Icon: Icons.Markets },
-  { key: 'Currency', label: 'Currency', Icon: Icons.Currency },
-  { key: 'Commodities', label: 'Commodities', Icon: Icons.Commodities },
-  { key: 'News & Filings', label: 'News & Filings', Icon: Icons.News },
-  { key: 'Portfolio Management', label: 'Portfolio', Icon: Icons.Portfolio },
-  { key: 'Events', label: 'Events', Icon: Icons.Events },
+// Per-section icon hues used when an item is inactive. Active items
+// fold into the emerald active pill (white-on-emerald).
+const ITEMS: { key: TabKey; label: string; Icon: React.FC<IconProps>; color: string }[] = [
+  { key: 'Today', label: 'Today', Icon: Icons.Today, color: '#0F8F6F' },
+  { key: 'Macro', label: 'Macro', Icon: Icons.Macro, color: '#8C79C9' },
+  { key: 'Markets', label: 'Markets', Icon: Icons.Markets, color: '#3F6E9A' },
+  { key: 'Currency', label: 'Currency', Icon: Icons.Currency, color: '#159A86' },
+  { key: 'Commodities', label: 'Commodities', Icon: Icons.Commodities, color: '#D7A14A' },
+  { key: 'News & Filings', label: 'News & Filings', Icon: Icons.News, color: '#C86B6B' },
+  { key: 'Portfolio Management', label: 'Portfolio', Icon: Icons.Portfolio, color: '#18A77B' },
+  { key: 'Events', label: 'Events', Icon: Icons.Events, color: '#8C79C9' },
 ];
 
 const CAPSULE_GLASS_STYLE: React.CSSProperties = {
   background:
-    'linear-gradient(180deg, rgba(255,255,255,0.82), rgba(240,235,255,0.72), rgba(238,232,247,0.66))',
-  borderColor: 'rgba(221,214,232,0.78)',
+    'linear-gradient(180deg, rgba(245,240,255,0.92), rgba(238,231,252,0.86), rgba(232,247,239,0.50))',
+  borderColor: 'rgba(140,121,201,0.28)',
   boxShadow:
-    '0 1px 0 rgba(255,255,255,0.85) inset, 0 18px 55px rgba(72,55,120,0.16)',
+    '0 1px 0 rgba(255,255,255,0.85) inset, 0 20px 55px rgba(72,55,120,0.18)',
 };
 
 function Brand() {
   return (
-    <div className="flex items-center gap-2 pl-0.5">
-      <MunshotMark size={30} />
+    <div className="flex items-center gap-2.5 pl-0.5">
+      <MunshotMark size={32} />
       <div className="leading-none min-w-0">
-        <div className="font-masthead text-[12px] font-bold tracking-tight truncate">Daily Market Pulse</div>
-        <div className="text-[8.5px] text-charcoal-mute mt-1 tracking-[0.22em] uppercase font-semibold">By Munshot</div>
+        <div className="font-masthead text-[13px] font-bold tracking-tight text-charcoal truncate">Daily Market Pulse</div>
+        <div className="text-[8.5px] text-charcoal-mute mt-1.5 tracking-[0.22em] uppercase font-semibold">By Munshot</div>
       </div>
     </div>
   );
@@ -160,12 +163,12 @@ function StatusBadge() {
 // pulsing dot + tiny label, no chip background.
 function StatusDot() {
   return (
-    <span className="inline-flex items-center justify-center gap-1.5 text-[9px] tracking-[0.18em] uppercase font-semibold text-charcoal-mute">
+    <span className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-full bg-calm-emerald-bg/70 ring-1 ring-calm-emerald/20 text-[9px] tracking-[0.18em] uppercase font-semibold text-calm-emerald w-fit mx-auto">
       <span className="relative inline-flex w-1.5 h-1.5">
         <span className="absolute inset-0 rounded-full bg-calm-emerald opacity-60 animate-ping" />
         <span className="relative w-1.5 h-1.5 rounded-full bg-calm-emerald" />
       </span>
-      Live
+      Live · mock
     </span>
   );
 }
@@ -184,11 +187,11 @@ function HoverHandle({ open }: { open: boolean }) {
       initial={false}
       animate={{ opacity: open ? 0 : 1 }}
       transition={{ duration: 0.2 }}
-      className="absolute left-3 top-1/2 -translate-y-1/2 w-[10px] h-[140px] rounded-full pointer-events-none"
+      className="absolute left-3 top-1/2 -translate-y-1/2 w-[12px] h-[150px] rounded-full pointer-events-none"
       style={{
-        background: 'linear-gradient(180deg, #0F8F6F 0%, #6F8DBF 55%, #8C79C9 100%)',
+        background: 'linear-gradient(180deg, #0F8F6F 0%, #8C79C9 100%)',
         boxShadow:
-          '0 4px 14px rgba(140,121,201,0.35), 0 2px 6px rgba(15,143,111,0.25), 0 1px 0 rgba(255,255,255,0.5) inset',
+          '0 0 22px rgba(15,143,111,0.30), 0 6px 18px rgba(140,121,201,0.30), 0 1px 0 rgba(255,255,255,0.55) inset',
       }}
     />
   );
@@ -204,8 +207,8 @@ function NavList({
   layoutScope: string;
 }) {
   return (
-    <ul className="flex flex-col gap-0.5">
-      {ITEMS.map(({ key, label, Icon: ItemIcon }) => {
+    <ul className="flex flex-col gap-1.5">
+      {ITEMS.map(({ key, label, Icon: ItemIcon, color }) => {
         const isActive = key === active;
         return (
           <li key={key}>
@@ -213,20 +216,31 @@ function NavList({
               type="button"
               onClick={() => onChange(key)}
               className={clsx(
-                'relative w-full flex items-center gap-2 px-2.5 py-1.5 rounded-full text-[12px] transition',
+                'group relative w-full flex items-center gap-2.5 h-10 px-3 rounded-full text-[13px] transition',
                 isActive
-                  ? 'text-calm-emerald font-semibold'
-                  : 'text-charcoal-mute hover:text-charcoal-soft hover:bg-cream/55'
+                  ? 'text-white font-semibold'
+                  : 'text-charcoal-soft font-medium hover:bg-cream/55'
               )}
             >
               {isActive && (
                 <motion.span
                   layoutId={`sidenav-${layoutScope}`}
-                  className="absolute inset-0 rounded-full bg-gradient-to-b from-calm-emerald-bg to-[#D9F1E6] ring-1 ring-calm-emerald/15 shadow-[0_1px_0_rgba(255,255,255,0.8)_inset,0_2px_6px_-2px_rgba(15,143,111,0.25)]"
+                  className="absolute inset-0 rounded-full"
+                  style={{
+                    background: 'linear-gradient(135deg, #0F8F6F 0%, #18A77B 100%)',
+                    boxShadow:
+                      '0 8px 22px rgba(15,143,111,0.28), 0 1px 0 rgba(255,255,255,0.18) inset',
+                  }}
                   transition={{ type: 'spring', stiffness: 380, damping: 32 }}
                 />
               )}
-              <ItemIcon className="relative z-10 w-[14px] h-[14px]" />
+              <ItemIcon
+                className="relative z-10 w-[17px] h-[17px] transition-opacity"
+                style={{
+                  color: isActive ? '#FFFFFF' : color,
+                  opacity: isActive ? 1 : 0.78,
+                }}
+              />
               <span className="relative z-10 truncate">{label}</span>
             </button>
           </li>
@@ -304,13 +318,16 @@ export function SideNav({ active, onChange }: Props) {
             setHoverOpen(true);
           }}
           onMouseLeave={scheduleClose}
-          className="absolute left-0 top-1/2 w-[176px] flex flex-col gap-3 p-3.5 rounded-[48px] border backdrop-blur-[18px] pointer-events-auto h-[min(78vh,640px)] min-h-[560px] max-h-[calc(100vh-3rem)]"
+          className="absolute left-0 top-1/2 w-[184px] flex flex-col gap-3.5 pt-[18px] pb-[14px] px-[14px] rounded-[48px] border backdrop-blur-[18px] pointer-events-auto h-[min(76vh,640px)] min-h-[560px] max-h-[calc(100vh-3rem)]"
           style={{ ...CAPSULE_GLASS_STYLE, y: '-50%' }}
           aria-label="Primary navigation"
         >
           <Brand />
-          <div className="h-px bg-bordersoft/60" />
+          <div className="h-px bg-gradient-to-r from-transparent via-calm-violet/25 to-transparent" />
           <nav className="flex-1 min-h-0 overflow-y-auto no-scrollbar -mx-1 px-1">
+            <div className="text-[8.5px] tracking-[0.28em] uppercase font-semibold text-charcoal-mute/80 pl-3 mb-2 select-none">
+              Market Desk
+            </div>
             <NavList active={active} onChange={onChange} layoutScope="desktop" />
           </nav>
           <StatusDot />
