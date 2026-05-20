@@ -376,7 +376,7 @@ function Masthead({ liveFetchedAt }: { liveFetchedAt: string | null }) {
   return (
     <header className="relative">
       {/* Eyebrow strip */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-2.5">
         <div className="flex items-center gap-2">
           <span className="relative flex w-1.5 h-1.5">
             <span className="animate-ping absolute inline-flex w-full h-full rounded-full bg-calm-emerald opacity-60" />
