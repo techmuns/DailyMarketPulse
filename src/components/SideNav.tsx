@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { AnimatePresence, motion } from 'framer-motion';
 import logoUrl from '../assets/logos/munshot-logo-w.png';
@@ -156,6 +156,33 @@ function StatusBadge() {
   );
 }
 
+// Slim variant used inside the hover-reveal desktop capsule — just a
+// pulsing dot + tiny label, no chip background.
+function StatusDot() {
+  return (
+    <span className="inline-flex items-center justify-center gap-1.5 text-[9px] tracking-[0.18em] uppercase font-semibold text-charcoal-mute">
+      <span className="relative inline-flex w-1.5 h-1.5">
+        <span className="absolute inset-0 rounded-full bg-calm-emerald opacity-60 animate-ping" />
+        <span className="relative w-1.5 h-1.5 rounded-full bg-calm-emerald" />
+      </span>
+      Live
+    </span>
+  );
+}
+
+/** Fixed top-left brand chrome, separate from the hover capsule. */
+export function DesktopBrand() {
+  return (
+    <div className="hidden md:flex fixed top-5 left-6 z-40 items-center gap-2 select-none">
+      <MunshotMark size={30} />
+      <div className="leading-none">
+        <div className="font-masthead text-[13px] font-bold tracking-tight">Daily Market Pulse</div>
+        <div className="text-[9px] text-charcoal-mute mt-1 tracking-[0.22em] uppercase font-semibold">By Munshot</div>
+      </div>
+    </div>
+  );
+}
+
 function NavList({
   active,
   onChange,
@@ -202,6 +229,23 @@ export function SideNav({ active, onChange }: Props) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const close = () => setMobileOpen(false);
 
+  // Desktop hover-reveal state. A small grace period on mouseleave
+  // lets the cursor cross the gap between trigger strip and capsule
+  // without closing.
+  const [hoverOpen, setHoverOpen] = useState(false);
+  const closeTimer = useRef<number | null>(null);
+  const cancelClose = () => {
+    if (closeTimer.current !== null) {
+      window.clearTimeout(closeTimer.current);
+      closeTimer.current = null;
+    }
+  };
+  const scheduleClose = () => {
+    cancelClose();
+    closeTimer.current = window.setTimeout(() => setHoverOpen(false), 140);
+  };
+  useEffect(() => cancelClose, []);
+
   return (
     <>
       {/* Mobile top capsule */}
@@ -222,18 +266,39 @@ export function SideNav({ active, onChange }: Props) {
         </div>
       </div>
 
-      {/* Desktop floating sidebar */}
-      <aside
-        className="hidden md:flex fixed left-5 top-1/2 -translate-y-1/2 z-30 w-[168px] flex-col gap-3 p-3 rounded-[42px] border backdrop-blur-[18px] h-[min(70vh,560px)] min-h-[470px] max-h-[calc(100vh-4rem)]"
-        style={CAPSULE_GLASS_STYLE}
+      {/* Desktop hover-reveal: thin trigger strip pinned to the left
+          edge, plus the floating capsule that slides in from off-screen
+          when the strip or the capsule itself is hovered. The strip
+          starts below the brand chrome so it doesn't fight with the
+          top-left brand. */}
+      <div
+        aria-hidden
+        className="hidden md:block fixed left-0 top-[68px] bottom-0 w-[18px] z-30"
+        onMouseEnter={() => {
+          cancelClose();
+          setHoverOpen(true);
+        }}
+        onMouseLeave={scheduleClose}
+      />
+
+      <motion.aside
+        initial={false}
+        animate={{ x: hoverOpen ? 22 : -126 }}
+        transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+        onMouseEnter={() => {
+          cancelClose();
+          setHoverOpen(true);
+        }}
+        onMouseLeave={scheduleClose}
+        className="hidden md:flex fixed left-0 top-1/2 z-30 w-[144px] flex-col gap-2.5 p-3 rounded-[40px] border backdrop-blur-[18px] max-h-[70vh]"
+        style={{ ...CAPSULE_GLASS_STYLE, y: '-50%' }}
+        aria-label="Primary navigation"
       >
-        <Brand />
-        <div className="h-px bg-bordersoft/60" />
         <nav className="flex-1 min-h-0 overflow-y-auto no-scrollbar -mx-1 px-1">
           <NavList active={active} onChange={onChange} layoutScope="desktop" />
         </nav>
-        <StatusBadge />
-      </aside>
+        <StatusDot />
+      </motion.aside>
 
       {/* Mobile drawer */}
       <AnimatePresence>

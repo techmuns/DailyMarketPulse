@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { SideNav } from './components/SideNav';
+import { SideNav, DesktopBrand } from './components/SideNav';
 import type { TabKey } from './components/SideNav';
 import { AISignalDrawer } from './components/AISignalDrawer';
 import { HeadlineDrawer } from './components/HeadlineDrawer';
@@ -31,29 +31,35 @@ function renderTab(tab: TabKey) {
 
 function App() {
   const [tab, setTab] = useState<TabKey>('Today');
+
+  // Whenever the active tab changes, return the page to the top so the
+  // new tab opens at its masthead instead of mid-scroll.
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [tab]);
+
   return (
     <LiveDataProvider>
     <StoreProvider>
       <div className="min-h-screen text-charcoal">
+        <DesktopBrand />
         <SideNav active={tab} onChange={setTab} />
-        <div className="md:pl-[204px]">
-          <main className="max-w-[1320px] mx-auto px-6 py-10">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={tab}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                transition={{ duration: 0.22 }}
-              >
-                {renderTab(tab)}
-              </motion.div>
-            </AnimatePresence>
-          </main>
-          <footer className="max-w-[1320px] mx-auto px-6 pb-10 pt-4 text-[10.5px] text-charcoal-mute tracking-wider uppercase border-t border-bordersoft/60 mt-10">
-            Daily Market Pulse · By Munshot · Mock data
-          </footer>
-        </div>
+        <main className="max-w-[1320px] mx-auto px-6 pt-10 md:pt-16 pb-10">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={tab}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.22 }}
+            >
+              {renderTab(tab)}
+            </motion.div>
+          </AnimatePresence>
+        </main>
+        <footer className="max-w-[1320px] mx-auto px-6 pb-10 pt-4 text-[10.5px] text-charcoal-mute tracking-wider uppercase border-t border-bordersoft/60 mt-10">
+          Daily Market Pulse · By Munshot · Mock data
+        </footer>
         <AISignalDrawer />
         <HeadlineDrawer />
         <div
