@@ -129,18 +129,18 @@ const ITEMS: { key: TabKey; label: string; Icon: React.FC<IconProps> }[] = [
 
 const CAPSULE_GLASS_STYLE: React.CSSProperties = {
   background:
-    'linear-gradient(180deg, rgba(255,255,255,0.78), rgba(240,235,255,0.66), rgba(238,232,247,0.58))',
-  borderColor: 'rgba(221,214,232,0.75)',
+    'linear-gradient(180deg, rgba(255,255,255,0.82), rgba(240,235,255,0.72), rgba(238,232,247,0.66))',
+  borderColor: 'rgba(221,214,232,0.78)',
   boxShadow:
-    '0 1px 0 rgba(255,255,255,0.85) inset, 0 18px 50px rgba(72,55,120,0.14)',
+    '0 1px 0 rgba(255,255,255,0.85) inset, 0 18px 55px rgba(72,55,120,0.16)',
 };
 
 function Brand() {
   return (
     <div className="flex items-center gap-2 pl-0.5">
-      <MunshotMark size={28} />
+      <MunshotMark size={30} />
       <div className="leading-none min-w-0">
-        <div className="font-masthead text-[11.5px] font-bold tracking-tight truncate">Daily Market Pulse</div>
+        <div className="font-masthead text-[12px] font-bold tracking-tight truncate">Daily Market Pulse</div>
         <div className="text-[8.5px] text-charcoal-mute mt-1 tracking-[0.22em] uppercase font-semibold">By Munshot</div>
       </div>
     </div>
@@ -170,16 +170,27 @@ function StatusDot() {
   );
 }
 
-/** Fixed top-left brand chrome, separate from the hover capsule. */
-export function DesktopBrand() {
+/**
+ * Visible emerald→lavender hover handle that tells the user where to
+ * hover when the nav capsule is hidden. Becomes transparent (but stays
+ * mounted) while the capsule is open so it doesn't compete visually,
+ * and is wrapped in a wider invisible trigger zone so the cursor can
+ * cross from the handle to the capsule without entering a dead gap.
+ */
+function HoverHandle({ open }: { open: boolean }) {
   return (
-    <div className="hidden md:flex fixed top-5 left-6 z-40 items-center gap-2 select-none">
-      <MunshotMark size={30} />
-      <div className="leading-none">
-        <div className="font-masthead text-[13px] font-bold tracking-tight">Daily Market Pulse</div>
-        <div className="text-[9px] text-charcoal-mute mt-1 tracking-[0.22em] uppercase font-semibold">By Munshot</div>
-      </div>
-    </div>
+    <motion.div
+      aria-hidden
+      initial={false}
+      animate={{ opacity: open ? 0 : 1 }}
+      transition={{ duration: 0.2 }}
+      className="absolute left-3 top-1/2 -translate-y-1/2 w-[10px] h-[140px] rounded-full pointer-events-none"
+      style={{
+        background: 'linear-gradient(180deg, #0F8F6F 0%, #6F8DBF 55%, #8C79C9 100%)',
+        boxShadow:
+          '0 4px 14px rgba(140,121,201,0.35), 0 2px 6px rgba(15,143,111,0.25), 0 1px 0 rgba(255,255,255,0.5) inset',
+      }}
+    />
   );
 }
 
@@ -266,39 +277,45 @@ export function SideNav({ active, onChange }: Props) {
         </div>
       </div>
 
-      {/* Desktop hover-reveal: thin trigger strip pinned to the left
-          edge, plus the floating capsule that slides in from off-screen
-          when the strip or the capsule itself is hovered. The strip
-          starts below the brand chrome so it doesn't fight with the
-          top-left brand. */}
-      <div
-        aria-hidden
-        className="hidden md:block fixed left-0 top-[68px] bottom-0 w-[18px] z-30"
-        onMouseEnter={() => {
-          cancelClose();
-          setHoverOpen(true);
-        }}
-        onMouseLeave={scheduleClose}
-      />
+      {/* Desktop hover-reveal. Outer wrapper is pointer-events-none so
+          dashboard content underneath stays clickable; the trigger zone
+          + capsule re-enable pointer events on themselves. The trigger
+          zone hosts the visible handle and extends a bit past the
+          handle so the cursor never falls into a dead gap when the
+          capsule slides in. */}
+      <div className="hidden md:block fixed left-0 top-0 bottom-0 w-[220px] z-30 pointer-events-none">
+        <div
+          className="absolute left-0 top-0 bottom-0 w-[32px] pointer-events-auto"
+          onMouseEnter={() => {
+            cancelClose();
+            setHoverOpen(true);
+          }}
+          onMouseLeave={scheduleClose}
+        >
+          <HoverHandle open={hoverOpen} />
+        </div>
 
-      <motion.aside
-        initial={false}
-        animate={{ x: hoverOpen ? 22 : -126 }}
-        transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-        onMouseEnter={() => {
-          cancelClose();
-          setHoverOpen(true);
-        }}
-        onMouseLeave={scheduleClose}
-        className="hidden md:flex fixed left-0 top-1/2 z-30 w-[144px] flex-col gap-2.5 p-3 rounded-[40px] border backdrop-blur-[18px] max-h-[70vh]"
-        style={{ ...CAPSULE_GLASS_STYLE, y: '-50%' }}
-        aria-label="Primary navigation"
-      >
-        <nav className="flex-1 min-h-0 overflow-y-auto no-scrollbar -mx-1 px-1">
-          <NavList active={active} onChange={onChange} layoutScope="desktop" />
-        </nav>
-        <StatusDot />
-      </motion.aside>
+        <motion.aside
+          initial={false}
+          animate={{ x: hoverOpen ? 20 : -180 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 32 }}
+          onMouseEnter={() => {
+            cancelClose();
+            setHoverOpen(true);
+          }}
+          onMouseLeave={scheduleClose}
+          className="absolute left-0 top-1/2 w-[176px] flex flex-col gap-3 p-3.5 rounded-[48px] border backdrop-blur-[18px] pointer-events-auto h-[min(78vh,640px)] min-h-[560px] max-h-[calc(100vh-3rem)]"
+          style={{ ...CAPSULE_GLASS_STYLE, y: '-50%' }}
+          aria-label="Primary navigation"
+        >
+          <Brand />
+          <div className="h-px bg-bordersoft/60" />
+          <nav className="flex-1 min-h-0 overflow-y-auto no-scrollbar -mx-1 px-1">
+            <NavList active={active} onChange={onChange} layoutScope="desktop" />
+          </nav>
+          <StatusDot />
+        </motion.aside>
+      </div>
 
       {/* Mobile drawer */}
       <AnimatePresence>

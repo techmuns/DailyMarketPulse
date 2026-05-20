@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { SideNav, DesktopBrand } from './components/SideNav';
+import { SideNav } from './components/SideNav';
 import type { TabKey } from './components/SideNav';
 import { AISignalDrawer } from './components/AISignalDrawer';
 import { HeadlineDrawer } from './components/HeadlineDrawer';
@@ -42,9 +42,8 @@ function App() {
     <LiveDataProvider>
     <StoreProvider>
       <div className="min-h-screen text-charcoal">
-        <DesktopBrand />
         <SideNav active={tab} onChange={setTab} />
-        <main className="max-w-[1320px] mx-auto px-6 pt-10 md:pt-16 pb-10">
+        <main className="max-w-[1320px] mx-auto px-6 py-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={tab}
