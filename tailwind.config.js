@@ -5,22 +5,23 @@ export default {
     extend: {
       colors: {
         // Calm Alpha — Emerald + Lavender Mist
+        // (slightly deeper / richer pass — see CHANGELOG below)
         ivory: {
-          50: '#F4F1FA',  // page background — lavender mist
-          100: '#EEE8F7', // secondary section tint
-          200: '#E5DDEF',
+          50: '#ECE3F4',  // page background — lavender mist (was #F4F1FA)
+          100: '#E4DAEF', // secondary section tint    (was #EEE8F7)
+          200: '#D9CDE7',
         },
-        cream: '#FFFDF9',        // primary card background
-        'cream-deep': '#F8F5EF', // elevated / secondary surface
+        cream: '#FFFDF9',        // primary card background — keep near-white for separation
+        'cream-deep': '#F6F1E8', // elevated / secondary surface — a touch warmer
         charcoal: {
           DEFAULT: '#1F2933',
           soft: '#3F4754',
           mute: '#667085',
         },
         calm: {
-          // Emerald (brand / active / support)
-          emerald: '#0F8F6F',
-          'emerald-bg': '#E6F7F0',
+          // Emerald (brand / active / support) — ~10% richer
+          emerald: '#0B7E61',
+          'emerald-bg': '#DAF1E5',
           green: '#36A379',
           'green-bg': '#E8F7EF',
           // Negative
@@ -36,7 +37,7 @@ export default {
           violet: '#8C79C9',
           'violet-bg': '#F0EBFF',
         },
-        bordersoft: '#DDD6E8',
+        bordersoft: '#CEC4E1',
         tabinactive: '#F3F0F7',
         hoverwash: '#EDF6F3',
       },
@@ -46,8 +47,10 @@ export default {
         masthead: ['"Playfair Display"', '"Newsreader"', 'Georgia', 'serif'],
       },
       boxShadow: {
-        soft: '0 1px 2px rgba(31, 41, 51, 0.04), 0 6px 18px rgba(31, 41, 51, 0.04)',
-        lift: '0 2px 4px rgba(31, 41, 51, 0.06), 0 14px 32px rgba(31, 41, 51, 0.07)',
+        // Violet-tinted secondary shadow so cards separate from the
+        // lavender page wash without going visually neutral.
+        soft: '0 1px 2px rgba(31, 41, 51, 0.05), 0 8px 22px rgba(76, 55, 120, 0.08)',
+        lift: '0 2px 4px rgba(31, 41, 51, 0.07), 0 16px 36px rgba(76, 55, 120, 0.11)',
       },
       borderRadius: {
         xl2: '1.25rem',
