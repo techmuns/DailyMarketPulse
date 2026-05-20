@@ -423,39 +423,86 @@ function Masthead({ liveFetchedAt }: { liveFetchedAt: string | null }) {
         By <span className="text-calm-emerald">Munshot</span>
       </p>
 
-      {/* Metadata row */}
-      <div className="mt-6 pt-4 border-t border-bordersoft flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-3 md:gap-5 flex-wrap text-[11.5px]">
-          <Meta label="Date" value={dateStr} />
-          <Sep />
-          <Meta label="Market">
-            <span className="inline-flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-calm-emerald" />
-              <span className="text-charcoal-soft font-medium">Open</span>
-            </span>
-          </Meta>
-          <Sep />
-          <Meta label="Data">
-            <span className="text-charcoal-soft font-medium">{formatFreshness(liveFetchedAt)}</span>
-          </Meta>
-        </div>
+      {/* Market Pulse control bar — replaces the plain Date | Market |
+          Data | Lens row with a three-zone capsule: edition info,
+          today's pulse tagline, and the lens selector. */}
+      <div
+        className="mt-6 flex items-center justify-between flex-wrap gap-3 rounded-[24px] border px-4 py-2.5"
+        style={{
+          background:
+            'linear-gradient(135deg, #FFFFFF 0%, #FCFBFF 70%, #F5F0FF 100%)',
+          borderColor: 'rgba(140,121,201,0.18)',
+          boxShadow: '0 12px 30px rgba(72,55,120,0.07)',
+        }}
+      >
+        <EditionInfo dateStr={dateStr} freshness={formatFreshness(liveFetchedAt)} />
+        <PulseTagline fragments={['Risk-off feel', 'INR weak', 'Autos lag']} />
         <PriorityLensSelector />
       </div>
     </header>
   );
 }
 
-function Meta({ label, value, children }: { label: string; value?: string; children?: React.ReactNode }) {
+function DotSep() {
+  return <span className="text-charcoal-mute/40 select-none">·</span>;
+}
+
+function CalendarGlyph() {
   return (
-    <span className="inline-flex items-baseline gap-2">
-      <span className="label-mute">{label}</span>
-      {value ? <span className="text-charcoal-soft font-medium">{value}</span> : children}
-    </span>
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="text-calm-violet/70 shrink-0"
+      aria-hidden
+    >
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M8 3v4M16 3v4M3 10h18" />
+    </svg>
   );
 }
 
-function Sep() {
-  return <span className="text-charcoal-mute/40 select-none">|</span>;
+function EditionInfo({ dateStr, freshness }: { dateStr: string; freshness: string }) {
+  return (
+    <div className="flex items-center gap-3 text-[11.5px] text-charcoal-soft flex-wrap">
+      <span className="inline-flex items-center gap-1.5">
+        <CalendarGlyph />
+        <span className="font-medium">{dateStr}</span>
+      </span>
+      <DotSep />
+      <span className="inline-flex items-center gap-1.5">
+        <span className="w-1.5 h-1.5 rounded-full bg-calm-emerald" />
+        <span className="font-medium">Market Open</span>
+      </span>
+      <DotSep />
+      <span className="inline-flex items-center gap-1.5">
+        <span className="w-1.5 h-1.5 rounded-full bg-calm-violet/70" />
+        <span className="font-medium">{freshness}</span>
+      </span>
+    </div>
+  );
+}
+
+function PulseTagline({ fragments }: { fragments: string[] }) {
+  return (
+    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-calm-emerald-bg/50 ring-1 ring-calm-emerald/15 text-[11.5px] text-charcoal-soft">
+      <span className="relative inline-flex w-1.5 h-1.5">
+        <span className="absolute inset-0 rounded-full bg-calm-emerald opacity-60 animate-ping" />
+        <span className="relative w-1.5 h-1.5 rounded-full bg-calm-emerald" />
+      </span>
+      {fragments.map((frag, i) => (
+        <span key={frag} className="inline-flex items-center gap-2">
+          <span className="font-medium">{frag}</span>
+          {i < fragments.length - 1 && <span className="text-charcoal-mute/40">·</span>}
+        </span>
+      ))}
+    </div>
+  );
 }
 
 function MiniScore({ label, value, dir, sub }: { label: string; value: string; dir: number; sub: string }) {
