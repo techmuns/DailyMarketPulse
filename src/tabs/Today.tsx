@@ -11,10 +11,10 @@ import { Sparkline } from '../components/Sparkline';
 import { PriorityLensSelector } from '../components/PriorityLens';
 import { SnapshotStrip } from '../components/SnapshotStrip';
 import type { SnapshotItem } from '../components/SnapshotStrip';
-import { HeadlineStrip } from '../components/HeadlineStrip';
+import { HeadlineStack } from '../components/HeadlineStack';
 import { aiSignals, featuredSignal } from '../data/signals';
 import { portfolio, portfolioStats } from '../data/portfolio';
-import { marketTemperature } from '../data/markets';
+import { marketTemperature, indices } from '../data/markets';
 import { actions } from '../data/actions';
 import { lensHeadlines } from '../data/lensHeadlines';
 import { useStore } from '../state/store';
@@ -143,34 +143,26 @@ export function Today() {
 
       <PulseBrief tabKey="Today" />
 
-      {/* Lens-driven headline strip — wrapped in a newsletter-style
-          section shell so it reads as a distinct editorial module
-          rather than free-floating cards on the page. */}
-      <section
-        className="relative rounded-[28px] border overflow-hidden px-4 pt-5 pb-4 sm:px-6 sm:pt-6 sm:pb-5"
-        style={{
-          background:
-            'linear-gradient(135deg, #FFFFFF 0%, #FCFBFF 65%, #F4F0FF 100%)',
-          borderColor: 'rgba(140,121,201,0.18)',
-          boxShadow: '0 18px 45px rgba(72,55,120,0.08)',
-        }}
-      >
-        <div
-          className="absolute inset-x-0 top-0 h-[3px] opacity-80"
-          style={{ background: 'linear-gradient(90deg, #0B7E61 0%, #8C79C9 55%, #0B7E61 100%)' }}
-          aria-hidden
-        />
+      {/* Below-PulseBrief 2-column module: Market Weather (left)
+          + vertical lens headlines (right). The lens selector in the
+          masthead control bar still drives which headlines fill the
+          right column. */}
+      <section>
         <SectionHeader
           title={stripTitle[lensType]}
           eyebrow={`${lens} lens`}
           hint="Tap a card to open the full read."
         />
-        <HeadlineStrip items={stripHeadlines} />
+        <div className="grid grid-cols-1 lg:grid-cols-[38%_62%] gap-6">
+          <MarketWeatherCard />
+          <HeadlineStack items={stripHeadlines.slice(0, 5)} />
+        </div>
       </section>
 
-      {/* B — Hero row: 2 cards only */}
-      <section className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        <MarketTemperatureCard />
+      {/* Featured AI Signal stands on its own row now that the Hero
+          grid is gone. Width-capped on wide viewports so it doesn't
+          stretch edge-to-edge. */}
+      <section className="w-full lg:max-w-[760px]">
         <FeaturedAISignal />
       </section>
 
@@ -307,35 +299,66 @@ export function Today() {
   );
 }
 
-function MarketTemperatureCard() {
+const MOOD = {
+  'risk-on':  { label: 'Breezy Uptrend', chip: 'bg-calm-emerald-bg text-calm-emerald', glyph: '☀', spark: '#0B7E61' },
+  'risk-off': { label: 'Storm Watch',    chip: 'bg-calm-rose-bg text-calm-rose',       glyph: '⛈', spark: '#C86B6B' },
+  'mixed':    { label: 'Mixed',          chip: 'bg-calm-amber-bg text-calm-amber',     glyph: '⛅', spark: '#D7A14A' },
+} as const;
+
+function MarketWeatherCard() {
   const { status, oneLine, spark } = marketTemperature;
-  const accent =
-    status === 'risk-on' ? 'bg-calm-green-bg text-calm-green'
-      : status === 'risk-off' ? 'bg-calm-rose-bg text-calm-rose'
-      : 'bg-calm-amber-bg text-calm-amber';
+  const mood = MOOD[status];
+  const nifty = indices.find((i) => i.id === 'i-nifty')!;
+  const sensex = indices.find((i) => i.id === 'i-sensex')!;
+
   return (
-    <Card className="lg:col-span-2" padding="lg">
-      <div className="flex items-start justify-between">
+    <Card padding="lg">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <span className="label-mute">Market temperature</span>
-          <div className="mt-2 flex items-baseline gap-3">
-            <span className={clsx('chip capitalize', accent)}>{status.replace('-', ' ')}</span>
-          </div>
+          <span className="label-mute">Market Weather</span>
+          <div className="mt-1 text-[10.5px] text-charcoal-mute">Today's market mood</div>
         </div>
-        <div className="text-right">
-          <Delta value={2.1} label="1D" />
-        </div>
+        <span className={clsx('chip', mood.chip)}>
+          <span aria-hidden>{mood.glyph}</span>
+          {mood.label}
+        </span>
       </div>
-      <p className="mt-3 text-[14px] text-charcoal-soft leading-snug">{oneLine}</p>
+
+      <p className="mt-3 text-[13.5px] text-charcoal-soft leading-snug">{oneLine}</p>
+
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <IndexRow name="NIFTY 50" value={nifty.current as number} change={nifty.trend!.d1} />
+        <IndexRow name="SENSEX" value={sensex.current as number} change={sensex.trend!.d1} />
+      </div>
+
       <div className="-mx-2 mt-4">
-        <Sparkline data={spark} color="#0F8F6F" height={52} strokeWidth={2} />
+        <Sparkline data={spark} color={mood.spark} height={48} strokeWidth={2} />
       </div>
+
       <div className="mt-3 flex items-center gap-5 text-[11.5px] text-charcoal-mute">
         <span>1D <span className="text-charcoal-soft font-medium ml-1 tabular-nums">+2.10%</span></span>
         <span>5D <span className="text-charcoal-soft font-medium ml-1 tabular-nums">+4.60%</span></span>
         <span>1M <span className="text-charcoal-soft font-medium ml-1 tabular-nums">+7.20%</span></span>
       </div>
     </Card>
+  );
+}
+
+function IndexRow({ name, value, change }: { name: string; value: number; change: number }) {
+  const up = change >= 0;
+  return (
+    <div className="rounded-xl border border-bordersoft bg-cream-deep/40 px-3 py-2">
+      <div className="label-mute">{name}</div>
+      <div className="mt-1 flex items-baseline justify-between gap-2">
+        <span className="font-display text-[15px] font-semibold tabular-nums text-charcoal">
+          {value.toLocaleString('en-IN', { maximumFractionDigits: 1 })}
+        </span>
+        <Delta value={change} size="xs" />
+        <span aria-hidden className={clsx('text-[10px]', up ? 'text-calm-green' : 'text-calm-rose')}>
+          {up ? '▲' : '▼'}
+        </span>
+      </div>
+    </div>
   );
 }
 
