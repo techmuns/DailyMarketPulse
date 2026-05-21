@@ -3,6 +3,7 @@ import { Card } from '../components/Card';
 import { events } from '../data/events';
 import { ToneDot } from '../components/Tone';
 import { PulseBrief } from '../components/PulseBrief';
+import { CompactMasthead } from '../components/CompactMasthead';
 import { getSignalTone, toneTokens } from '../utils/tone';
 import clsx from 'clsx';
 
@@ -15,6 +16,7 @@ const WHENS: Array<{ key: 'today' | 'tomorrow' | 'this-week'; label: string }> =
 export function Events() {
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
+      <CompactMasthead section="Events" chips={['Earnings week', 'Macro print', 'Policy watch']} />
       <PulseBrief tabKey="Events" />
 
       <header>

@@ -5,6 +5,7 @@ import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
 import { ToneDot, MeaningBadge } from '../components/Tone';
 import { PulseBrief } from '../components/PulseBrief';
+import { CompactMasthead } from '../components/CompactMasthead';
 import { currencies as mockCurrencies, currencySummary } from '../data/currencies';
 import { useLiveOverlay, DataSourceChip } from '../state/liveData';
 import { LiveWire } from '../components/LiveWire';
@@ -19,6 +20,7 @@ export function Currency() {
   const currencies = useLiveOverlay(mockCurrencies, 'currencies');
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
+      <CompactMasthead section="Currency" chips={['INR weak', 'USD firm', 'Rates watch']} />
       <PulseBrief tabKey="Currency" />
 
       <header>

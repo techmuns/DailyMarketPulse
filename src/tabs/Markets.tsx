@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Card } from '../components/Card';
 import { SectionHeader } from '../components/SectionHeader';
 import { PulseBrief } from '../components/PulseBrief';
+import { CompactMasthead } from '../components/CompactMasthead';
 import { Heatmap } from '../components/Heatmap';
 import type { HeatCell } from '../components/Heatmap';
 import { indices as mockIndices, sectors as mockSectors, breadth, gainers, losers, unusualVolume } from '../data/markets';
@@ -34,6 +35,7 @@ export function Markets() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
+      <CompactMasthead section="Markets" chips={['Risk-off feel', 'INR weak', 'Autos lag']} />
       <PulseBrief tabKey="Markets" />
 
       <header>

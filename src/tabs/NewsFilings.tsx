@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { ChangeStripChip, SourceChip } from '../components/Chip';
 import { ToneDot, MeaningBadge } from '../components/Tone';
 import { PulseBrief } from '../components/PulseBrief';
+import { CompactMasthead } from '../components/CompactMasthead';
 import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
 import { news, filings } from '../data/news';
 import { LiveWire } from '../components/LiveWire';
@@ -33,6 +34,7 @@ export function NewsFilings() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-7">
+      <CompactMasthead section="Filings" chips={['Earnings risk', 'New filings', 'Rating watch']} />
       <PulseBrief tabKey="News & Filings" />
 
       <LiveWire
