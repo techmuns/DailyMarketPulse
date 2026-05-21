@@ -14,6 +14,24 @@ export const SYMBOLS = {
     { id: 'i-nasdaq', yahoo: '^IXIC' },
     { id: 'i-vix',    yahoo: '^INDIAVIX' },
   ],
+  // NSE sector indices. IDs match src/data/markets.ts sectors[].id so
+  // the live overlay can swap in real d1/d5/m1/spark values.
+  sectors: [
+    { id: 's-it',     yahoo: '^CNXIT' },
+    { id: 's-banks',  yahoo: '^NSEBANK',  fallbacks: ['^CNXBANK'] },
+    { id: 's-auto',   yahoo: '^CNXAUTO' },
+    { id: 's-fmcg',   yahoo: '^CNXFMCG' },
+    { id: 's-pharma', yahoo: '^CNXPHARMA' },
+    { id: 's-metals', yahoo: '^CNXMETAL' },
+    { id: 's-energy', yahoo: '^CNXENERGY' },
+    { id: 's-realty', yahoo: '^CNXREALTY' },
+  ],
+  // Yahoo-fetchable macro series. India CPI / Repo / IIP are not on
+  // Yahoo (would need RBI / MoSPI scraping) so they stay mock — only
+  // the rate / yield series that Yahoo serves go here.
+  macro: [
+    { id: 'm-us10y', yahoo: '^TNX' },
+  ],
   currencies: [
     { id: 'fx-usdinr', yahoo: 'USDINR=X' },
     { id: 'fx-eurinr', yahoo: 'EURINR=X' },
