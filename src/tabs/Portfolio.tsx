@@ -4,7 +4,7 @@ import { SectionHeader } from '../components/SectionHeader';
 import { Heatmap } from '../components/Heatmap';
 import type { HeatCell } from '../components/Heatmap';
 import { portfolio as mockPortfolio, portfolioStats } from '../data/portfolio';
-import { useLiveOverlay } from '../state/liveData';
+import { useLiveOverlay, DataSourceChip } from '../state/liveData';
 import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
 import { ToneDot, MeaningBadge } from '../components/Tone';
@@ -74,7 +74,12 @@ export function Portfolio({ hideBrief = false }: { hideBrief?: boolean } = {}) {
       </section>
 
       <section>
-        <SectionHeader title="Portfolio Impact Board" eyebrow="Holdings" hint="Weight, today's move, 5D trend, impact driver and action." />
+        <SectionHeader
+          title="Portfolio Impact Board"
+          eyebrow="Holdings"
+          hint="Weight, today's move, 5D trend, impact driver and action."
+          right={<DataSourceChip section="holdings" />}
+        />
         <div className="card overflow-hidden">
           <table className="tbl">
             <thead>

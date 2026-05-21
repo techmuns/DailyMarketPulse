@@ -6,7 +6,7 @@ import { AISignalDrawer } from './components/AISignalDrawer';
 import { HeadlineDrawer } from './components/HeadlineDrawer';
 import watermarkUrl from './assets/logos/munshot-logo.png';
 import { StoreProvider } from './state/store';
-import { LiveDataProvider } from './state/liveData';
+import { LiveDataProvider, LIVE_MODE, useLive } from './state/liveData';
 import { Today } from './tabs/Today';
 import { Macro } from './tabs/Macro';
 import { Markets } from './tabs/Markets';
@@ -56,9 +56,7 @@ function App() {
             </motion.div>
           </AnimatePresence>
         </main>
-        <footer className="max-w-[1320px] mx-auto px-6 pb-10 pt-4 text-[10.5px] text-charcoal-mute tracking-wider uppercase border-t border-bordersoft/60 mt-10">
-          Daily Market Pulse · By Munshot · Mock data
-        </footer>
+        <FooterLine />
         <AISignalDrawer />
         <HeadlineDrawer />
         <div
@@ -80,6 +78,19 @@ function App() {
       </div>
     </StoreProvider>
     </LiveDataProvider>
+  );
+}
+
+function FooterLine() {
+  const { data } = useLive();
+  let label: string;
+  if (!LIVE_MODE) label = 'Mock data';
+  else if (!data) label = 'Live mode · feed unavailable';
+  else label = `Live mode · feed loaded ${new Date(data.fetchedAt).toUTCString()}`;
+  return (
+    <footer className="max-w-[1320px] mx-auto px-6 pb-10 pt-4 text-[10.5px] text-charcoal-mute tracking-wider uppercase border-t border-bordersoft/60 mt-10">
+      Daily Market Pulse · By Munshot · {label}
+    </footer>
   );
 }
 

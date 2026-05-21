@@ -10,7 +10,7 @@ import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
 import clsx from 'clsx';
 import type { HeatCell } from '../components/Heatmap';
 import { commodities as mockCommodities, commoditySummary } from '../data/commodities';
-import { useLiveOverlay } from '../state/liveData';
+import { useLiveOverlay, DataSourceChip } from '../state/liveData';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
 import { num } from '../utils/format';
@@ -41,7 +41,12 @@ export function Commodities() {
       </header>
 
       <section>
-        <SectionHeader title="Commodity Pressure Board" eyebrow="Pressure & support" hint="Input-cost moves, portfolio impact, and sector pressure." />
+        <SectionHeader
+          title="Commodity Pressure Board"
+          eyebrow="Pressure & support"
+          hint="Input-cost moves, portfolio impact, and sector pressure."
+          right={<DataSourceChip section="commodities" />}
+        />
         <div className="card overflow-hidden">
           <table className="tbl">
             <thead>
