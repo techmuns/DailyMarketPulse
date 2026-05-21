@@ -25,9 +25,109 @@ export default {
       }
       return handleTTS(req, env, ctx);
     }
+    if (url.pathname === '/api/quote') {
+      if (req.method !== 'GET') {
+        return json({ ok: false, reason: 'method-not-allowed' }, 405);
+      }
+      return handleQuote(req, ctx);
+    }
     return env.ASSETS.fetch(req);
   },
 };
+
+/* ---------- Yahoo quote proxy ---------- */
+//
+// GET /api/quote?ticker=RELIANCE.NS
+//
+// Fetches Yahoo's chart endpoint server-side (browsers can't reach
+// it due to CORS + cookie/crumb requirements). Returns:
+//   { ok: true, ticker, current, trend: { d1, d5, m1, spark } }
+//
+// Edge-cached per ticker for 5 minutes. Used by the "Add holding"
+// flow on Book/Watchlist to fetch live prices for user-added tickers
+// without waiting for the next refresh-data workflow run.
+
+const QUOTE_CACHE_S = 5 * 60;
+
+async function handleQuote(req: Request, ctx: ExecutionContext): Promise<Response> {
+  const url = new URL(req.url);
+  const raw = (url.searchParams.get('ticker') ?? '').trim();
+  if (!raw) return json({ ok: false, reason: 'missing-ticker' }, 400);
+  if (raw.length > 32 || !/^[A-Za-z0-9.^=&_-]+$/.test(raw)) {
+    return json({ ok: false, reason: 'bad-ticker' }, 400);
+  }
+  const ticker = raw.toUpperCase();
+
+  const cacheKey = new Request(`https://internal.quote/v1/${encodeURIComponent(ticker)}`, { method: 'GET' });
+  const cache = caches.default;
+  const cached = await cache.match(cacheKey);
+  if (cached) {
+    const r = new Response(cached.body, cached);
+    r.headers.set('x-cache', 'hit');
+    return r;
+  }
+
+  let result: { current: number; trend: { d1: number; d5: number; m1: number; spark: number[] } };
+  try {
+    result = await fetchYahooChart(ticker);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`quote ${ticker} failed:`, msg);
+    return json({ ok: false, reason: 'fetch-failed', detail: msg.slice(0, 200) }, 502);
+  }
+
+  const resp = new Response(
+    JSON.stringify({ ok: true, ticker, ...result, fetchedAt: new Date().toISOString() }),
+    {
+      status: 200,
+      headers: {
+        'content-type': 'application/json',
+        'cache-control': `public, max-age=${QUOTE_CACHE_S}`,
+        'x-cache': 'miss',
+      },
+    },
+  );
+  ctx.waitUntil(cache.put(cacheKey, resp.clone()));
+  return resp;
+}
+
+async function fetchYahooChart(ticker: string) {
+  const end = Math.floor(Date.now() / 1000);
+  const start = end - 45 * 24 * 60 * 60;
+  const chartUrl = `https://query2.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?period1=${start}&period2=${end}&interval=1d`;
+
+  const ua =
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36';
+  const res = await fetch(chartUrl, {
+    headers: { 'User-Agent': ua, Accept: 'application/json' },
+  });
+  if (!res.ok) {
+    throw new Error(`yahoo http ${res.status}`);
+  }
+  const data = (await res.json()) as any;
+  const r = data?.chart?.result?.[0];
+  const closes: unknown[] = r?.indicators?.quote?.[0]?.close ?? [];
+  const valid = closes.filter((v): v is number => typeof v === 'number' && Number.isFinite(v));
+  if (valid.length < 2) throw new Error(`only ${valid.length} valid closes`);
+
+  const round = (v: number) => Math.round(v * 100) / 100;
+  const pct = (a: number, b: number) => (b === 0 ? 0 : ((a - b) / b) * 100);
+  const last = valid[valid.length - 1];
+  const prev1 = valid[valid.length - 2] ?? last;
+  const prev5 = valid[valid.length - 6] ?? valid[0];
+  const prev1m = valid[0];
+  return {
+    current: round(last),
+    trend: {
+      d1: round(pct(last, prev1)),
+      d5: round(pct(last, prev5)),
+      m1: round(pct(last, prev1m)),
+      spark: valid.slice(-7).map(round),
+    },
+  };
+}
+
+/* ---------- TTS ---------- */
 
 async function handleTTS(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   if (!env.TTS_API_KEY) {

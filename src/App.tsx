@@ -7,6 +7,7 @@ import { HeadlineDrawer } from './components/HeadlineDrawer';
 import watermarkUrl from './assets/logos/munshot-logo.png';
 import { StoreProvider } from './state/store';
 import { LiveDataProvider, LIVE_MODE, useLive } from './state/liveData';
+import { UserBookProvider } from './state/userBook';
 import { Today } from './tabs/Today';
 import { Macro } from './tabs/Macro';
 import { Markets } from './tabs/Markets';
@@ -40,6 +41,7 @@ function App() {
 
   return (
     <LiveDataProvider>
+    <UserBookProvider>
     <StoreProvider>
       <div className="min-h-screen text-charcoal">
         <SideNav active={tab} onChange={setTab} />
@@ -77,6 +79,7 @@ function App() {
         </div>
       </div>
     </StoreProvider>
+    </UserBookProvider>
     </LiveDataProvider>
   );
 }

@@ -1,3 +1,4 @@
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '../components/Card';
 import { SectionHeader } from '../components/SectionHeader';
@@ -5,6 +6,10 @@ import { Heatmap } from '../components/Heatmap';
 import type { HeatCell } from '../components/Heatmap';
 import { portfolio as mockPortfolio, portfolioStats } from '../data/portfolio';
 import { useLiveOverlay, DataSourceChip } from '../state/liveData';
+import { useUserBook, mergeUserBook } from '../state/userBook';
+import { useQuote } from '../state/quotes';
+import { HoldingDialog } from '../components/HoldingDialog';
+import type { DialogInitial } from '../components/HoldingDialog';
 import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
 import { ToneDot, MeaningBadge } from '../components/Tone';
@@ -15,11 +20,23 @@ import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
 import clsx from 'clsx';
+import type { Holding } from '../types';
 
 export function Portfolio({ hideBrief = false }: { hideBrief?: boolean } = {}) {
   const { openDrawer } = useStore();
-  const portfolio = useLiveOverlay(mockPortfolio, 'holdings');
+  const { state: bookState, add, edit, remove } = useUserBook();
+  const merged = useMemo(
+    () => mergeUserBook(mockPortfolio, bookState.portfolio),
+    [bookState.portfolio],
+  );
+  const portfolio = useLiveOverlay(merged, 'holdings');
   const sortedByWeight = [...portfolio].sort((a, b) => b.weight - a.weight);
+
+  const [dialog, setDialog] = useState<{ open: boolean; mode: 'add' | 'edit'; editId?: string; initial?: DialogInitial }>({
+    open: false,
+    mode: 'add',
+  });
+  const userIds = new Set(bookState.portfolio.added.map((a) => a.id));
 
   const heat: HeatCell[] = sortedByWeight.map((h) => ({
     id: h.id,
@@ -78,7 +95,18 @@ export function Portfolio({ hideBrief = false }: { hideBrief?: boolean } = {}) {
           title="Portfolio Impact Board"
           eyebrow="Holdings"
           hint="Weight, today's move, 5D trend, impact driver and action."
-          right={<DataSourceChip section="holdings" />}
+          right={
+            <div className="flex items-center gap-2">
+              <DataSourceChip section="holdings" />
+              <button
+                type="button"
+                onClick={() => setDialog({ open: true, mode: 'add' })}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-gradient-to-b from-calm-emerald to-[#0C7A5E] text-white text-[11px] font-semibold shadow-soft hover:shadow-lift transition"
+              >
+                <span aria-hidden>+</span> Add holding
+              </button>
+            </div>
+          }
         />
         <div className="card overflow-hidden">
           <table className="tbl">
@@ -94,31 +122,31 @@ export function Portfolio({ hideBrief = false }: { hideBrief?: boolean } = {}) {
               </tr>
             </thead>
             <tbody>
-              {sortedByWeight.map((h) => {
-                const tone = getSignalTone({ ...h, scope: 'portfolio' });
-                const meaning = marketMeaning({ ...h, category: 'portfolio' });
-                return (
-                  <tr key={h.id} className={clsx('row-link', toneTokens(tone).rowClass)} onClick={() => openDrawer(aiSignals[0])}>
-                    <td className="pl-5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[13px] font-semibold text-charcoal">{h.title}</span>
-                        {meaning && <MeaningBadge tone={tone}>{meaning}</MeaningBadge>}
-                      </div>
-                      <div className="text-[10.5px] text-charcoal-mute mt-0.5">{h.sector}</div>
-                    </td>
-                    <td className="tabular-nums text-charcoal-soft text-[12px]">{h.weight}%</td>
-                    <td><Delta value={h.trend!.d1} /></td>
-                    <td>
-                      <div className="w-[80px]">
-                        <Sparkline data={h.trend!.spark} color={toneTokens(tone).spark} height={22} />
-                      </div>
-                    </td>
-                    <td className="text-[11.5px] text-charcoal-mute leading-snug">{h.whyShown}</td>
-                    <td><ToneDot tone={tone} /></td>
-                    <td className="pr-5 text-[11.5px] text-calm-violet">{h.action || '—'}</td>
-                  </tr>
-                );
-              })}
+              {sortedByWeight.map((h) => (
+                <HoldingRow
+                  key={h.id}
+                  h={h}
+                  isUser={userIds.has(h.id)}
+                  onOpen={() => openDrawer(aiSignals[0])}
+                  onEdit={() =>
+                    setDialog({
+                      open: true,
+                      mode: 'edit',
+                      editId: h.id,
+                      initial: {
+                        ticker: (h as Holding & { ticker?: string }).ticker,
+                        title: h.title,
+                        sector: h.sector,
+                        weight: h.weight,
+                        thesis: h.thesis,
+                      },
+                    })
+                  }
+                  onRemove={() => {
+                    if (confirm(`Remove ${h.title}?`)) remove('portfolio', h.id);
+                  }}
+                />
+              ))}
             </tbody>
           </table>
         </div>
@@ -135,7 +163,116 @@ export function Portfolio({ hideBrief = false }: { hideBrief?: boolean } = {}) {
           </ul>
         </Card>
       </section>
+
+      <HoldingDialog
+        open={dialog.open}
+        mode={dialog.mode}
+        surface="portfolio"
+        initial={dialog.initial}
+        onClose={() => setDialog({ open: false, mode: 'add' })}
+        onSubmit={(data) => {
+          if (dialog.mode === 'add') {
+            add('portfolio', data as Parameters<typeof add>[1]);
+          } else if (dialog.editId) {
+            edit('portfolio', dialog.editId, data);
+          }
+          setDialog({ open: false, mode: 'add' });
+        }}
+      />
     </motion.div>
+  );
+}
+
+// Row component — handles its own live-quote fetch for user-added
+// holdings so the demo rows (which come pre-populated via the live
+// overlay) don't pay any extra cost.
+function HoldingRow({
+  h,
+  isUser,
+  onOpen,
+  onEdit,
+  onRemove,
+}: {
+  h: Holding;
+  isUser: boolean;
+  onOpen: () => void;
+  onEdit: () => void;
+  onRemove: () => void;
+}) {
+  const tone = getSignalTone({ ...h, scope: 'portfolio' });
+  const meaning = marketMeaning({ ...h, category: 'portfolio' });
+  // For user-added rows the bundled overlay can't fill values (no id
+  // match in live.json). Fetch on demand from /api/quote.
+  const quote = useQuote(isUser ? h.ticker : null);
+  const d1 = isUser && quote.data ? quote.data.trend.d1 : h.trend!.d1;
+  const spark = isUser && quote.data && quote.data.trend.spark.length > 0
+    ? quote.data.trend.spark
+    : h.trend!.spark;
+
+  return (
+    <tr
+      className={clsx('row-link group', toneTokens(tone).rowClass)}
+      onClick={onOpen}
+    >
+      <td className="pl-5">
+        <div className="flex items-center gap-2">
+          <span className="text-[13px] font-semibold text-charcoal">{h.title}</span>
+          {isUser && (
+            <span className="chip bg-calm-violet-bg text-calm-violet" title="User-added">
+              You
+            </span>
+          )}
+          {meaning && <MeaningBadge tone={tone}>{meaning}</MeaningBadge>}
+        </div>
+        <div className="text-[10.5px] text-charcoal-mute mt-0.5">
+          {h.sector}
+          {isUser && quote.loading && <span className="ml-2 text-charcoal-mute/60">fetching live price…</span>}
+          {isUser && quote.error && <span className="ml-2 text-calm-rose">price unavailable</span>}
+        </div>
+      </td>
+      <td className="tabular-nums text-charcoal-soft text-[12px]">{h.weight}%</td>
+      <td>
+        {isUser && quote.loading ? (
+          <span className="text-charcoal-mute text-[12px]">—</span>
+        ) : (
+          <Delta value={d1} />
+        )}
+      </td>
+      <td>
+        <div className="w-[80px]">
+          {spark.length > 1 ? (
+            <Sparkline data={spark} color={toneTokens(tone).spark} height={22} />
+          ) : (
+            <span className="text-charcoal-mute text-[10px]">—</span>
+          )}
+        </div>
+      </td>
+      <td className="text-[11.5px] text-charcoal-mute leading-snug">{h.whyShown}</td>
+      <td><ToneDot tone={tone} /></td>
+      <td className="pr-5">
+        <div className="flex items-center gap-2 justify-end">
+          <span className="text-[11.5px] text-calm-violet">{h.action || '—'}</span>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onEdit(); }}
+            className="opacity-0 group-hover:opacity-100 transition text-charcoal-mute hover:text-charcoal-soft text-[11px] px-1"
+            title="Edit"
+            aria-label="Edit holding"
+          >
+            ✎
+          </button>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onRemove(); }}
+            className="opacity-0 group-hover:opacity-100 transition text-charcoal-mute hover:text-calm-rose text-[12px] px-1"
+            title="Remove"
+            aria-label="Remove holding"
+          >
+            ×
+          </button>
+        </div>
+      </td>
+    </tr>
   );
 }
 
