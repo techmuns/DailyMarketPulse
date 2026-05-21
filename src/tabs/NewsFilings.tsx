@@ -5,6 +5,7 @@ import { ToneDot, MeaningBadge } from '../components/Tone';
 import { PulseBrief } from '../components/PulseBrief';
 import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
 import { news, filings } from '../data/news';
+import { LiveWire } from '../components/LiveWire';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
 import { timeAgo } from '../utils/format';
@@ -33,6 +34,13 @@ export function NewsFilings() {
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-7">
       <PulseBrief tabKey="News & Filings" />
+
+      <LiveWire
+        title="Live news wire"
+        eyebrow="MoneyControl · all markets"
+        hint="Raw headlines from moneycontrol.com, refreshed twice daily."
+        limit={10}
+      />
 
       <header className="flex items-end justify-between gap-3 flex-wrap">
         <div>

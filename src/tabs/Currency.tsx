@@ -7,6 +7,7 @@ import { ToneDot, MeaningBadge } from '../components/Tone';
 import { PulseBrief } from '../components/PulseBrief';
 import { currencies as mockCurrencies, currencySummary } from '../data/currencies';
 import { useLiveOverlay, DataSourceChip } from '../state/liveData';
+import { LiveWire } from '../components/LiveWire';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
 import { num } from '../utils/format';
@@ -78,6 +79,14 @@ export function Currency() {
           </table>
         </div>
       </section>
+
+      <LiveWire
+        title="Currency news wire"
+        eyebrow="MoneyControl · FX-filtered"
+        hint="Live headlines mentioning the rupee, USD, or FX flows."
+        keywords={['rupee', 'inr', 'usd', 'dollar', 'currency', 'fx', 'forex', 'rbi', 'euro', 'yen']}
+        limit={6}
+      />
 
       <section>
         <SectionHeader title="Importer / exporter map" eyebrow="FX impact" />

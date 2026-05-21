@@ -70,17 +70,29 @@ async function run() {
   let fail = 0;
 
   for (const [kind, list] of Object.entries(SYMBOLS)) {
-    for (const { id, yahoo } of list) {
-      try {
-        const closes = await fetchCloses(yahoo);
-        const trend = computeTrend(closes);
-        const current = round(closes[closes.length - 1]);
-        out[kind].push({ id, ticker: yahoo, current, trend });
+    for (const { id, yahoo, fallbacks = [] } of list) {
+      const candidates = [yahoo, ...fallbacks];
+      let resolved = null;
+      let lastErr = null;
+      for (const symbol of candidates) {
+        try {
+          const closes = await fetchCloses(symbol);
+          resolved = { symbol, closes };
+          break;
+        } catch (err) {
+          lastErr = err;
+        }
+        await sleep(150);
+      }
+      if (resolved) {
+        const trend = computeTrend(resolved.closes);
+        const current = round(resolved.closes[resolved.closes.length - 1]);
+        out[kind].push({ id, ticker: resolved.symbol, current, trend });
         ok++;
-        console.log(`ok    ${kind.padEnd(11)} ${id.padEnd(10)} ${yahoo.padEnd(14)} cur=${current}`);
-      } catch (err) {
+        console.log(`ok    ${kind.padEnd(11)} ${id.padEnd(10)} ${resolved.symbol.padEnd(14)} cur=${current}`);
+      } else {
         fail++;
-        console.warn(`skip  ${kind.padEnd(11)} ${id.padEnd(10)} ${yahoo.padEnd(14)} ${err.message ?? err}`);
+        console.warn(`skip  ${kind.padEnd(11)} ${id.padEnd(10)} ${yahoo.padEnd(14)} ${lastErr?.message ?? lastErr}`);
       }
       await sleep(150);
     }
