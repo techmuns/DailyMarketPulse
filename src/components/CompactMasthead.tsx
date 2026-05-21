@@ -24,7 +24,7 @@ interface Props {
 export function CompactMasthead({ section, chips = [], time = '08:25 IST' }: Props) {
   return (
     <header
-      className="sticky top-0 z-20 -mx-6 md:-ml-[72px] md:-mr-6 px-6 md:pl-[72px] md:pr-6 backdrop-blur-[12px] border-b border-bordersoft/70"
+      className="sticky top-0 z-20 -mx-6 md:-mx-16 px-6 md:px-16 backdrop-blur-[12px] border-b border-bordersoft/70"
       style={{
         background:
           'linear-gradient(180deg, rgba(252,251,255,0.92) 0%, rgba(245,240,255,0.78) 100%)',

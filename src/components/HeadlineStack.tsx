@@ -1,9 +1,14 @@
+import { useState } from 'react';
 import clsx from 'clsx';
 import type { LensHeadline, Signal } from '../types';
 import { useStore } from '../state/store';
 
 interface Props {
   items: LensHeadline[];
+  // Number of headlines visible before "Show all" is offered. Anything
+  // above this threshold is collapsed by default so the panel stays
+  // visually balanced with Market Weather. Defaults to 3.
+  defaultVisible?: number;
 }
 
 // Same tone vocabulary used elsewhere — tone is read via the left rail
@@ -15,8 +20,9 @@ const TONE: Record<Signal, { rail: string; text: string; label: string }> = {
   noise: { rail: 'bg-calm-violet', text: 'text-calm-violet', label: 'Neutral' },
 };
 
-export function HeadlineStack({ items }: Props) {
+export function HeadlineStack({ items, defaultVisible = 3 }: Props) {
   const { openHeadline } = useStore();
+  const [expanded, setExpanded] = useState(false);
 
   if (items.length === 0) {
     return (
@@ -26,9 +32,13 @@ export function HeadlineStack({ items }: Props) {
     );
   }
 
+  const visible = expanded ? items : items.slice(0, defaultVisible);
+  const hidden = items.length - visible.length;
+
   return (
+    <div>
     <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-      {items.map((h, i) => {
+      {visible.map((h, i) => {
         const tone = TONE[h.signal];
         const affected = [...h.affectedSectors, ...h.affectedCompanies].slice(0, 2);
         const isLastOdd = items.length % 2 === 1 && i === items.length - 1;
@@ -77,6 +87,29 @@ export function HeadlineStack({ items }: Props) {
         );
       })}
     </ul>
+    {(hidden > 0 || expanded) && (
+      <div className="mt-2.5 flex items-center justify-end gap-3">
+        {hidden > 0 && (
+          <button
+            type="button"
+            onClick={() => setExpanded(true)}
+            className="text-[11px] tracking-wide font-medium text-calm-violet hover:text-calm-violet/80 transition"
+          >
+            Show all {items.length} →
+          </button>
+        )}
+        {expanded && items.length > defaultVisible && (
+          <button
+            type="button"
+            onClick={() => setExpanded(false)}
+            className="text-[11px] tracking-wide text-charcoal-mute hover:text-charcoal-soft transition"
+          >
+            Show less
+          </button>
+        )}
+      </div>
+    )}
+    </div>
   );
 }
 

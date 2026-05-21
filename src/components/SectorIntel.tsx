@@ -97,24 +97,22 @@ export function SectorIntel({ headlines }: Props) {
 
 function AiCommentary({ text, picked }: { text: string; picked: CanonicalSector | null }) {
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-bordersoft bg-cream shadow-soft px-5 py-4">
+    <div className="relative overflow-hidden rounded-2xl border border-bordersoft bg-cream shadow-soft px-4 py-3">
       <div
         aria-hidden
         className="absolute inset-y-0 left-0 w-[3px]"
         style={{ background: 'linear-gradient(180deg, #8C79C9 0%, #0F8F6F 100%)' }}
       />
-      <div className="flex items-center gap-2 mb-1.5">
+      <div className="flex items-center gap-2 mb-1">
         <span className="relative inline-flex w-1.5 h-1.5">
           <span className="absolute inset-0 rounded-full bg-calm-violet opacity-60 animate-ping" />
           <span className="relative w-1.5 h-1.5 rounded-full bg-calm-violet" />
         </span>
-        <span className="text-[9.5px] tracking-[0.22em] uppercase font-semibold text-calm-violet">
-          AI sector read{picked ? ` · ${picked}` : ' · today'}
+        <span className="text-[9px] tracking-[0.22em] uppercase font-semibold text-calm-violet">
+          AI read{picked ? ` · ${picked}` : ''}
         </span>
       </div>
-      <p className="font-display italic text-[14px] md:text-[14.5px] text-charcoal-soft leading-relaxed">
-        {text}
-      </p>
+      <p className="text-[12.5px] md:text-[13px] text-charcoal-soft leading-snug">{text}</p>
     </div>
   );
 }
@@ -298,6 +296,8 @@ function TopSectorsList({
   top: SectorSummary[];
   onSelect: (s: CanonicalSector) => void;
 }) {
+  const DEFAULT_VISIBLE = 3;
+  const [expanded, setExpanded] = useState(false);
   if (top.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-bordersoft bg-cream/60 px-5 py-10 text-center text-[12.5px] text-charcoal-mute">
@@ -305,50 +305,65 @@ function TopSectorsList({
       </div>
     );
   }
+  const visible = expanded ? top : top.slice(0, DEFAULT_VISIBLE);
+  const hidden = top.length - visible.length;
   return (
     <div>
       <div className="mb-2 flex items-baseline justify-between">
-        <h3 className="font-display text-[14px] font-semibold text-charcoal">
+        <h3 className="font-display text-[13.5px] font-semibold text-charcoal">
           Today’s headline sectors
         </h3>
-        <span className="text-[10.5px] text-charcoal-mute">
-          Top {top.length} · ranked by material activity
+        <span className="text-[10px] text-charcoal-mute">
+          Top {top.length} · by material activity
         </span>
       </div>
       <ul className="divide-y divide-bordersoft/60 rounded-2xl border border-bordersoft bg-cream shadow-soft overflow-hidden">
-        {top.map((s) => (
+        {visible.map((s) => (
           <li key={s.sector}>
             <button
               type="button"
               onClick={() => onSelect(s.sector)}
-              className="group w-full text-left px-4 py-3 flex items-start gap-4 hover:bg-cream-deep/50 transition"
+              className="group w-full text-left px-3.5 py-2 flex items-center gap-3 hover:bg-cream-deep/50 transition"
             >
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-display text-[14px] font-semibold text-charcoal">
+                  <span className="font-display text-[13px] font-semibold text-charcoal truncate">
                     {s.sector}
                   </span>
                   <ToneChip tone={s.tone} />
                 </div>
-                <p className="text-[12px] text-charcoal-soft mt-1 leading-snug line-clamp-2">
+                <p className="text-[11.5px] text-charcoal-soft mt-0.5 leading-snug truncate">
                   {s.topReason}
                 </p>
               </div>
-              <div className="flex flex-col items-end gap-1 shrink-0">
-                <span className="text-[10.5px] tracking-[0.18em] uppercase font-semibold text-charcoal-mute">
-                  {s.materialCount} material
-                </span>
-                <span className="text-[10px] text-charcoal-mute/80">
-                  {s.totalCount} total
-                </span>
+              <div className="text-[10px] text-charcoal-mute tabular-nums shrink-0">
+                {s.materialCount}/{s.totalCount}
               </div>
-              <span className="self-center text-charcoal-mute group-hover:text-calm-emerald transition" aria-hidden>
+              <span className="text-charcoal-mute group-hover:text-calm-emerald transition shrink-0" aria-hidden>
                 →
               </span>
             </button>
           </li>
         ))}
       </ul>
+      {hidden > 0 && (
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          className="mt-2 text-[11px] tracking-wide text-calm-violet hover:text-calm-violet/80 transition font-medium"
+        >
+          Show {hidden} more →
+        </button>
+      )}
+      {expanded && top.length > DEFAULT_VISIBLE && (
+        <button
+          type="button"
+          onClick={() => setExpanded(false)}
+          className="mt-2 text-[11px] tracking-wide text-charcoal-mute hover:text-charcoal-soft transition"
+        >
+          Show less
+        </button>
+      )}
     </div>
   );
 }
@@ -366,39 +381,63 @@ function SectorDetail({
   onOpen: (h: LensHeadline) => void;
   onBack: () => void;
 }) {
+  const DEFAULT_VISIBLE = 3;
+  const [expanded, setExpanded] = useState(false);
   const material = summary?.headlines.filter(isMaterial) ?? [];
   const routine = summary?.headlines.filter((h) => !isMaterial(h)) ?? [];
   const tone: SectorTone = summary?.tone ?? 'quiet';
   const materialCount = material.length;
+  const visible = expanded ? material.slice(0, 5) : material.slice(0, DEFAULT_VISIBLE);
+  const hidden = Math.max(0, Math.min(material.length, 5) - visible.length);
 
   return (
     <div className="rounded-2xl border border-bordersoft bg-cream shadow-soft overflow-hidden">
-      <div className="px-5 py-3.5 flex items-center justify-between gap-3 border-b border-bordersoft/60">
-        <div className="flex items-center gap-2.5 flex-wrap">
+      <div className="px-4 py-2.5 flex items-center justify-between gap-3 border-b border-bordersoft/60">
+        <div className="flex items-center gap-2 flex-wrap min-w-0">
           <button
             type="button"
             onClick={onBack}
-            className="text-[11.5px] text-charcoal-mute hover:text-charcoal-soft transition"
+            className="text-[11px] text-charcoal-mute hover:text-charcoal-soft transition shrink-0"
           >
             ← All sectors
           </button>
           <span className="text-charcoal-mute/40">·</span>
-          <h3 className="font-display text-[15px] font-semibold text-charcoal">{sector}</h3>
+          <h3 className="font-display text-[14px] font-semibold text-charcoal truncate">{sector}</h3>
           <ToneChip tone={tone} />
-          <span className="text-[10.5px] tracking-[0.18em] uppercase font-semibold text-charcoal-mute">
-            {materialCount} material headline{materialCount === 1 ? '' : 's'}
+          <span className="text-[10px] tracking-[0.16em] uppercase font-semibold text-charcoal-mute">
+            {materialCount} material
           </span>
         </div>
       </div>
 
       {material.length > 0 ? (
-        <ul className="divide-y divide-bordersoft/60">
-          {material.slice(0, 5).map((s) => (
-            <HeadlineRow key={s.headline.id} headline={s.headline} onOpen={onOpen} />
-          ))}
-        </ul>
+        <>
+          <ul className="divide-y divide-bordersoft/60">
+            {visible.map((s) => (
+              <HeadlineRow key={s.headline.id} headline={s.headline} onOpen={onOpen} />
+            ))}
+          </ul>
+          {hidden > 0 && (
+            <button
+              type="button"
+              onClick={() => setExpanded(true)}
+              className="w-full px-4 py-2 border-t border-bordersoft/60 text-[11px] tracking-wide font-medium text-calm-violet hover:bg-cream-deep/40 transition"
+            >
+              Show all {Math.min(material.length, 5)}
+            </button>
+          )}
+          {expanded && material.length > DEFAULT_VISIBLE && (
+            <button
+              type="button"
+              onClick={() => setExpanded(false)}
+              className="w-full px-4 py-2 border-t border-bordersoft/60 text-[11px] tracking-wide text-charcoal-mute hover:text-charcoal-soft transition"
+            >
+              Show less
+            </button>
+          )}
+        </>
       ) : (
-        <div className="px-5 py-8 text-center text-[12.5px] text-charcoal-mute">
+        <div className="px-5 py-7 text-center text-[12px] text-charcoal-mute">
           No material sector-moving change detected today.
         </div>
       )}
@@ -423,56 +462,47 @@ function HeadlineRow({
       : headline.signal === 'monitor'
       ? 'mixed'
       : 'quiet';
-  const companies = headline.affectedCompanies?.slice(0, 3) ?? [];
+  const companies = headline.affectedCompanies?.slice(0, 2) ?? [];
 
   return (
     <li>
-      <div className="px-5 py-3 hover:bg-cream-deep/50 transition flex flex-col gap-2">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-2 flex-wrap min-w-0">
-            <ToneChip tone={tone} />
-            <span className="text-[10.5px] text-charcoal-mute tracking-wide">
-              {headline.category}
-            </span>
-            <span className="text-charcoal-mute/40">·</span>
-            <span className="text-[10.5px] text-charcoal-mute">{headline.sourceType}</span>
-            <span className="text-charcoal-mute/40">·</span>
-            <span className="text-[10.5px] text-charcoal-mute">{headline.timestamp}</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => onOpen(headline)}
-            className="text-[11.5px] font-medium text-calm-emerald hover:text-calm-emerald/80 transition shrink-0"
-          >
-            Read more →
-          </button>
+      <button
+        type="button"
+        onClick={() => onOpen(headline)}
+        className="w-full text-left px-4 py-2.5 hover:bg-cream-deep/50 transition flex flex-col gap-1"
+      >
+        <div className="flex items-center gap-2 flex-wrap text-[10px] text-charcoal-mute tracking-wide">
+          <ToneChip tone={tone} />
+          <span className="truncate">{headline.category}</span>
+          <span className="text-charcoal-mute/40">·</span>
+          <span>{headline.timestamp}</span>
         </div>
 
-        <h4 className="font-display text-[14px] font-medium text-charcoal leading-snug">
+        <h4 className="font-display text-[13px] font-medium text-charcoal leading-snug line-clamp-2">
           {headline.headline}
         </h4>
-        <p className="text-[12px] text-charcoal-soft leading-relaxed">
+        <p className="text-[11.5px] text-charcoal-soft leading-snug truncate">
           {headline.whyItMatters}
         </p>
 
         {companies.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+          <div className="flex flex-wrap items-center gap-1 mt-0.5">
             {companies.map((c) => (
               <span
                 key={c}
-                className="font-mono text-[10.5px] text-charcoal-soft bg-cream-deep border border-bordersoft px-1.5 py-0.5 rounded"
+                className="font-mono text-[10px] text-charcoal-soft bg-cream-deep border border-bordersoft px-1.5 py-0.5 rounded"
               >
                 {c}
               </span>
             ))}
-            {(headline.affectedCompanies?.length ?? 0) > 3 && (
+            {(headline.affectedCompanies?.length ?? 0) > 2 && (
               <span className="text-[10px] text-charcoal-mute">
-                +{(headline.affectedCompanies?.length ?? 0) - 3}
+                +{(headline.affectedCompanies?.length ?? 0) - 2}
               </span>
             )}
           </div>
         )}
-      </div>
+      </button>
     </li>
   );
 }

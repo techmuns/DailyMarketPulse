@@ -313,27 +313,37 @@ export function tonePhrase(t: SectorTone): string {
   return TONE_PHRASE[t];
 }
 
+// Short verb form used in the crisp default commentary, e.g.
+// "Banks were under pressure, IT Services led, FMCG was mixed."
+const TONE_VERB: Record<SectorTone, string> = {
+  support: 'led',
+  pressure: 'was under pressure',
+  mixed: 'was mixed',
+  quiet: 'was quiet',
+};
+
 // Build the default (no-sector-selected) AI commentary string.
+// Aim: 1–2 short sentences, scannable at a glance. No long italic
+// paragraphs, no analyst-speak repetition of detail already shown
+// in the list below.
 export function defaultCommentary(top: SectorSummary[]): string {
   if (top.length === 0) {
-    return 'Today’s market narrative is quiet. No sector cleared the material-change threshold this session.';
+    return 'No sector cleared the material-change threshold today.';
   }
-  const lead = top
+  const lead = top.slice(0, 3).map((s) => s.sector);
+  const joined =
+    lead.length === 3
+      ? `${lead[0]}, ${lead[1]} and ${lead[2]}`
+      : lead.join(' and ');
+  const beats = top
     .slice(0, 3)
-    .map((s) => `${s.sector} ${TONE_PHRASE[s.tone]}`)
+    .map((s) => `${s.sector} ${TONE_VERB[s.tone]}`)
     .join(', ');
-  const reasons = top
-    .slice(0, 2)
-    .map((s) => {
-      const why = s.headlines[0]?.headline.shortContext ?? '';
-      return `${s.sector} is in focus because of ${why.replace(/\.$/, '').toLowerCase()}`;
-    })
-    .join('; ');
-  return `Today’s market narrative is led by ${lead}. ${reasons}. These are the sectors that kept the market conversation active today.`;
+  return `${joined} led today's sector narrative. ${beats}.`;
 }
 
-// Build the per-sector commentary string used when a sector is picked
-// from the dropdown.
+// Per-sector commentary used when a sector is picked from the
+// dropdown. Kept short — 1–2 sentences. No restated detail.
 export function sectorCommentary(summary: SectorSummary | undefined, picked: CanonicalSector): string {
   if (!summary || summary.materialCount === 0) {
     return 'This sector did not make the main market narrative today. There are routine mentions, but no material sector-moving change detected.';
@@ -351,5 +361,5 @@ export function sectorCommentary(summary: SectorSummary | undefined, picked: Can
     mixed: 'Mixed',
     quiet: 'Quiet',
   };
-  return `${picked} has ${summary.materialCount} material change${summary.materialCount === 1 ? '' : 's'} today: ${themes}. The sector tone is ${toneLabel[summary.tone]}.`;
+  return `${picked} has ${summary.materialCount} material change${summary.materialCount === 1 ? '' : 's'} today: ${themes}. Sector tone: ${toneLabel[summary.tone]}.`;
 }
