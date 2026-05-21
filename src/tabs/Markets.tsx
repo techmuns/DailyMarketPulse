@@ -5,7 +5,7 @@ import { PulseBrief } from '../components/PulseBrief';
 import { Heatmap } from '../components/Heatmap';
 import type { HeatCell } from '../components/Heatmap';
 import { indices as mockIndices, sectors, breadth, gainers, losers, unusualVolume } from '../data/markets';
-import { useLiveOverlay } from '../state/liveData';
+import { useLiveOverlay, DataSourceChip } from '../state/liveData';
 import type { MoverItem } from '../data/markets';
 import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
@@ -36,7 +36,12 @@ export function Markets() {
       </header>
 
       <section>
-        <SectionHeader title="Market Movers Board" eyebrow="Indices" hint="Index levels, 1D / 5D / 1M reads, and where today's flow is leaning." />
+        <SectionHeader
+          title="Market Movers Board"
+          eyebrow="Indices"
+          hint="Index levels, 1D / 5D / 1M reads, and where today's flow is leaning."
+          right={<DataSourceChip section="indices" />}
+        />
         <div className="card overflow-hidden">
           <table className="tbl">
             <thead>

@@ -6,7 +6,7 @@ import { Sparkline } from '../components/Sparkline';
 import { ToneDot, MeaningBadge } from '../components/Tone';
 import { PulseBrief } from '../components/PulseBrief';
 import { watchlist as mockWatchlist } from '../data/watchlist';
-import { useLiveOverlay } from '../state/liveData';
+import { useLiveOverlay, DataSourceChip } from '../state/liveData';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
 import { num } from '../utils/format';
@@ -31,7 +31,12 @@ export function Watchlist({ hideBrief = false }: { hideBrief?: boolean } = {}) {
       </header>
 
       <section>
-        <SectionHeader title="Watchlist Signal Board" eyebrow="Today" hint="Movers, opportunity setups, risk signals, and no-news corrections." />
+        <SectionHeader
+          title="Watchlist Signal Board"
+          eyebrow="Today"
+          hint="Movers, opportunity setups, risk signals, and no-news corrections."
+          right={<DataSourceChip section="holdings" />}
+        />
         <div className="card overflow-hidden">
           <table className="tbl">
             <thead>

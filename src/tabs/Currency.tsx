@@ -6,7 +6,7 @@ import { Sparkline } from '../components/Sparkline';
 import { ToneDot, MeaningBadge } from '../components/Tone';
 import { PulseBrief } from '../components/PulseBrief';
 import { currencies as mockCurrencies, currencySummary } from '../data/currencies';
-import { useLiveOverlay } from '../state/liveData';
+import { useLiveOverlay, DataSourceChip } from '../state/liveData';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
 import { num } from '../utils/format';
@@ -27,7 +27,12 @@ export function Currency() {
       </header>
 
       <section>
-        <SectionHeader title="Currency Pressure Board" eyebrow="Pairs" hint="Rate, 1D / 5D / 1M moves, trend, and portfolio impact." />
+        <SectionHeader
+          title="Currency Pressure Board"
+          eyebrow="Pairs"
+          hint="Rate, 1D / 5D / 1M moves, trend, and portfolio impact."
+          right={<DataSourceChip section="currencies" />}
+        />
         <div className="card overflow-hidden">
           <table className="tbl">
             <thead>
