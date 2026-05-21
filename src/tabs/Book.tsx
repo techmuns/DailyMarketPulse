@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
 import { PulseBrief } from '../components/PulseBrief';
+import { CompactMasthead } from '../components/CompactMasthead';
 import { Portfolio } from './Portfolio';
 import { Watchlist } from './Watchlist';
 
@@ -19,6 +20,12 @@ export function Book() {
       transition={{ duration: 0.25 }}
       className="space-y-9"
     >
+      <CompactMasthead
+        section={view === 'Holdings' ? 'Book' : 'Watchlist'}
+        chips={view === 'Holdings'
+          ? ['Risk-off feel', 'Autos lag', 'IT support']
+          : ['New movers', 'No-news drift', 'Volume watch']}
+      />
       <PulseBrief tabKey="Book" />
 
       <header>

@@ -6,6 +6,7 @@ import { Sparkline } from '../components/Sparkline';
 import { ToneDot, MeaningBadge } from '../components/Tone';
 import { Heatmap } from '../components/Heatmap';
 import { PulseBrief } from '../components/PulseBrief';
+import { CompactMasthead } from '../components/CompactMasthead';
 import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
 import clsx from 'clsx';
 import type { HeatCell } from '../components/Heatmap';
@@ -32,6 +33,7 @@ export function Commodities() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
+      <CompactMasthead section="Commodities" chips={['Crude firm', 'Steel up', 'Aluminium pressure']} />
       <PulseBrief tabKey="Commodities" />
 
       <header>
