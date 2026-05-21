@@ -22,10 +22,9 @@ export type SourceLabel =
 export type PriorityLens =
   | 'Global'
   | 'Sectoral'
-  | 'Portfolio Related'
-  | 'Custom';
+  | 'Portfolio Related';
 
-export type LensType = 'global' | 'sectoral' | 'portfolio' | 'custom';
+export type LensType = 'global' | 'sectoral' | 'portfolio';
 
 export interface LensHeadline {
   id: string;

@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import type { PriorityLens } from '../types';
 import { useStore } from '../state/store';
 
-const LENSES: PriorityLens[] = ['Global', 'Sectoral', 'Portfolio Related', 'Custom'];
+const LENSES: PriorityLens[] = ['Global', 'Sectoral', 'Portfolio Related'];
 
 export function PriorityLensSelector() {
   const { lens, setLens } = useStore();

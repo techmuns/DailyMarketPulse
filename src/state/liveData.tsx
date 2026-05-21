@@ -24,29 +24,66 @@ export interface LivePayload {
 
 export type LiveKind = 'indices' | 'currencies' | 'commodities' | 'holdings';
 
+// MoneyControl-sourced supplementary feed: news headlines, NSE
+// gainers/losers, FII/DII flows. Populated by scripts/fetch-moneycontrol.mjs
+// and committed as public/data/moneycontrol.json by the
+// refresh-moneycontrol GitHub workflow. Any of the fields can be null
+// independently — frontend treats each section as optional.
+
+export interface MoneyControlNewsItem {
+  title: string;
+  url: string;
+  publishedAt: string | null;
+}
+
+export interface MoneyControlMover {
+  name: string;
+  price: number | null;
+  changePct: number | null;
+}
+
+export interface MoneyControlFiiDii {
+  date: string;
+  fii: { buy: number | null; sell: number | null; net: number | null };
+  dii: { buy: number | null; sell: number | null; net: number | null };
+}
+
+export interface MoneyControlPayload {
+  fetchedAt: string;
+  news: MoneyControlNewsItem[] | null;
+  gainers: MoneyControlMover[] | null;
+  losers: MoneyControlMover[] | null;
+  fiiDii: MoneyControlFiiDii | null;
+}
+
 interface LiveCtx {
   data: LivePayload | null;
+  mc: MoneyControlPayload | null;
   loading: boolean;
   error: string | null;
 }
 
-const Ctx = createContext<LiveCtx>({ data: null, loading: true, error: null });
+const Ctx = createContext<LiveCtx>({ data: null, mc: null, loading: true, error: null });
 
 export function LiveDataProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<LivePayload | null>(null);
+  const [mc, setMc] = useState<MoneyControlPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
-    fetch('/data/live.json', { cache: 'no-cache' })
+    const live = fetch('/data/live.json', { cache: 'no-cache' })
       .then((r) => (r.ok ? r.json() : null))
       .then((j) => {
-        if (!alive) return;
-        if (j && typeof j.fetchedAt === 'string') {
-          setData(j as LivePayload);
-        }
-      })
+        if (alive && j && typeof j.fetchedAt === 'string') setData(j as LivePayload);
+      });
+    const mcFetch = fetch('/data/moneycontrol.json', { cache: 'no-cache' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        if (alive && j && typeof j.fetchedAt === 'string') setMc(j as MoneyControlPayload);
+      });
+    Promise.allSettled([live, mcFetch])
       .catch((e) => {
         if (alive) setError(String(e));
       })
@@ -58,12 +95,16 @@ export function LiveDataProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const value = useMemo(() => ({ data, loading, error }), [data, loading, error]);
+  const value = useMemo(() => ({ data, mc, loading, error }), [data, mc, loading, error]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 
 export function useLive(): LiveCtx {
   return useContext(Ctx);
+}
+
+export function useMoneyControl(): MoneyControlPayload | null {
+  return useContext(Ctx).mc;
 }
 
 /**
@@ -135,6 +176,87 @@ function formatAge(ageMs: number): string {
   const hrs = Math.floor(mins / 60);
   if (hrs < 24) return `${hrs}h ago`;
   return `${Math.floor(hrs / 24)}d ago`;
+}
+
+// ---------- Live headlines (MoneyControl news feed) ----------
+//
+// useLiveHeadlines(filter?) returns a filtered slice of moneycontrol news
+// plus a freshness state matching the DataSource model.
+// The `filter` predicate runs on the headline title (case-insensitive
+// substring match against any keyword in the array).
+
+export interface LiveHeadlineState {
+  kind: 'mock' | 'unavailable' | 'live' | 'delayed';
+  items: MoneyControlNewsItem[];
+  total: number;
+  ageMs: number | null;
+}
+
+export function useLiveHeadlines(keywords?: string[]): LiveHeadlineState {
+  const mc = useMoneyControl();
+  return useMemo(() => {
+    if (!LIVE_MODE) return { kind: 'mock', items: [], total: 0, ageMs: null };
+    if (!mc || !mc.news || mc.news.length === 0) {
+      return { kind: 'unavailable', items: [], total: 0, ageMs: null };
+    }
+    const all = mc.news;
+    const items = keywords && keywords.length > 0
+      ? all.filter((n) => {
+          const t = n.title.toLowerCase();
+          return keywords.some((k) => t.includes(k.toLowerCase()));
+        })
+      : all;
+    const t = Date.parse(mc.fetchedAt);
+    const ageMs = Number.isNaN(t) ? null : Date.now() - t;
+    const fresh = ageMs == null ? true : ageMs <= FRESH_MS;
+    return {
+      kind: fresh ? 'live' : 'delayed',
+      items,
+      total: all.length,
+      ageMs,
+    };
+  }, [mc, keywords?.join('|')]);
+}
+
+// Reusable chip used by headline sections (and any list where the
+// underlying source is moneycontrol news).
+export function LiveHeadlinesChip({ state }: { state: LiveHeadlineState }) {
+  const base =
+    'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9.5px] tracking-[0.18em] uppercase font-semibold shrink-0';
+  if (state.kind === 'live') {
+    return (
+      <span
+        className={`${base} bg-calm-emerald-bg/70 ring-1 ring-calm-emerald/25 text-calm-emerald`}
+        title={`${state.items.length} of ${state.total} live headlines · ${state.ageMs == null ? '' : formatAge(state.ageMs)}`}
+      >
+        <span className="relative inline-flex w-1.5 h-1.5">
+          <span className="absolute inset-0 rounded-full bg-calm-emerald opacity-60 animate-ping" />
+          <span className="relative w-1.5 h-1.5 rounded-full bg-calm-emerald" />
+        </span>
+        Live · {state.items.length}
+      </span>
+    );
+  }
+  if (state.kind === 'delayed') {
+    return (
+      <span
+        className={`${base} bg-calm-amber-bg ring-1 ring-calm-amber/30 text-calm-amber`}
+        title={`${state.items.length} headlines · ${state.ageMs == null ? '' : formatAge(state.ageMs)} (stale)`}
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-calm-amber" />
+        Delayed · {state.items.length}
+      </span>
+    );
+  }
+  return (
+    <span
+      className={`${base} bg-cream-deep ring-1 ring-bordersoft text-charcoal-mute`}
+      title={state.kind === 'mock' ? 'Build has no VITE_DATA_MODE=live — using bundled mock narratives' : 'Live mode enabled but moneycontrol feed did not load'}
+    >
+      <span className="w-1.5 h-1.5 rounded-full bg-charcoal-mute/60" />
+      {state.kind === 'mock' ? 'Curated · mock' : 'Headlines unavailable'}
+    </span>
+  );
 }
 
 export function DataSourceChip({ section }: { section: LiveKind }) {
