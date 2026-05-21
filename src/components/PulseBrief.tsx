@@ -37,6 +37,13 @@ export function PulseBrief({ tabKey, className }: Props) {
   // or the browser SpeechSynthesis fallback — pause/resume route
   // differently per source.
   const sourceRef = useRef<'audio' | 'speech' | null>(null);
+  // SpeechSynthesisUtterance.onstart fires asynchronously after
+  // speak() returns, so `isSpeaking` is briefly still false right
+  // after we set state to 'playing'. Without this flag the auto-idle
+  // effect below would flip state back to 'idle' before the Pause
+  // button ever renders. We set this to true when speech actually
+  // starts and only allow the auto-idle transition after that.
+  const speechStartedRef = useRef(false);
 
   const stopAudio = useCallback(() => {
     if (audioRef.current) {
@@ -47,6 +54,7 @@ export function PulseBrief({ tabKey, className }: Props) {
     }
     stopBrowser();
     sourceRef.current = null;
+    speechStartedRef.current = false;
     if (activeStopper === stopAudio) activeStopper = null;
     setState('idle');
   }, [stopBrowser]);
@@ -83,12 +91,24 @@ export function PulseBrief({ tabKey, className }: Props) {
     };
   }, [tabKey, stopAudio]);
 
-  // If the browser TTS finishes on its own, reset state. Skip while
-  // paused (speechSynthesis reports !speaking when paused).
+  // Auto-recover to idle when the browser-TTS finishes on its own.
+  // Only valid AFTER speech has actually started — otherwise the
+  // initial !isSpeaking after calling speak() would flip us back to
+  // idle before Pause/Stop ever render (the bug this guards against).
   useEffect(() => {
-    if (state === 'playing' && sourceRef.current === 'speech' && !isSpeaking) {
+    if (isSpeaking) {
+      speechStartedRef.current = true;
+      return;
+    }
+    if (
+      state === 'playing' &&
+      sourceRef.current === 'speech' &&
+      speechStartedRef.current &&
+      !isSpeaking
+    ) {
       setState('idle');
       sourceRef.current = null;
+      speechStartedRef.current = false;
     }
   }, [isSpeaking, state]);
 
@@ -136,6 +156,7 @@ export function PulseBrief({ tabKey, className }: Props) {
     }
 
     if (supported) {
+      speechStartedRef.current = false;
       speak(script);
       sourceRef.current = 'speech';
       setState('playing');
