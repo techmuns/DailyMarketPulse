@@ -28,7 +28,13 @@ export const SYMBOLS = {
     { id: 'c-alum',   yahoo: 'ALI=F' },
     { id: 'c-copper', yahoo: 'HG=F' },
     { id: 'c-sugar',  yahoo: 'SB=F' },
-    // c-palm intentionally skipped — no reliable Yahoo symbol.
+    // Palm oil has no clean Yahoo futures symbol. Try CPO=F (CME
+    // palm oil futures, USD-denominated, settles to Bursa FCPO);
+    // fall back to the FTSE Bursa Malaysia Palm Oil Plantation
+    // index FBMPM.FGI which tracks plantation equities and moves
+    // with the underlying. If both fail, the script logs a skip
+    // and the chip shows LIVE · 6/7 instead of 7/7.
+    { id: 'c-palm',   yahoo: 'CPO=F', fallbacks: ['FBMPM.FGI'] },
   ],
   holdings: [
     // Portfolio

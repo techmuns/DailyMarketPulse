@@ -6,6 +6,7 @@ import { Heatmap } from '../components/Heatmap';
 import type { HeatCell } from '../components/Heatmap';
 import { indices as mockIndices, sectors, breadth, gainers, losers, unusualVolume } from '../data/markets';
 import { useLiveOverlay, DataSourceChip } from '../state/liveData';
+import { LiveWire } from '../components/LiveWire';
 import type { MoverItem } from '../data/markets';
 import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
@@ -99,6 +100,14 @@ export function Markets() {
         <MoverTable title="Top losers" items={losers} />
         <MoverTable title="Unusual volume" items={unusualVolume} volume />
       </section>
+
+      <LiveWire
+        title="Sectoral & index news wire"
+        eyebrow="MoneyControl · markets-filtered"
+        hint="Live headlines mentioning indices, sectors, or major movers."
+        keywords={['nifty', 'sensex', 'bse', 'nse', 'index', 'sector', 'bank', 'it', 'auto', 'pharma', 'metal', 'fmcg']}
+        limit={6}
+      />
     </motion.div>
   );
 }
