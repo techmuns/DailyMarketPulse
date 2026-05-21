@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { SectionHeader } from '../components/SectionHeader';
 import { ChangeStripChip, Ticker } from '../components/Chip';
 import { ToneDot, MeaningBadge } from '../components/Tone';
@@ -373,38 +373,30 @@ function CuratedHeadlinesSection({
   lensType: LensType;
   sectoralHeadlines: import('../types').LensHeadline[];
 }) {
-  // The Sectoral lens swaps the 2-up stack for the intelligence layer
-  // (AI commentary + headline-sector chips + searchable detail). All
-  // other lenses keep the curated editorial 2-column layout with
-  // Market Weather on the left.
-  if (lensType === 'sectoral') {
-    return (
-      <section>
-        <SectionHeader
-          title="Which sectors mattered today"
-          eyebrow="Sectoral lens · intelligence"
-          hint="AI-ranked sectors that made today’s narrative. Pick any sector to see its top 5 headlines."
-          right={
-            <span
-              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-calm-violet-bg/60 ring-1 ring-calm-violet/25 text-[9.5px] tracking-[0.18em] uppercase font-semibold text-calm-violet shrink-0"
-              title="Editorial narratives, ranked by analyst-watch keywords"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-calm-violet" />
-              Curated
-            </span>
-          }
-        />
-        <SectorIntel headlines={sectoralHeadlines} />
-      </section>
-    );
-  }
+  // Same shell across all three lenses: Market Weather is the
+  // constant left anchor, and only the right column changes when
+  // the user picks a different lens. The right column crossfades so
+  // the eye doesn't have to re-parse the whole page on every switch.
+
+  const sectionTitle =
+    lensType === 'sectoral'
+      ? 'Which sectors mattered today'
+      : title;
+  const eyebrowText =
+    lensType === 'sectoral'
+      ? 'Sectoral lens · intelligence'
+      : `${lens} lens · curated`;
+  const hintText =
+    lensType === 'sectoral'
+      ? 'AI-ranked sectors that made today’s narrative. Pick any sector to see its top 5 headlines.'
+      : 'Editorial narratives with portfolio context. The live wire below carries raw moneycontrol headlines.';
 
   return (
     <section>
       <SectionHeader
-        title={title}
-        eyebrow={`${lens} lens · curated`}
-        hint="Editorial narratives with portfolio context. The live wire below carries raw moneycontrol headlines."
+        title={sectionTitle}
+        eyebrow={eyebrowText}
+        hint={hintText}
         right={
           <span
             className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-calm-violet-bg/60 ring-1 ring-calm-violet/25 text-[9.5px] tracking-[0.18em] uppercase font-semibold text-calm-violet shrink-0"
@@ -415,9 +407,27 @@ function CuratedHeadlinesSection({
           </span>
         }
       />
-      <div className="grid grid-cols-1 lg:grid-cols-[38%_62%] gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[38%_62%] gap-6 items-start">
+        {/* Stable left anchor — never changes across lenses. */}
         <MarketWeatherCard />
-        <HeadlineStack items={items} />
+
+        {/* Right column — crossfades on lens switch. */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={lensType}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.22, ease: 'easeOut' }}
+            className="min-w-0"
+          >
+            {lensType === 'sectoral' ? (
+              <SectorIntel headlines={sectoralHeadlines} />
+            ) : (
+              <HeadlineStack items={items} />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </section>
   );
