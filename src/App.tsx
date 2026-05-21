@@ -45,7 +45,7 @@ function App() {
     <StoreProvider>
       <div className="min-h-screen text-charcoal">
         <SideNav active={tab} onChange={setTab} />
-        <main className="max-w-[1320px] mx-auto px-6 md:pl-[72px] pt-6 pb-10">
+        <main className="max-w-[1320px] mx-auto px-6 md:px-16 pt-6 pb-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={tab}
@@ -91,7 +91,7 @@ function FooterLine() {
   else if (!data) label = 'Live mode · feed unavailable';
   else label = `Live mode · feed loaded ${new Date(data.fetchedAt).toUTCString()}`;
   return (
-    <footer className="max-w-[1320px] mx-auto px-6 md:pl-[72px] pb-10 pt-4 text-[10.5px] text-charcoal-mute tracking-wider uppercase border-t border-bordersoft/60 mt-10">
+    <footer className="max-w-[1320px] mx-auto px-6 md:px-16 pb-10 pt-4 text-[10.5px] text-charcoal-mute tracking-wider uppercase border-t border-bordersoft/60 mt-10">
       Daily Market Pulse · By Munshot · {label}
     </footer>
   );
