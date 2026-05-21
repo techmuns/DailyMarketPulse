@@ -4,7 +4,9 @@ import { PulseBrief } from '../components/PulseBrief';
 import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
 import { ToneDot, MeaningBadge } from '../components/Tone';
-import { macro, macroPulseSummary } from '../data/macro';
+import { macro as mockMacro, macroPulseSummary } from '../data/macro';
+import { useLiveOverlay, DataSourceChip } from '../state/liveData';
+import { LiveWire } from '../components/LiveWire';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
 import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
@@ -12,6 +14,7 @@ import clsx from 'clsx';
 
 export function Macro() {
   const { openDrawer } = useStore();
+  const macro = useLiveOverlay(mockMacro, 'macro');
 
   const sectorReads = [
     { sector: 'Banks', signal: 'support' as const, note: 'Liquidity + dovish CPI' },
@@ -35,7 +38,12 @@ export function Macro() {
       </header>
 
       <section>
-        <SectionHeader title="Macro Pressure Board" eyebrow="Indicators" hint="Inflation, rates, liquidity and policy moves since yesterday." />
+        <SectionHeader
+          title="Macro Pressure Board"
+          eyebrow="Indicators"
+          hint="Inflation, rates, liquidity and policy moves since yesterday."
+          right={<DataSourceChip section="macro" />}
+        />
         <div className="card overflow-hidden">
           <table className="tbl">
             <thead>
@@ -101,6 +109,14 @@ export function Macro() {
           })}
         </div>
       </section>
+
+      <LiveWire
+        title="Macro news wire"
+        eyebrow="MoneyControl · macro-filtered"
+        hint="Live headlines mentioning rates, inflation, RBI, Fed, or policy."
+        keywords={['cpi', 'inflation', 'rate', 'rbi', 'fed', 'gdp', 'yield', 'repo', 'policy', 'liquidity', 'monetary']}
+        limit={6}
+      />
     </motion.div>
   );
 }

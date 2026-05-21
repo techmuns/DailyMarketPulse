@@ -20,9 +20,11 @@ export interface LivePayload {
   currencies: LiveItem[];
   commodities: LiveItem[];
   holdings: LiveItem[];
+  sectors?: LiveItem[];
+  macro?: LiveItem[];
 }
 
-export type LiveKind = 'indices' | 'currencies' | 'commodities' | 'holdings';
+export type LiveKind = 'indices' | 'currencies' | 'commodities' | 'holdings' | 'sectors' | 'macro';
 
 // MoneyControl-sourced supplementary feed: news headlines, NSE
 // gainers/losers, FII/DII flows. Populated by scripts/fetch-moneycontrol.mjs
@@ -167,6 +169,52 @@ export function useDataSource(section: LiveKind): DataSourceState {
   if (Number.isNaN(t)) return { kind: 'unavailable' };
   const ageMs = Date.now() - t;
   return { kind: ageMs <= FRESH_MS ? 'live' : 'delayed', live: list.length, ageMs };
+}
+
+// MoneyControl-driven hooks for movers + FII/DII flows.
+//
+// useLiveMovers(kind) returns live gainers/losers from moneycontrol
+// when the build is in live mode and the feed loaded. Returns null in
+// every other case — callers fall back to bundled mock data.
+
+export type MoverKind = 'gainers' | 'losers';
+
+export interface LiveMoversState {
+  kind: 'mock' | 'unavailable' | 'live' | 'delayed';
+  items: MoneyControlMover[];
+  ageMs: number | null;
+}
+
+export function useLiveMovers(which: MoverKind): LiveMoversState {
+  const mc = useMoneyControl();
+  return useMemo(() => {
+    if (!LIVE_MODE) return { kind: 'mock', items: [], ageMs: null };
+    if (!mc) return { kind: 'unavailable', items: [], ageMs: null };
+    const list = mc[which] ?? [];
+    if (list.length === 0) return { kind: 'unavailable', items: [], ageMs: null };
+    const t = Date.parse(mc.fetchedAt);
+    const ageMs = Number.isNaN(t) ? null : Date.now() - t;
+    const fresh = ageMs == null ? true : ageMs <= FRESH_MS;
+    return { kind: fresh ? 'live' : 'delayed', items: list, ageMs };
+  }, [mc, which]);
+}
+
+export interface LiveFiiDiiState {
+  kind: 'mock' | 'unavailable' | 'live' | 'delayed';
+  data: MoneyControlFiiDii | null;
+  ageMs: number | null;
+}
+
+export function useLiveFiiDii(): LiveFiiDiiState {
+  const mc = useMoneyControl();
+  return useMemo(() => {
+    if (!LIVE_MODE) return { kind: 'mock', data: null, ageMs: null };
+    if (!mc || !mc.fiiDii) return { kind: 'unavailable', data: null, ageMs: null };
+    const t = Date.parse(mc.fetchedAt);
+    const ageMs = Number.isNaN(t) ? null : Date.now() - t;
+    const fresh = ageMs == null ? true : ageMs <= FRESH_MS;
+    return { kind: fresh ? 'live' : 'delayed', data: mc.fiiDii, ageMs };
+  }, [mc]);
 }
 
 function formatAge(ageMs: number): string {
