@@ -9,6 +9,7 @@ import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
 import { PriorityLensSelector } from '../components/PriorityLens';
 import { HeadlineStack } from '../components/HeadlineStack';
+import { LiveWire } from '../components/LiveWire';
 import { aiSignals } from '../data/signals';
 import { marketTemperature, indices } from '../data/markets';
 import { lensHeadlines } from '../data/lensHeadlines';
@@ -54,12 +55,11 @@ export function Today() {
     };
     // Map the new lens semantic onto the feed groups so the "Top changes"
     // table still reorders in a sensible way. Global → macro/news; Sectoral
-    // → markets; Portfolio Related / Custom → portfolio.
+    // → markets; Portfolio Related → portfolio.
     const lensFocus: Record<string, FeedItem['group']> = {
       Global: 'macro',
       Sectoral: 'markets',
       'Portfolio Related': 'portfolio',
-      Custom: 'portfolio',
     };
     const focus = lensFocus[lens];
     return [...baseFeed].sort((a, b) => {
@@ -72,14 +72,12 @@ export function Today() {
   const lensType: LensType =
     lens === 'Global' ? 'global'
       : lens === 'Sectoral' ? 'sectoral'
-      : lens === 'Portfolio Related' ? 'portfolio'
-      : 'custom';
+      : 'portfolio';
   const stripHeadlines = lensHeadlines.filter((h) => h.lensType === lensType);
   const stripTitle: Record<LensType, string> = {
     global: 'Top global headlines',
     sectoral: 'Sector headlines',
     portfolio: 'Headlines linked to your book',
-    custom: 'Custom feed',
   };
 
   return (
@@ -93,17 +91,18 @@ export function Today() {
           + vertical lens headlines (right). The lens selector in the
           masthead control bar still drives which headlines fill the
           right column. */}
-      <section>
-        <SectionHeader
-          title={stripTitle[lensType]}
-          eyebrow={`${lens} lens`}
-          hint="Tap a card to open the full read."
-        />
-        <div className="grid grid-cols-1 lg:grid-cols-[38%_62%] gap-6">
-          <MarketWeatherCard />
-          <HeadlineStack items={stripHeadlines.slice(0, 5)} />
-        </div>
-      </section>
+      <CuratedHeadlinesSection
+        title={stripTitle[lensType]}
+        lens={lens}
+        items={stripHeadlines.slice(0, 5)}
+      />
+
+      <LiveWire
+        title="Live market wire"
+        eyebrow="MoneyControl · markets"
+        hint="Live India-market headlines, refreshed twice a day."
+        limit={6}
+      />
 
       {/* Top changes since yesterday — moved up to sit directly under
           the Market Weather + Headlines block. */}
@@ -355,6 +354,40 @@ function MarketWeatherCard() {
         <TrendStat label="1M" value={nifty.m1 ?? undefined} />
       </div>
     </div>
+  );
+}
+
+function CuratedHeadlinesSection({
+  title,
+  lens,
+  items,
+}: {
+  title: string;
+  lens: string;
+  items: import('../types').LensHeadline[];
+}) {
+  // Curated narratives are editorial copy (with whyItMatters / signal /
+  // affectedCompanies fields the raw news wire can't provide). Mark
+  // them with a "Curated" chip so they're not confused with the live
+  // wire that sits right below.
+  return (
+    <section>
+      <SectionHeader
+        title={title}
+        eyebrow={`${lens} lens · curated`}
+        hint="Editorial narratives with portfolio context. The live wire below carries raw moneycontrol headlines."
+        right={
+          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-calm-violet-bg/60 ring-1 ring-calm-violet/25 text-[9.5px] tracking-[0.18em] uppercase font-semibold text-calm-violet shrink-0" title="Curated editorial narratives, not raw news">
+            <span className="w-1.5 h-1.5 rounded-full bg-calm-violet" />
+            Curated
+          </span>
+        }
+      />
+      <div className="grid grid-cols-1 lg:grid-cols-[38%_62%] gap-6">
+        <MarketWeatherCard />
+        <HeadlineStack items={items} />
+      </div>
+    </section>
   );
 }
 
