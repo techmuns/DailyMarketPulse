@@ -10,6 +10,7 @@ import { Sparkline } from '../components/Sparkline';
 import { PriorityLensSelector } from '../components/PriorityLens';
 import { HeadlineStack } from '../components/HeadlineStack';
 import { LiveWire } from '../components/LiveWire';
+import { SectorIntel } from '../components/SectorIntel';
 import { aiSignals } from '../data/signals';
 import { marketTemperature, indices } from '../data/markets';
 import { lensHeadlines } from '../data/lensHeadlines';
@@ -95,6 +96,8 @@ export function Today() {
         title={stripTitle[lensType]}
         lens={lens}
         items={stripHeadlines.slice(0, 5)}
+        lensType={lensType}
+        sectoralHeadlines={lensHeadlines.filter((h) => h.lensType === 'sectoral')}
       />
 
       <LiveWire
@@ -361,15 +364,41 @@ function CuratedHeadlinesSection({
   title,
   lens,
   items,
+  lensType,
+  sectoralHeadlines,
 }: {
   title: string;
   lens: string;
   items: import('../types').LensHeadline[];
+  lensType: LensType;
+  sectoralHeadlines: import('../types').LensHeadline[];
 }) {
-  // Curated narratives are editorial copy (with whyItMatters / signal /
-  // affectedCompanies fields the raw news wire can't provide). Mark
-  // them with a "Curated" chip so they're not confused with the live
-  // wire that sits right below.
+  // The Sectoral lens swaps the 2-up stack for the intelligence layer
+  // (AI commentary + headline-sector chips + searchable detail). All
+  // other lenses keep the curated editorial 2-column layout with
+  // Market Weather on the left.
+  if (lensType === 'sectoral') {
+    return (
+      <section>
+        <SectionHeader
+          title="Which sectors mattered today"
+          eyebrow="Sectoral lens · intelligence"
+          hint="AI-ranked sectors that made today’s narrative. Pick any sector to see its top 5 headlines."
+          right={
+            <span
+              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-calm-violet-bg/60 ring-1 ring-calm-violet/25 text-[9.5px] tracking-[0.18em] uppercase font-semibold text-calm-violet shrink-0"
+              title="Editorial narratives, ranked by analyst-watch keywords"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-calm-violet" />
+              Curated
+            </span>
+          }
+        />
+        <SectorIntel headlines={sectoralHeadlines} />
+      </section>
+    );
+  }
+
   return (
     <section>
       <SectionHeader
@@ -377,7 +406,10 @@ function CuratedHeadlinesSection({
         eyebrow={`${lens} lens · curated`}
         hint="Editorial narratives with portfolio context. The live wire below carries raw moneycontrol headlines."
         right={
-          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-calm-violet-bg/60 ring-1 ring-calm-violet/25 text-[9.5px] tracking-[0.18em] uppercase font-semibold text-calm-violet shrink-0" title="Curated editorial narratives, not raw news">
+          <span
+            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-calm-violet-bg/60 ring-1 ring-calm-violet/25 text-[9.5px] tracking-[0.18em] uppercase font-semibold text-calm-violet shrink-0"
+            title="Curated editorial narratives, not raw news"
+          >
             <span className="w-1.5 h-1.5 rounded-full bg-calm-violet" />
             Curated
           </span>
