@@ -322,10 +322,8 @@ const TONE_VERB: Record<SectorTone, string> = {
   quiet: 'was quiet',
 };
 
-// Build the default (no-sector-selected) AI commentary string.
-// Aim: 1–2 short sentences, scannable at a glance. No long italic
-// paragraphs, no analyst-speak repetition of detail already shown
-// in the list below.
+// Default (no sector picked) AI read — one short sentence, the
+// minimum a buy-side reader needs to know which sectors moved.
 export function defaultCommentary(top: SectorSummary[]): string {
   if (top.length === 0) {
     return 'No sector cleared the material-change threshold today.';
@@ -335,31 +333,29 @@ export function defaultCommentary(top: SectorSummary[]): string {
     lead.length === 3
       ? `${lead[0]}, ${lead[1]} and ${lead[2]}`
       : lead.join(' and ');
-  const beats = top
-    .slice(0, 3)
-    .map((s) => `${s.sector} ${TONE_VERB[s.tone]}`)
-    .join(', ');
-  return `${joined} led today's sector narrative. ${beats}.`;
+  const tones = top.slice(0, 3).map((s) => `${s.sector} ${TONE_VERB[s.tone]}`).join(', ');
+  return `${joined} led today's sector narrative; ${tones}.`;
 }
 
-// Per-sector commentary used when a sector is picked from the
-// dropdown. Kept short — 1–2 sentences. No restated detail.
+// Per-sector AI read — one short sentence when there's a story,
+// the spec literal when there isn't.
 export function sectorCommentary(summary: SectorSummary | undefined, picked: CanonicalSector): string {
   if (!summary || summary.materialCount === 0) {
     return 'This sector did not make the main market narrative today. There are routine mentions, but no material sector-moving change detected.';
   }
-  const themes = summary.headlines
-    .slice(0, 3)
-    .map((h) => {
-      const cat = h.headline.category.replace(/^[^·:]*[·:]\s*/, '').toLowerCase();
-      return cat || h.headline.headline.toLowerCase().slice(0, 40);
-    })
-    .join(', ');
   const toneLabel: Record<SectorTone, string> = {
     support: 'Support',
     pressure: 'Pressure',
     mixed: 'Mixed',
     quiet: 'Quiet',
   };
-  return `${picked} has ${summary.materialCount} material change${summary.materialCount === 1 ? '' : 's'} today: ${themes}. Sector tone: ${toneLabel[summary.tone]}.`;
+  const themes = summary.headlines
+    .slice(0, 2)
+    .map((h) => {
+      const cat = h.headline.category.replace(/^[^·:]*[·:]\s*/, '').toLowerCase();
+      return cat || h.headline.headline.toLowerCase().slice(0, 40);
+    })
+    .join(' and ');
+  const n = summary.materialCount;
+  return `${picked} · ${toneLabel[summary.tone]} tone · ${n} material change${n === 1 ? '' : 's'} on ${themes}.`;
 }

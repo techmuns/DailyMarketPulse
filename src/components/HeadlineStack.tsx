@@ -20,7 +20,7 @@ const TONE: Record<Signal, { rail: string; text: string; label: string }> = {
   noise: { rail: 'bg-calm-violet', text: 'text-calm-violet', label: 'Neutral' },
 };
 
-export function HeadlineStack({ items, defaultVisible = 3 }: Props) {
+export function HeadlineStack({ items, defaultVisible = 5 }: Props) {
   const { openHeadline } = useStore();
   const [expanded, setExpanded] = useState(false);
 
