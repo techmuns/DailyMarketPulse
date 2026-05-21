@@ -60,6 +60,11 @@ export function Portfolio({ hideBrief = false }: { hideBrief?: boolean } = {}) {
         <p className="text-[12.5px] text-charcoal-mute mt-1.5">What changed since yesterday for your holdings.</p>
       </header>
 
+      {/* Immediate analyst read — moved up so the most actionable
+          summary is visible before the user scrolls past the
+          scorecards / heatmap. */}
+      <WhatChangedCard />
+
       {/* Scorecards */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Scorecard label="Book value" value={portfolioStats.bookValue} sub="mock NAV" accent="navy" />
@@ -150,18 +155,6 @@ export function Portfolio({ hideBrief = false }: { hideBrief?: boolean } = {}) {
             </tbody>
           </table>
         </div>
-      </section>
-
-      <section>
-        <SectionHeader title="What changed since yesterday for my book" eyebrow="Read" />
-        <Card padding="md">
-          <ul className="text-[12.5px] text-charcoal-soft space-y-2.5">
-            <Read change="Risk increased" text="Autos input cost squeezed deepened (M&M, MARUTI)" />
-            <Read change="Support improved" text="CPI cooler than expected — rate-sensitive holdings benefit" />
-            <Read change="Changed since yesterday" text="Asian Paints filing eased crude pass-through worry" />
-            <Read change="5-day trend" text="INR weakness now durable — exporter tailwind, importer drag" />
-          </ul>
-        </Card>
       </section>
 
       <HoldingDialog
@@ -296,11 +289,84 @@ function Scorecard({ label, value, sub, dir, accent }: { label: string; value: s
   );
 }
 
-function Read({ change, text }: { change: any; text: string }) {
+type ChangeKind = 'risk' | 'support' | 'change' | 'trend';
+interface ChangeRow {
+  kind: ChangeKind;
+  label: string;
+  text: string;
+}
+
+const CHANGE_ROWS: ChangeRow[] = [
+  { kind: 'risk',    label: 'Risk increased',         text: 'Autos input cost squeeze deepened for M&M and Maruti.' },
+  { kind: 'support', label: 'Support improved',       text: 'CPI cooled, helping rate-sensitive holdings.' },
+  { kind: 'change',  label: 'Changed since yesterday', text: 'Asian Paints filing eased crude pass-through worry.' },
+  { kind: 'trend',   label: '5-day trend',            text: 'INR weakness remains durable: exporter tailwind, importer drag.' },
+];
+
+const CHIP_STYLE: Record<ChangeKind, string> = {
+  risk:    'bg-calm-rose-bg/70 text-calm-rose ring-calm-rose/20',
+  support: 'bg-calm-emerald-bg/70 text-calm-emerald ring-calm-emerald/25',
+  change:  'bg-calm-violet-bg/70 text-calm-violet ring-calm-violet/20',
+  trend:   'bg-calm-amber-bg/70 text-calm-amber ring-calm-amber/25',
+};
+
+function WhatChangedCard() {
   return (
-    <li className="flex items-start gap-2.5">
-      <span className="chip bg-cream-deep text-charcoal-mute shrink-0 mt-0.5">{change}</span>
-      <span>{text}</span>
-    </li>
+    <section
+      aria-labelledby="what-changed-title"
+      className="relative rounded-2xl border border-bordersoft bg-white overflow-hidden"
+      style={{
+        boxShadow: '0 14px 38px rgba(72,55,120,0.10), 0 1px 0 rgba(255,255,255,0.6) inset',
+      }}
+    >
+      <div
+        aria-hidden
+        className="absolute inset-y-0 left-0 w-[3px]"
+        style={{ background: 'linear-gradient(180deg, #0F8F6F 0%, #8C79C9 100%)' }}
+      />
+      <div
+        aria-hidden
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle at 88% -10%, rgba(140,121,201,0.10) 0%, transparent 45%)',
+        }}
+      />
+
+      <div className="relative px-5 py-4 md:px-6 md:py-5">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <h2 id="what-changed-title" className="font-display text-[16px] font-semibold text-charcoal">
+              What changed since yesterday
+            </h2>
+            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-calm-violet-bg/60 ring-1 ring-calm-violet/20 text-[9.5px] tracking-[0.18em] uppercase font-semibold text-calm-violet">
+              <span className="w-1.5 h-1.5 rounded-full bg-calm-violet" />
+              Book read
+            </span>
+          </div>
+          <span className="text-[10.5px] tracking-[0.18em] uppercase font-semibold text-charcoal-mute">
+            Updated today
+          </span>
+        </div>
+
+        <ul className="divide-y divide-bordersoft/50">
+          {CHANGE_ROWS.map((r) => (
+            <li
+              key={r.label}
+              className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0"
+            >
+              <span
+                className={clsx(
+                  'inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full ring-1 text-[9.5px] tracking-[0.16em] uppercase font-semibold shrink-0 mt-[1px]',
+                  CHIP_STYLE[r.kind],
+                )}
+              >
+                {r.label}
+              </span>
+              <span className="text-[12.5px] text-charcoal-soft leading-snug">{r.text}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
   );
 }

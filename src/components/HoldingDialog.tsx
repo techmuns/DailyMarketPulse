@@ -88,7 +88,7 @@ export function HoldingDialog({ open, mode, surface, initial, onClose, onSubmit 
       {open && (
         <>
           <motion.div
-            className="fixed inset-0 bg-charcoal/30 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-charcoal/25 backdrop-blur-[3px] z-40"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -97,13 +97,14 @@ export function HoldingDialog({ open, mode, surface, initial, onClose, onSubmit 
           <motion.div
             role="dialog"
             aria-modal="true"
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[min(92vw,460px)] rounded-2xl bg-cream shadow-lift border border-bordersoft p-6"
+            className="fixed left-1/2 top-[10vh] -translate-x-1/2 z-50 w-[min(92vw,460px)] max-h-[80vh] rounded-2xl bg-white border border-calm-violet/15 flex flex-col overflow-hidden"
+            style={{ boxShadow: '0 28px 60px -20px rgba(72,55,120,0.32), 0 8px 18px rgba(72,55,120,0.10)' }}
             initial={{ opacity: 0, scale: 0.96, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.96, y: 8 }}
             transition={{ duration: 0.18 }}
           >
-            <div className="flex items-start justify-between mb-4">
+            <div className="flex items-start justify-between px-6 pt-5 pb-3 border-b border-bordersoft/60 shrink-0">
               <div>
                 <p className="label-mute">{surface === 'portfolio' ? 'Portfolio' : 'Watchlist'}</p>
                 <h2 className="font-display text-[18px] font-semibold mt-0.5">
@@ -113,14 +114,17 @@ export function HoldingDialog({ open, mode, surface, initial, onClose, onSubmit 
               <button
                 type="button"
                 onClick={onClose}
-                className="text-charcoal-mute hover:text-charcoal text-[18px] leading-none px-1"
+                className="text-charcoal-mute hover:text-charcoal text-[20px] leading-none px-1.5 -mr-1"
                 aria-label="Close"
               >
                 ×
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-3">
+            <form
+              onSubmit={handleSubmit}
+              className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-3"
+            >
               <Field
                 label="Ticker (Yahoo symbol)"
                 hint="e.g. RELIANCE.NS, INFY.NS, TCS.NS, AAPL"
