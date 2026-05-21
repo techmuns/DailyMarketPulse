@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface UseSpeechReturn {
   speak: (text: string) => void;
+  pause: () => void;
+  resume: () => void;
   stop: () => void;
   isSpeaking: boolean;
   supported: boolean;
@@ -98,11 +100,21 @@ export function useSpeech(): UseSpeechReturn {
     [supported, voice]
   );
 
+  const pause = useCallback(() => {
+    if (!supported) return;
+    window.speechSynthesis.pause();
+  }, [supported]);
+
+  const resume = useCallback(() => {
+    if (!supported) return;
+    window.speechSynthesis.resume();
+  }, [supported]);
+
   const stop = useCallback(() => {
     if (!supported) return;
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
   }, [supported]);
 
-  return { speak, stop, isSpeaking, supported };
+  return { speak, pause, resume, stop, isSpeaking, supported };
 }

@@ -16,17 +16,27 @@ interface Props {
   className?: string;
 }
 
-type PlayState = 'idle' | 'loading' | 'playing';
+type PlayState = 'idle' | 'loading' | 'playing' | 'paused';
+
+// Global lock — guarantees only one audio source is playing across the
+// whole app even if two PulseBriefs render simultaneously. Set when a
+// brief starts, cleared on stop/end. The stopper is invoked by any
+// other brief that wants to start.
+let activeStopper: (() => void) | null = null;
 
 export function PulseBrief({ tabKey, className }: Props) {
   const brief = pulseBriefs[tabKey];
-  const { speak, stop: stopBrowser, isSpeaking, supported } = useSpeech();
+  const { speak, pause: pauseBrowser, resume: resumeBrowser, stop: stopBrowser, isSpeaking, supported } = useSpeech();
   const { openDrawer } = useStore();
   const tokens = toneTokens(brief.tone);
 
   const [state, setState] = useState<PlayState>('idle');
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const lastUrlRef = useRef<string | null>(null);
+  // Tracks whether playback is using the HTMLAudioElement (premium)
+  // or the browser SpeechSynthesis fallback — pause/resume route
+  // differently per source.
+  const sourceRef = useRef<'audio' | 'speech' | null>(null);
 
   const stopAudio = useCallback(() => {
     if (audioRef.current) {
@@ -36,8 +46,33 @@ export function PulseBrief({ tabKey, className }: Props) {
       audioRef.current = null;
     }
     stopBrowser();
+    sourceRef.current = null;
+    if (activeStopper === stopAudio) activeStopper = null;
     setState('idle');
   }, [stopBrowser]);
+
+  const pauseAudio = useCallback(() => {
+    if (sourceRef.current === 'audio' && audioRef.current) {
+      audioRef.current.pause();
+    } else if (sourceRef.current === 'speech') {
+      pauseBrowser();
+    }
+    setState('paused');
+  }, [pauseBrowser]);
+
+  const resumeAudio = useCallback(async () => {
+    if (sourceRef.current === 'audio' && audioRef.current) {
+      try {
+        await audioRef.current.play();
+        setState('playing');
+      } catch {
+        setState('idle');
+      }
+    } else if (sourceRef.current === 'speech') {
+      resumeBrowser();
+      setState('playing');
+    }
+  }, [resumeBrowser]);
 
   // Stop everything on tab change / unmount.
   useEffect(() => {
@@ -48,32 +83,49 @@ export function PulseBrief({ tabKey, className }: Props) {
     };
   }, [tabKey, stopAudio]);
 
-  // If the browser TTS finishes (or errors) on its own, reset state.
+  // If the browser TTS finishes on its own, reset state. Skip while
+  // paused (speechSynthesis reports !speaking when paused).
   useEffect(() => {
-    if (state === 'playing' && !audioRef.current && !isSpeaking) {
+    if (state === 'playing' && sourceRef.current === 'speech' && !isSpeaking) {
       setState('idle');
+      sourceRef.current = null;
     }
   }, [isSpeaking, state]);
 
-  const onPlay = useCallback(async () => {
-    if (state === 'playing' || state === 'loading') {
-      stopAudio();
+  const onPrimary = useCallback(async () => {
+    if (state === 'playing') {
+      pauseAudio();
       return;
     }
+    if (state === 'paused') {
+      await resumeAudio();
+      return;
+    }
+    if (state === 'loading') return;
+
+    // Kick off a fresh playback. First, ensure any other brief that
+    // might be playing in the app is stopped — no overlap.
+    if (activeStopper && activeStopper !== stopAudio) {
+      activeStopper();
+    }
+    activeStopper = stopAudio;
+
     const script = buildTopFiveAudioScript(topChanges);
     setState('loading');
 
-    // Try premium first.
     const premium = await generateTopFiveAudio(script);
     if (premium?.url) {
       revokeAudio(lastUrlRef.current);
       lastUrlRef.current = premium.url;
       const audio = new Audio(premium.url);
-      audio.onended = () => setState('idle');
-      audio.onerror = () => {
+      audio.onended = () => {
         setState('idle');
+        sourceRef.current = null;
+        if (activeStopper === stopAudio) activeStopper = null;
       };
+      audio.onerror = () => setState('idle');
       audioRef.current = audio;
+      sourceRef.current = 'audio';
       try {
         await audio.play();
         setState('playing');
@@ -83,18 +135,22 @@ export function PulseBrief({ tabKey, className }: Props) {
       return;
     }
 
-    // Fall back to browser speech.
     if (supported) {
       speak(script);
+      sourceRef.current = 'speech';
       setState('playing');
     } else {
       setState('idle');
     }
-  }, [state, stopAudio, supported, speak]);
+  }, [state, pauseAudio, resumeAudio, stopAudio, supported, speak]);
 
   const audioCapable = supported || isPremiumModeEnabled();
-  const label =
-    state === 'loading' ? 'Preparing audio…' : state === 'playing' ? 'Stop' : 'Play Today’s Top 5';
+  const primaryLabel =
+    state === 'loading' ? 'Preparing audio…'
+      : state === 'playing' ? 'Pause'
+      : state === 'paused' ? 'Resume'
+      : 'Play Today’s Top 5';
+  const showStopBtn = state === 'playing' || state === 'paused' || state === 'loading';
 
   return (
     <AnimatePresence mode="wait">
@@ -149,19 +205,40 @@ export function PulseBrief({ tabKey, className }: Props) {
           </div>
           <div className="flex flex-col items-end gap-1.5 shrink-0">
             {audioCapable ? (
-              <button
-                onClick={onPlay}
-                disabled={state === 'loading'}
-                className={clsx(
-                  'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12px] font-semibold transition shadow-soft',
-                  state === 'playing' && 'bg-calm-rose-bg text-calm-rose hover:bg-calm-rose-bg/70',
-                  state === 'loading' && 'bg-calm-violet-bg text-calm-violet cursor-wait',
-                  state === 'idle' && 'bg-calm-emerald text-white hover:bg-[#0CA67F]'
+              <div className="inline-flex items-center gap-1.5">
+                <button
+                  onClick={onPrimary}
+                  disabled={state === 'loading'}
+                  aria-label={
+                    state === 'playing' ? 'Pause audio'
+                      : state === 'paused' ? 'Resume audio'
+                      : state === 'loading' ? 'Preparing audio'
+                      : "Play Today's top 5 audio"
+                  }
+                  className={clsx(
+                    'inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[12px] font-semibold transition shadow-soft',
+                    state === 'playing' && 'bg-calm-emerald text-white hover:bg-[#0CA67F]',
+                    state === 'paused' && 'bg-calm-emerald text-white hover:bg-[#0CA67F]',
+                    state === 'loading' && 'bg-calm-violet-bg text-calm-violet cursor-wait',
+                    state === 'idle' && 'bg-calm-emerald text-white hover:bg-[#0CA67F]'
+                  )}
+                >
+                  {state === 'loading' ? <SpinnerIcon />
+                    : state === 'playing' ? <PauseIcon />
+                    : <SpeakerIcon />}
+                  {primaryLabel}
+                </button>
+                {showStopBtn && (
+                  <button
+                    onClick={stopAudio}
+                    aria-label="Stop audio"
+                    title="Stop"
+                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-cream-deep border border-bordersoft text-charcoal-mute hover:text-calm-rose hover:border-calm-rose/30 transition"
+                  >
+                    <StopIcon />
+                  </button>
                 )}
-              >
-                {state === 'loading' ? <SpinnerIcon /> : state === 'playing' ? <StopIcon /> : <SpeakerIcon />}
-                {label}
-              </button>
+              </div>
             ) : (
               <span className="text-[10.5px] text-charcoal-mute italic">Audio not supported in this browser</span>
             )}
@@ -209,6 +286,15 @@ function StopIcon() {
   return (
     <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
       <rect x="6" y="6" width="12" height="12" rx="1.5" />
+    </svg>
+  );
+}
+
+function PauseIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+      <rect x="6" y="5" width="4" height="14" rx="1" />
+      <rect x="14" y="5" width="4" height="14" rx="1" />
     </svg>
   );
 }
