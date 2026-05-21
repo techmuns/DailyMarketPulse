@@ -10,7 +10,9 @@ import { Sparkline } from '../components/Sparkline';
 import { PriorityLensSelector } from '../components/PriorityLens';
 import { HeadlineStack } from '../components/HeadlineStack';
 import { LiveWire } from '../components/LiveWire';
-import { SectorIntel } from '../components/SectorIntel';
+import { SectorIntel, SectorPickerControl, useSectorSummaries } from '../components/SectorIntel';
+import type { CanonicalSector } from '../utils/sectorIntel';
+import { useState } from 'react';
 import { aiSignals } from '../data/signals';
 import { marketTemperature, indices } from '../data/markets';
 import { lensHeadlines } from '../data/lensHeadlines';
@@ -378,6 +380,13 @@ function CuratedHeadlinesSection({
   // the user picks a different lens. The right column crossfades so
   // the eye doesn't have to re-parse the whole page on every switch.
 
+  // Sectoral picker lives on the parent so we can render it in the
+  // section header (replaces the Curated badge for sectoral) — this
+  // keeps the sector cards beside Market Weather without losing
+  // vertical room to the picker control.
+  const [pickedSector, setPickedSector] = useState<CanonicalSector | null>(null);
+  const activeSectors = useSectorSummaries(sectoralHeadlines);
+
   const sectionTitle =
     lensType === 'sectoral'
       ? 'Which sectors mattered today'
@@ -388,8 +397,8 @@ function CuratedHeadlinesSection({
       : `${lens} lens · curated`;
   const hintText =
     lensType === 'sectoral'
-      ? 'AI-ranked sectors that made today’s narrative. Pick any sector to see its top 5 headlines.'
-      : 'Editorial narratives with portfolio context. The live wire below carries raw moneycontrol headlines.';
+      ? 'AI-ranked sectors. Pick any to see its top 5 headlines.'
+      : 'Editorial narratives with portfolio context.';
 
   return (
     <section>
@@ -398,13 +407,21 @@ function CuratedHeadlinesSection({
         eyebrow={eyebrowText}
         hint={hintText}
         right={
-          <span
-            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-calm-violet-bg/60 ring-1 ring-calm-violet/25 text-[9.5px] tracking-[0.18em] uppercase font-semibold text-calm-violet shrink-0"
-            title="Curated editorial narratives, not raw news"
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-calm-violet" />
-            Curated
-          </span>
+          lensType === 'sectoral' ? (
+            <SectorPickerControl
+              picked={pickedSector}
+              onPick={setPickedSector}
+              activeSectors={activeSectors}
+            />
+          ) : (
+            <span
+              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-calm-violet-bg/60 ring-1 ring-calm-violet/25 text-[9.5px] tracking-[0.18em] uppercase font-semibold text-calm-violet shrink-0"
+              title="Curated editorial narratives, not raw news"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-calm-violet" />
+              Curated
+            </span>
+          )
         }
       />
       <div className="grid grid-cols-1 lg:grid-cols-[38%_62%] gap-6 items-start">
@@ -422,9 +439,13 @@ function CuratedHeadlinesSection({
             className="min-w-0"
           >
             {lensType === 'sectoral' ? (
-              <SectorIntel headlines={sectoralHeadlines} />
+              <SectorIntel
+                headlines={sectoralHeadlines}
+                picked={pickedSector}
+                onPick={setPickedSector}
+              />
             ) : (
-              <HeadlineStack items={items} />
+              <HeadlineStack items={items} defaultVisible={5} />
             )}
           </motion.div>
         </AnimatePresence>

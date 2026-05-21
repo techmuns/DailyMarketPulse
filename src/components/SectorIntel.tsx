@@ -31,11 +31,14 @@ import {
 
 interface Props {
   headlines: LensHeadline[];
+  // Controlled selection so the parent can render the picker in its
+  // own header strip without duplicating state.
+  picked: CanonicalSector | null;
+  onPick: (s: CanonicalSector | null) => void;
 }
 
-export function SectorIntel({ headlines }: Props) {
+export function SectorIntel({ headlines, picked, onPick }: Props) {
   const { openHeadline } = useStore();
-  const [picked, setPicked] = useState<CanonicalSector | null>(null);
 
   const summaries = useMemo(() => aggregateBySector(headlines), [headlines]);
   const top = useMemo(() => topSectors(summaries, 5), [summaries]);
@@ -49,17 +52,8 @@ export function SectorIntel({ headlines }: Props) {
     : defaultCommentary(top);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-3.5">
       <AiCommentary text={commentary} picked={picked} />
-
-      <div className="flex items-center justify-between gap-3 flex-wrap">
-        <SectorPicker
-          value={picked}
-          onChange={setPicked}
-          activeSectors={summaries.map((s) => s.sector)}
-        />
-        <ToneLegend />
-      </div>
 
       <AnimatePresence mode="wait">
         {picked ? (
@@ -74,7 +68,7 @@ export function SectorIntel({ headlines }: Props) {
               sector={picked}
               summary={summaryByPicked}
               onOpen={openHeadline}
-              onBack={() => setPicked(null)}
+              onBack={() => onPick(null)}
             />
           </motion.div>
         ) : (
@@ -85,11 +79,33 @@ export function SectorIntel({ headlines }: Props) {
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.2 }}
           >
-            <TopSectorsList top={top} onSelect={setPicked} />
+            <TopSectorsCards top={top} onSelect={onPick} />
           </motion.div>
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+// Exposed so the parent (Today.tsx) can render the picker in the
+// section header alongside the "Curated" badge — frees vertical
+// space inside the intel column.
+export function SectorPickerControl({
+  picked,
+  onPick,
+  activeSectors,
+}: {
+  picked: CanonicalSector | null;
+  onPick: (s: CanonicalSector | null) => void;
+  activeSectors: CanonicalSector[];
+}) {
+  return <SectorPicker value={picked} onChange={onPick} activeSectors={activeSectors} />;
+}
+
+export function useSectorSummaries(headlines: LensHeadline[]): CanonicalSector[] {
+  return useMemo(
+    () => aggregateBySector(headlines).map((s) => s.sector),
+    [headlines],
   );
 }
 
@@ -259,18 +275,6 @@ const TONE_STYLE: Record<SectorTone, { dot: string; chip: string; label: string 
   },
 };
 
-function ToneLegend() {
-  return (
-    <div className="flex items-center gap-3 text-[10.5px] text-charcoal-mute">
-      {(Object.keys(TONE_STYLE) as SectorTone[]).map((t) => (
-        <span key={t} className="inline-flex items-center gap-1.5">
-          <span className={clsx('w-1.5 h-1.5 rounded-full', TONE_STYLE[t].dot)} />
-          {TONE_STYLE[t].label}
-        </span>
-      ))}
-    </div>
-  );
-}
 
 function ToneChip({ tone }: { tone: SectorTone }) {
   const s = TONE_STYLE[tone];
@@ -289,15 +293,13 @@ function ToneChip({ tone }: { tone: SectorTone }) {
 
 /* ---------- Default: top sectors list ---------- */
 
-function TopSectorsList({
+function TopSectorsCards({
   top,
   onSelect,
 }: {
   top: SectorSummary[];
   onSelect: (s: CanonicalSector) => void;
 }) {
-  const DEFAULT_VISIBLE = 3;
-  const [expanded, setExpanded] = useState(false);
   if (top.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-bordersoft bg-cream/60 px-5 py-10 text-center text-[12.5px] text-charcoal-mute">
@@ -305,66 +307,48 @@ function TopSectorsList({
       </div>
     );
   }
-  const visible = expanded ? top : top.slice(0, DEFAULT_VISIBLE);
-  const hidden = top.length - visible.length;
+  // Same rectangular-card grid as Global / Portfolio HeadlineStack so
+  // the three lenses share one visual language. The 5th card spans
+  // the full row when the column count is 2 (odd total) so the grid
+  // never has a half-row of whitespace.
+  const items = top.slice(0, 5);
   return (
-    <div>
-      <div className="mb-2 flex items-baseline justify-between">
-        <h3 className="font-display text-[13.5px] font-semibold text-charcoal">
-          Today’s headline sectors
-        </h3>
-        <span className="text-[10px] text-charcoal-mute">
-          Top {top.length} · by material activity
-        </span>
-      </div>
-      <ul className="divide-y divide-bordersoft/60 rounded-2xl border border-bordersoft bg-cream shadow-soft overflow-hidden">
-        {visible.map((s) => (
-          <li key={s.sector}>
+    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+      {items.map((s, i) => {
+        const isLastOdd = items.length % 2 === 1 && i === items.length - 1;
+        const rail = TONE_STYLE[s.tone].dot;
+        return (
+          <li key={s.sector} className={clsx(isLastOdd && 'sm:col-span-2')}>
             <button
               type="button"
               onClick={() => onSelect(s.sector)}
-              className="group w-full text-left px-3.5 py-2 flex items-center gap-3 hover:bg-cream-deep/50 transition"
+              className="group relative w-full text-left rounded-2xl border border-bordersoft/70 bg-cream shadow-soft hover:shadow-lift transition-shadow overflow-hidden h-full flex flex-col"
             >
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-display text-[13px] font-semibold text-charcoal truncate">
+              <div className={clsx('absolute inset-y-0 left-0 w-[3px]', rail)} aria-hidden />
+              <div className="relative pl-4 pr-3.5 py-3 flex flex-col gap-1.5 flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-display text-[14px] font-semibold text-charcoal truncate">
                     {s.sector}
                   </span>
                   <ToneChip tone={s.tone} />
                 </div>
-                <p className="text-[11.5px] text-charcoal-soft mt-0.5 leading-snug truncate">
+                <p className="text-[11.5px] text-charcoal-soft leading-snug line-clamp-2">
                   {s.topReason}
                 </p>
+                <div className="mt-auto pt-1 flex items-end justify-between gap-3">
+                  <span className="text-[10px] tracking-[0.16em] uppercase font-semibold text-charcoal-mute">
+                    {s.materialCount} material · {s.totalCount} total
+                  </span>
+                  <span className="text-[11px] font-medium text-calm-emerald group-hover:text-calm-emerald/80 transition">
+                    Open →
+                  </span>
+                </div>
               </div>
-              <div className="text-[10px] text-charcoal-mute tabular-nums shrink-0">
-                {s.materialCount}/{s.totalCount}
-              </div>
-              <span className="text-charcoal-mute group-hover:text-calm-emerald transition shrink-0" aria-hidden>
-                →
-              </span>
             </button>
           </li>
-        ))}
-      </ul>
-      {hidden > 0 && (
-        <button
-          type="button"
-          onClick={() => setExpanded(true)}
-          className="mt-2 text-[11px] tracking-wide text-calm-violet hover:text-calm-violet/80 transition font-medium"
-        >
-          Show {hidden} more →
-        </button>
-      )}
-      {expanded && top.length > DEFAULT_VISIBLE && (
-        <button
-          type="button"
-          onClick={() => setExpanded(false)}
-          className="mt-2 text-[11px] tracking-wide text-charcoal-mute hover:text-charcoal-soft transition"
-        >
-          Show less
-        </button>
-      )}
-    </div>
+        );
+      })}
+    </ul>
   );
 }
 

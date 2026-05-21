@@ -12,45 +12,48 @@ export interface TopChange {
   meaning?: string;
 }
 
+// Top 5 = AI-ranked biggest market-moving news of the day across all
+// dimensions (global, macro, FX, commodity, sector, single stock).
+// Ordered by overall importance, not by theme.
 export const topChanges: TopChange[] = [
   {
     rank: 1,
-    headline: 'M&M faces FX and steel cost pressure',
-    signal: 'risk',
-    affected: ['M&M'],
-    action: 'Assign follow-up',
-    meaning: 'Margin Risk',
-  },
-  {
-    rank: 2,
-    headline: 'India CPI cools to 4.62 percent',
+    headline: 'India CPI cools to 4.62 percent, lifting rate-cut visibility',
     signal: 'support',
-    affected: ['HDFC Bank', 'Bajaj Finance', 'Real Estate'],
+    affected: ['Banks', 'NBFC', 'Real Estate'],
     action: 'Monitor rate-sensitive names',
     meaning: 'Rate Support',
   },
   {
+    rank: 2,
+    headline: 'US 10 year yields ease back below 4.45 percent on softer PMI',
+    signal: 'support',
+    affected: ['IT Services', 'EM Equities'],
+    action: 'Watch IT exporter follow-through',
+    meaning: 'Global Tailwind',
+  },
+  {
     rank: 3,
-    headline: 'USD INR weakness is now a five day trend',
+    headline: 'USD INR weakness is now a durable five day trend',
     signal: 'risk',
-    affected: ['M&M', 'Asian Paints', 'Infosys', 'TCS'],
-    action: 'Add to thesis',
+    affected: ['Auto', 'Paints', 'IT Services'],
+    action: 'Update FX overlay',
     meaning: 'FX Pressure',
   },
   {
     rank: 4,
-    headline: 'Asian Paints announces a zero point six percent selective price hike',
-    signal: 'support',
-    affected: ['Asian Paints'],
-    action: 'Update thesis',
-    meaning: 'Input Cost Relief',
+    headline: 'Brent crude firms above 84 dollars on supply concerns',
+    signal: 'risk',
+    affected: ['Paints', 'Aviation', 'Refining'],
+    action: 'Stress-test input costs',
+    meaning: 'Input Cost ↑',
   },
   {
     rank: 5,
-    headline: 'DMart saw one point eight times average volume with no major news',
+    headline: 'NBFCs see unsecured retail growth moderate as RBI risk weights bite',
     signal: 'monitor',
-    affected: ['DMart'],
-    action: 'Read later',
-    meaning: 'Volume Breakout',
+    affected: ['HDFC Bank', 'Bajaj Finance', 'Axis Bank'],
+    action: 'Watch credit-cost commentary',
+    meaning: 'Credit Watch',
   },
 ];
