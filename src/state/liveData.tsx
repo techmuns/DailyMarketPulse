@@ -65,6 +65,77 @@ interface LiveCtx {
   error: string | null;
 }
 
+// NSE regular trading session: Mon–Fri, 09:15–15:30 IST. While the
+// market is open we poll the Worker /api/quote proxy for live intraday
+// prices; while it's closed we rely on the twice-daily live.json
+// snapshot produced by the refresh-data workflow.
+const MARKET_TZ = 'Asia/Kolkata';
+const OPEN_POLL_MS = 5 * 60 * 1000; // aligns with the Worker quote cache TTL
+const CLOSED_POLL_MS = 30 * 60 * 1000;
+
+function isIndianMarketOpen(now: Date = new Date()): boolean {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: MARKET_TZ,
+    weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(now);
+  const get = (type: string) => parts.find((p) => p.type === type)?.value ?? '';
+  if (!['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].includes(get('weekday'))) return false;
+  const minutes = parseInt(get('hour'), 10) * 60 + parseInt(get('minute'), 10);
+  return minutes >= 9 * 60 + 15 && minutes <= 15 * 60 + 30;
+}
+
+const OVERLAY_KINDS: LiveKind[] = ['indices', 'currencies', 'commodities', 'holdings', 'sectors', 'macro'];
+
+// Fetch fresh per-ticker quotes from the Worker proxy. Any ticker that
+// fails is simply omitted so the caller keeps its live.json baseline.
+async function fetchLiveQuotes(items: LiveItem[]): Promise<Map<string, { current: number; trend: Trend }>> {
+  const out = new Map<string, { current: number; trend: Trend }>();
+  await Promise.all(
+    items.map(async (it) => {
+      if (!it.ticker) return;
+      try {
+        const r = await fetch(`/api/quote?ticker=${encodeURIComponent(it.ticker)}`, { cache: 'no-cache' });
+        if (!r.ok) return;
+        const j = await r.json();
+        if (j && j.ok === true && typeof j.current === 'number' && j.trend) {
+          out.set(it.id, { current: j.current, trend: j.trend as Trend });
+        }
+      } catch {
+        // Leave this id on its live.json baseline value.
+      }
+    }),
+  );
+  return out;
+}
+
+async function overlayLiveQuotes(payload: LivePayload): Promise<LivePayload> {
+  const items: LiveItem[] = [];
+  for (const kind of OVERLAY_KINDS) {
+    const list = payload[kind];
+    if (Array.isArray(list)) items.push(...list);
+  }
+  const quotes = await fetchLiveQuotes(items);
+  if (quotes.size === 0) return payload;
+  const apply = (list?: LiveItem[]) =>
+    list?.map((i) => {
+      const q = quotes.get(i.id);
+      return q ? { ...i, current: q.current, trend: q.trend } : i;
+    });
+  return {
+    ...payload,
+    fetchedAt: new Date().toISOString(),
+    indices: apply(payload.indices) ?? payload.indices,
+    currencies: apply(payload.currencies) ?? payload.currencies,
+    commodities: apply(payload.commodities) ?? payload.commodities,
+    holdings: apply(payload.holdings) ?? payload.holdings,
+    sectors: apply(payload.sectors),
+    macro: apply(payload.macro),
+  };
+}
+
 const Ctx = createContext<LiveCtx>({ data: null, mc: null, loading: true, error: null });
 
 export function LiveDataProvider({ children }: { children: ReactNode }) {
@@ -75,25 +146,63 @@ export function LiveDataProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let alive = true;
-    const live = fetch('/data/live.json', { cache: 'no-cache' })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((j) => {
-        if (alive && j && typeof j.fetchedAt === 'string') setData(j as LivePayload);
-      });
-    const mcFetch = fetch('/data/moneycontrol.json', { cache: 'no-cache' })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((j) => {
-        if (alive && j && typeof j.fetchedAt === 'string') setMc(j as MoneyControlPayload);
-      });
-    Promise.allSettled([live, mcFetch])
-      .catch((e) => {
-        if (alive) setError(String(e));
-      })
-      .finally(() => {
-        if (alive) setLoading(false);
-      });
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let lastLoad = 0;
+
+    async function load() {
+      lastLoad = Date.now();
+      const [liveRes, mcRes] = await Promise.allSettled([
+        fetch('/data/live.json', { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : null)),
+        fetch('/data/moneycontrol.json', { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : null)),
+      ]);
+
+      let base: LivePayload | null = null;
+      if (liveRes.status === 'fulfilled' && liveRes.value && typeof liveRes.value.fetchedAt === 'string') {
+        base = liveRes.value as LivePayload;
+      } else if (liveRes.status === 'rejected' && alive) {
+        setError(String(liveRes.reason));
+      }
+
+      // Phase 1 — paint the twice-daily snapshot immediately.
+      if (alive) {
+        if (base) setData(base);
+        if (mcRes.status === 'fulfilled' && mcRes.value && typeof mcRes.value.fetchedAt === 'string') {
+          setMc(mcRes.value as MoneyControlPayload);
+        }
+        setLoading(false);
+      }
+
+      // Phase 2 — upgrade to live intraday prices while the market is open.
+      if (alive && base && LIVE_MODE && isIndianMarketOpen()) {
+        const live = await overlayLiveQuotes(base);
+        if (alive) setData(live);
+      }
+    }
+
+    function schedule() {
+      const delay = isIndianMarketOpen() ? OPEN_POLL_MS : CLOSED_POLL_MS;
+      timer = setTimeout(() => {
+        load().finally(() => {
+          if (alive) schedule();
+        });
+      }, delay);
+    }
+
+    function refetchOnReturn() {
+      if (document.visibilityState === 'visible' && Date.now() - lastLoad > 60_000) load();
+    }
+
+    load().finally(() => {
+      if (alive) schedule();
+    });
+    document.addEventListener('visibilitychange', refetchOnReturn);
+    window.addEventListener('focus', refetchOnReturn);
+
     return () => {
       alive = false;
+      if (timer) clearTimeout(timer);
+      document.removeEventListener('visibilitychange', refetchOnReturn);
+      window.removeEventListener('focus', refetchOnReturn);
     };
   }, []);
 
