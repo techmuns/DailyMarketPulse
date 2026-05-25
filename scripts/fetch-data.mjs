@@ -58,13 +58,8 @@ function computeTrend(closes) {
 }
 
 async function run() {
-  const out = {
-    fetchedAt: new Date().toISOString(),
-    indices: [],
-    currencies: [],
-    commodities: [],
-    holdings: [],
-  };
+  const out = { fetchedAt: new Date().toISOString() };
+  for (const kind of Object.keys(SYMBOLS)) out[kind] = [];
 
   let ok = 0;
   let fail = 0;

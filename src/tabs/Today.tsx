@@ -14,7 +14,7 @@ import { LiveWire } from '../components/LiveWire';
 import { SectorIntel, SectorPickerControl, useSectorSummaries } from '../components/SectorIntel';
 import type { CanonicalSector } from '../utils/sectorIntel';
 import { aiSignals } from '../data/signals';
-import { marketTemperature, indices, weatherIndices, curatedIndexDrivers } from '../data/markets';
+import { marketTemperature, indices, weatherIndices, sectors } from '../data/markets';
 import type { Geography, IndexDriver, WeatherIndexMeta } from '../data/markets';
 import { lensHeadlines } from '../data/lensHeadlines';
 import { useStore } from '../state/store';
@@ -266,6 +266,100 @@ function describeWeather(india: (number | null)[], global: (number | null)[]): s
   return null;
 }
 
+// ── Data-driven index drivers ───────────────────────────────────────
+// Drivers are derived from the live numbers we actually have: India
+// from live NSE sector moves (falling back to index breadth + VIX), US
+// from the live 10Y yield direction (falling back to Nasdaq-vs-S&P
+// relative strength). No editorial guessing — the chip always matches
+// the day's data.
+
+function fmtPct(v: number): string {
+  return `${v >= 0 ? '+' : ''}${v.toFixed(2)}%`;
+}
+
+function sectorShortName(id: string): string {
+  return sectors.find((s) => s.id === id)?.sector ?? id;
+}
+
+interface DriverInputs {
+  vix: number | null;
+  liveSectors: { name: string; d1: number }[];
+  nasdaq: number | null;
+  spx: number | null;
+  us10y: number | null;
+}
+
+function deriveDriver(meta: WeatherIndexMeta, change: number | null, inp: DriverInputs): IndexDriver | null {
+  if (change == null || !Number.isFinite(change)) return null;
+  const dir = change > 0.05 ? 'rose' : change < -0.05 ? 'fell' : 'was flat';
+
+  if (meta.geography === 'India') {
+    if (inp.liveSectors.length > 0) {
+      const sorted = [...inp.liveSectors].sort((a, b) => b.d1 - a.d1);
+      const top = sorted[0];
+      const bottom = sorted[sorted.length - 1];
+      const label = change >= 0 ? `${top.name} lead` : `${bottom.name} drag`;
+      const bullets = [`${top.name} led (${fmtPct(top.d1)})`, `${bottom.name} lagged (${fmtPct(bottom.d1)})`];
+      if (inp.vix != null) bullets.push(`India VIX ${inp.vix <= 0 ? 'cooled' : 'rose'} (${fmtPct(inp.vix)})`);
+      return {
+        label,
+        summary: `${meta.name} ${dir} ${fmtPct(change)} — ${top.name} led while ${bottom.name} lagged.`,
+        bullets: bullets.slice(0, 3),
+        source: { label: 'Derived from live NSE sector moves' },
+      };
+    }
+    const label =
+      change > 0.4 ? 'Broad buying' : change > 0.05 ? 'Mild bid' : change < -0.4 ? 'Risk-off' : change < -0.05 ? 'Mild softness' : 'Range-bound';
+    const bullets = [`${meta.name} ${dir} ${fmtPct(change)}`];
+    if (inp.vix != null) bullets.push(`India VIX ${inp.vix <= 0 ? 'cooled' : 'rose'} (${fmtPct(inp.vix)})`);
+    return {
+      label,
+      summary: `${meta.name} ${dir} ${fmtPct(change)} on the day.`,
+      bullets,
+      source: { label: 'Derived from live index moves' },
+    };
+  }
+
+  // US
+  if (inp.us10y != null && Math.abs(inp.us10y) >= 0.3) {
+    const easing = inp.us10y < 0;
+    return {
+      label: easing ? 'Yields ease' : 'Yields firm',
+      summary: `${meta.name} ${dir} ${fmtPct(change)} as US 10Y yields ${easing ? 'eased' : 'firmed'} (${fmtPct(inp.us10y)}).`,
+      bullets: [
+        `US 10Y ${easing ? 'lower' : 'higher'} (${fmtPct(inp.us10y)})`,
+        easing ? 'Softer yields support valuations' : 'Firmer yields pressure valuations',
+      ],
+      source: { label: 'Derived from live 10Y yield + index moves' },
+    };
+  }
+  if (inp.nasdaq != null && inp.spx != null) {
+    const diff = inp.nasdaq - inp.spx;
+    const label =
+      inp.nasdaq >= 0.05 && inp.spx >= 0.05
+        ? diff > 0.15
+          ? 'Tech leads'
+          : 'Broad gains'
+        : inp.nasdaq <= -0.05 && inp.spx <= -0.05
+        ? diff < -0.15
+          ? 'Tech lags'
+          : 'Risk-off'
+        : 'Rotation';
+    return {
+      label,
+      summary: `${meta.name} ${dir} ${fmtPct(change)} — Nasdaq ${fmtPct(inp.nasdaq)} vs S&P 500 ${fmtPct(inp.spx)}.`,
+      bullets: [`Nasdaq ${fmtPct(inp.nasdaq)}`, `S&P 500 ${fmtPct(inp.spx)}`],
+      source: { label: 'Derived from live index moves' },
+    };
+  }
+  return {
+    label: change >= 0 ? 'US firmer' : 'US softer',
+    summary: `${meta.name} ${dir} ${fmtPct(change)} on the day.`,
+    bullets: [`${meta.name} ${dir} ${fmtPct(change)}`],
+    source: { label: 'Derived from live index moves' },
+  };
+}
+
 interface ResolvedIndex {
   value: number | null;
   change: number | null;
@@ -337,9 +431,21 @@ function MarketWeatherCard() {
     'i-nasdaq': nasdaq,
     'i-spx': spx,
   };
-  // Driver insight is curated editorial context (shown in both mock and
-  // live mode); an index with no entry falls back to "Driver pending".
-  const driverFor = (id: string): IndexDriver | null => curatedIndexDrivers[id] ?? null;
+  // Drivers are derived from the data we actually have live: India from
+  // NSE sector moves (mock sectors in mock mode), US from the 10Y yield
+  // and Nasdaq-vs-S&P. Falls back to index breadth, then "Driver
+  // pending" only when the index value itself is unavailable.
+  const vix = pickIndex('i-vix').change;
+  const rawSectorMoves: { name: string; d1: number | undefined }[] = MOCK_MODE
+    ? sectors.map((s) => ({ name: s.sector, d1: s.trend?.d1 ?? Number(s.current) }))
+    : (liveCtx.data?.sectors ?? []).map((s) => ({ name: sectorShortName(s.id), d1: s.trend?.d1 }));
+  const liveSectorMoves = rawSectorMoves.filter(
+    (s): s is { name: string; d1: number } => typeof s.d1 === 'number' && Number.isFinite(s.d1)
+  );
+  const us10y = MOCK_MODE ? null : liveCtx.data?.macro?.find((m) => m.id === 'm-us10y')?.trend?.d1 ?? null;
+  const driverInputs: DriverInputs = { vix, liveSectors: liveSectorMoves, nasdaq: nasdaq.change, spx: spx.change, us10y };
+  const driverFor = (meta: WeatherIndexMeta): IndexDriver | null =>
+    deriveDriver(meta, resolvedById[meta.id]?.change ?? null, driverInputs);
   const updatedLabel = state === 'unavailable' || ageMs == null ? null : `Updated ${formatAge(ageMs)}`;
   const geographies: Geography[] = ['India', 'US'];
 
@@ -395,7 +501,7 @@ function MarketWeatherCard() {
                       meta={m}
                       value={r?.value ?? null}
                       change={r?.change ?? null}
-                      driver={driverFor(m.id)}
+                      driver={driverFor(m)}
                       updatedLabel={updatedLabel}
                     />
                   );
