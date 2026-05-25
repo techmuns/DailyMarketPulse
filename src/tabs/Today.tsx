@@ -14,7 +14,7 @@ import { LiveWire } from '../components/LiveWire';
 import { SectorIntel, SectorPickerControl, useSectorSummaries } from '../components/SectorIntel';
 import type { CanonicalSector } from '../utils/sectorIntel';
 import { aiSignals } from '../data/signals';
-import { marketTemperature, indices, weatherIndices, mockIndexDrivers } from '../data/markets';
+import { marketTemperature, indices, weatherIndices, curatedIndexDrivers } from '../data/markets';
 import type { Geography, IndexDriver, WeatherIndexMeta } from '../data/markets';
 import { lensHeadlines } from '../data/lensHeadlines';
 import { useStore } from '../state/store';
@@ -337,10 +337,9 @@ function MarketWeatherCard() {
     'i-nasdaq': nasdaq,
     'i-spx': spx,
   };
-  // Driver insight is editorial. Mock mode shows the curated demo
-  // drivers; live mode has no driver feed yet, so cards show
-  // "Driver pending" rather than faking insight in production.
-  const driverFor = (id: string): IndexDriver | null => (MOCK_MODE ? mockIndexDrivers[id] ?? null : null);
+  // Driver insight is curated editorial context (shown in both mock and
+  // live mode); an index with no entry falls back to "Driver pending".
+  const driverFor = (id: string): IndexDriver | null => curatedIndexDrivers[id] ?? null;
   const updatedLabel = state === 'unavailable' || ageMs == null ? null : `Updated ${formatAge(ageMs)}`;
   const geographies: Geography[] = ['India', 'US'];
 

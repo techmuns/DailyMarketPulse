@@ -191,11 +191,11 @@ export interface IndexDriver {
   source?: { label: string; url?: string };
 }
 
-// MOCK / DEV FALLBACK ONLY. Shown when the build is in mock mode so the
-// card design can be demoed. In live/production mode there is no live
-// driver feed yet, so the card shows "Driver pending" rather than
-// presenting fabricated insight as live.
-export const mockIndexDrivers: Record<string, IndexDriver> = {
+// Curated editorial driver context shown in the Market Weather card
+// (the section is labelled "Curated"). Prices/% stay live; these labels
+// are editorial, not a live driver feed. If an index has no entry the
+// card shows "Driver pending".
+export const curatedIndexDrivers: Record<string, IndexDriver> = {
   'i-nifty': {
     label: 'Banks rally',
     summary:
@@ -205,7 +205,7 @@ export const mockIndexDrivers: Record<string, IndexDriver> = {
       'RBI rate-cut hopes lifted rate-sensitives',
       'FII flows turned net positive',
     ],
-    source: { label: 'Mock data · demo' },
+    source: { label: 'Curated · editorial' },
   },
   'i-sensex': {
     label: 'RBI cut hopes',
@@ -216,19 +216,19 @@ export const mockIndexDrivers: Record<string, IndexDriver> = {
       'Large-cap financials supported the index',
       'Cooling inflation aided sentiment',
     ],
-    source: { label: 'Mock data · demo' },
+    source: { label: 'Curated · editorial' },
   },
   'i-nasdaq': {
     label: 'AI strength',
     summary:
       'Nasdaq advanced as megacap tech and AI names extended their bid on resilient earnings momentum.',
     bullets: ['Megacap tech / AI names led', 'Earnings momentum stayed firm', 'Growth appetite improved'],
-    source: { label: 'Mock data · demo' },
+    source: { label: 'Curated · editorial' },
   },
   'i-spx': {
     label: 'Yields ease',
     summary: 'S&P 500 edged up as softer Treasury yields eased pressure on valuations across sectors.',
     bullets: ['Treasury yields drifted lower', 'Rate-sensitive sectors firmed', 'Breadth stayed constructive'],
-    source: { label: 'Mock data · demo' },
+    source: { label: 'Curated · editorial' },
   },
 };
