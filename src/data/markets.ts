@@ -161,3 +161,74 @@ export const marketTemperature: {
   oneLine: 'India is mixed while global tech keeps a firm bid — autos and NBFC lag, IT gets support.',
   spark: [49, 52, 54, 55, 53, 56, 58],
 };
+
+// ── Market Weather — geography + driver model ───────────────────────
+//
+// The Market Weather card groups its indices by geography and shows a
+// tiny "driver" insight (what likely moved each index). Prices and %
+// come from the live overlay; the driver narrative is editorial.
+
+export type Geography = 'India' | 'US';
+
+export interface WeatherIndexMeta {
+  id: string;
+  name: string;
+  geography: Geography;
+  flag: string;
+}
+
+export const weatherIndices: WeatherIndexMeta[] = [
+  { id: 'i-nifty', name: 'NIFTY 50', geography: 'India', flag: '🇮🇳' },
+  { id: 'i-sensex', name: 'SENSEX', geography: 'India', flag: '🇮🇳' },
+  { id: 'i-nasdaq', name: 'NASDAQ', geography: 'US', flag: '🇺🇸' },
+  { id: 'i-spx', name: 'S&P 500', geography: 'US', flag: '🇺🇸' },
+];
+
+export interface IndexDriver {
+  label: string; // 2–4 word chip
+  summary: string; // one-line reason
+  bullets: string[]; // 2–3 short points
+  source?: { label: string; url?: string };
+}
+
+// MOCK / DEV FALLBACK ONLY. Shown when the build is in mock mode so the
+// card design can be demoed. In live/production mode there is no live
+// driver feed yet, so the card shows "Driver pending" rather than
+// presenting fabricated insight as live.
+export const mockIndexDrivers: Record<string, IndexDriver> = {
+  'i-nifty': {
+    label: 'Banks rally',
+    summary:
+      'Nifty moved higher as banks and financials led gains, helped by RBI rate-cut expectations and positive FII flows.',
+    bullets: [
+      'Banks & financials led the advance',
+      'RBI rate-cut hopes lifted rate-sensitives',
+      'FII flows turned net positive',
+    ],
+    source: { label: 'Mock data · demo' },
+  },
+  'i-sensex': {
+    label: 'RBI cut hopes',
+    summary:
+      'Sensex tracked Nifty higher on growing conviction of an RBI rate cut and steady large-cap buying.',
+    bullets: [
+      'Rate-cut expectations firmed up',
+      'Large-cap financials supported the index',
+      'Cooling inflation aided sentiment',
+    ],
+    source: { label: 'Mock data · demo' },
+  },
+  'i-nasdaq': {
+    label: 'AI strength',
+    summary:
+      'Nasdaq advanced as megacap tech and AI names extended their bid on resilient earnings momentum.',
+    bullets: ['Megacap tech / AI names led', 'Earnings momentum stayed firm', 'Growth appetite improved'],
+    source: { label: 'Mock data · demo' },
+  },
+  'i-spx': {
+    label: 'Yields ease',
+    summary: 'S&P 500 edged up as softer Treasury yields eased pressure on valuations across sectors.',
+    bullets: ['Treasury yields drifted lower', 'Rate-sensitive sectors firmed', 'Breadth stayed constructive'],
+    source: { label: 'Mock data · demo' },
+  },
+};

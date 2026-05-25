@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SectionHeader } from '../components/SectionHeader';
 import { ChangeStripChip, Ticker } from '../components/Chip';
@@ -12,9 +13,9 @@ import { HeadlineStack } from '../components/HeadlineStack';
 import { LiveWire } from '../components/LiveWire';
 import { SectorIntel, SectorPickerControl, useSectorSummaries } from '../components/SectorIntel';
 import type { CanonicalSector } from '../utils/sectorIntel';
-import { useEffect, useState } from 'react';
 import { aiSignals } from '../data/signals';
-import { marketTemperature, indices } from '../data/markets';
+import { marketTemperature, indices, weatherIndices, mockIndexDrivers } from '../data/markets';
+import type { Geography, IndexDriver, WeatherIndexMeta } from '../data/markets';
 import { lensHeadlines } from '../data/lensHeadlines';
 import { useStore } from '../state/store';
 import { todayLong, pct } from '../utils/format';
@@ -217,9 +218,10 @@ function resolveDataState(fetchedAt: string | null): {
 function formatAge(ageMs: number): string {
   const mins = Math.max(0, Math.floor(ageMs / 60000));
   if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 60) return `${mins} min ago`;
   const hrs = Math.floor(mins / 60);
-  return `${hrs}h ago`;
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
 }
 
 function deriveMood(moves: number[]): MoodKey {
@@ -329,6 +331,19 @@ function MarketWeatherCard() {
   // instead.
   const sparkData: number[] | null = nifty.spark ?? (MOCK_MODE ? spark : null);
 
+  const resolvedById: Record<string, ResolvedIndex> = {
+    'i-nifty': nifty,
+    'i-sensex': sensex,
+    'i-nasdaq': nasdaq,
+    'i-spx': spx,
+  };
+  // Driver insight is editorial. Mock mode shows the curated demo
+  // drivers; live mode has no driver feed yet, so cards show
+  // "Driver pending" rather than faking insight in production.
+  const driverFor = (id: string): IndexDriver | null => (MOCK_MODE ? mockIndexDrivers[id] ?? null : null);
+  const updatedLabel = state === 'unavailable' || ageMs == null ? null : `Updated ${formatAge(ageMs)}`;
+  const geographies: Geography[] = ['India', 'US'];
+
   return (
     <div
       className="relative rounded-[28px] border overflow-hidden p-5 sm:p-6"
@@ -363,11 +378,32 @@ function MarketWeatherCard() {
         {summaryLine}
       </p>
 
-      <div className="relative mt-4 grid grid-cols-2 gap-2.5">
-        <IndexRow name="NIFTY 50" value={nifty.value} change={nifty.change} />
-        <IndexRow name="SENSEX" value={sensex.value} change={sensex.change} />
-        <IndexRow name="NASDAQ" value={nasdaq.value} change={nasdaq.change} />
-        <IndexRow name="S&P 500" value={spx.value} change={spx.change} />
+      <div className="relative mt-4 space-y-3">
+        {geographies.map((geo) => (
+          <div key={geo}>
+            <div className="flex items-center gap-2 mb-1.5">
+              <span aria-hidden className="h-px flex-1 bg-bordersoft/70" />
+              <CountryPill geo={geo} />
+            </div>
+            <div className="grid grid-cols-2 gap-2.5">
+              {weatherIndices
+                .filter((m) => m.geography === geo)
+                .map((m) => {
+                  const r = resolvedById[m.id];
+                  return (
+                    <IndexCard
+                      key={m.id}
+                      meta={m}
+                      value={r?.value ?? null}
+                      change={r?.change ?? null}
+                      driver={driverFor(m.id)}
+                      updatedLabel={updatedLabel}
+                    />
+                  );
+                })}
+            </div>
+          </div>
+        ))}
       </div>
 
       <div className="relative mt-4 text-[9.5px] tracking-[0.22em] uppercase font-semibold text-charcoal-mute">
@@ -495,7 +531,7 @@ function DataStateChip({ state, ageMs }: { state: DataState; ageMs: number | nul
           <span className="absolute inset-0 rounded-full bg-calm-emerald opacity-60 animate-ping" />
           <span className="relative w-1.5 h-1.5 rounded-full bg-calm-emerald" />
         </span>
-        Live · updated {formatAge(ageMs ?? 0)}
+        Updated {formatAge(ageMs ?? 0)}
       </span>
     );
   }
@@ -503,14 +539,14 @@ function DataStateChip({ state, ageMs }: { state: DataState; ageMs: number | nul
     return (
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-calm-amber-bg ring-1 ring-calm-amber/30 text-[9.5px] tracking-[0.18em] uppercase font-semibold text-calm-amber shrink-0">
         <span className="w-1.5 h-1.5 rounded-full bg-calm-amber" />
-        Delayed · updated {formatAge(ageMs ?? 0)}
+        Updated {formatAge(ageMs ?? 0)}
       </span>
     );
   }
   return (
     <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-cream-deep ring-1 ring-bordersoft text-[9.5px] tracking-[0.18em] uppercase font-semibold text-charcoal-mute shrink-0">
       <span className="w-1.5 h-1.5 rounded-full bg-charcoal-mute/60" />
-      {state === 'mock' ? 'Mock data' : 'Data unavailable'}
+      {state === 'mock' ? 'Mock data' : 'Update pending'}
     </span>
   );
 }
@@ -535,23 +571,139 @@ function TrendStat({ label, value }: { label: string; value?: number }) {
   );
 }
 
-function IndexRow({ name, value, change }: { name: string; value: number | null; change: number | null }) {
+function CountryPill({ geo }: { geo: Geography }) {
+  const flag = weatherIndices.find((w) => w.geography === geo)?.flag ?? '';
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/70 px-2 py-0.5 ring-1 ring-bordersoft text-[9px] tracking-[0.18em] uppercase font-semibold text-charcoal-soft shrink-0">
+      <span aria-hidden className="text-[10.5px] leading-none">
+        {flag}
+      </span>
+      {geo}
+    </span>
+  );
+}
+
+// Pointer with hover (desktop) vs touch (mobile) drives whether the
+// insight popover opens on hover or on tap.
+function useHoverCapable(): boolean {
+  const [hover, setHover] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(hover: hover)').matches : true
+  );
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(hover: hover)');
+    const onChange = () => setHover(mq.matches);
+    mq.addEventListener?.('change', onChange);
+    return () => mq.removeEventListener?.('change', onChange);
+  }, []);
+  return hover;
+}
+
+function IndexCard({
+  meta,
+  value,
+  change,
+  driver,
+  updatedLabel,
+}: {
+  meta: WeatherIndexMeta;
+  value: number | null;
+  change: number | null;
+  driver: IndexDriver | null;
+  updatedLabel: string | null;
+}) {
+  const hoverCapable = useHoverCapable();
+  const [open, setOpen] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const popRef = useRef<HTMLDivElement>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const openNow = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    setOpen(true);
+  };
+  const closeSoon = () => {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    closeTimer.current = setTimeout(() => setOpen(false), 120);
+  };
+
+  // Anchor the portal popover to the card. Position is written straight
+  // to the element's style (no render state) so it stays clear of the
+  // card's overflow-hidden clip and flips above when space is tight.
+  useLayoutEffect(() => {
+    if (!open) return;
+    function place() {
+      const el = cardRef.current;
+      const pop = popRef.current;
+      if (!el || !pop) return;
+      const rect = el.getBoundingClientRect();
+      const width = Math.min(264, window.innerWidth - 16);
+      let left = rect.left + rect.width / 2 - width / 2;
+      left = Math.max(8, Math.min(left, window.innerWidth - width - 8));
+      const popH = pop.offsetHeight || 176;
+      const below = rect.bottom + 8 + popH <= window.innerHeight;
+      const top = below ? rect.bottom + 8 : Math.max(8, rect.top - 8 - popH);
+      pop.style.width = `${width}px`;
+      pop.style.left = `${left}px`;
+      pop.style.top = `${top}px`;
+      pop.style.visibility = 'visible';
+    }
+    place();
+    window.addEventListener('scroll', place, true);
+    window.addEventListener('resize', place);
+    return () => {
+      window.removeEventListener('scroll', place, true);
+      window.removeEventListener('resize', place);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    function onPointer(e: PointerEvent) {
+      const t = e.target as Node;
+      if (cardRef.current?.contains(t) || popRef.current?.contains(t)) return;
+      setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false);
+    }
+    document.addEventListener('pointerdown', onPointer);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('pointerdown', onPointer);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [open]);
+
   const up = change != null && change > 0;
   const down = change != null && change < 0;
-  const rail = up
-    ? 'border-l-calm-green'
-    : down
-    ? 'border-l-calm-rose'
-    : 'border-l-bordersoft';
+  const rail = up ? 'border-l-calm-green' : down ? 'border-l-calm-rose' : 'border-l-bordersoft';
   const missing = value == null || change == null;
+
+  const hoverHandlers = hoverCapable
+    ? { onMouseEnter: openNow, onMouseLeave: closeSoon }
+    : { onClick: () => setOpen((o) => !o) };
+
   return (
     <div
+      ref={cardRef}
+      role="button"
+      tabIndex={0}
+      aria-expanded={open}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          setOpen((o) => !o);
+        }
+      }}
       className={clsx(
-        'rounded-xl border border-bordersoft bg-white px-3 py-2 border-l-[3px]',
+        'rounded-xl border border-bordersoft bg-white px-3 py-2 border-l-[3px] transition-shadow outline-none',
+        'hover:shadow-[0_6px_18px_rgba(72,55,120,0.10)] focus-visible:ring-2 focus-visible:ring-calm-violet/30 cursor-pointer',
         rail
       )}
+      {...hoverHandlers}
     >
-      <div className="label-mute">{name}</div>
+      <div className="label-mute">{meta.name}</div>
       <div className="mt-1 flex items-baseline justify-between gap-2">
         <span className="font-display text-[15px] font-semibold tabular-nums text-charcoal">
           {value == null ? '—' : value.toLocaleString('en-IN', { maximumFractionDigits: 1 })}
@@ -559,20 +711,87 @@ function IndexRow({ name, value, change }: { name: string; value: number | null;
         {missing ? (
           <span className="text-[11px] text-charcoal-mute">—</span>
         ) : (
-          <>
+          <span className="inline-flex items-center gap-1">
             <Delta value={change!} size="xs" />
             <span
               aria-hidden
-              className={clsx(
-                'text-[10px]',
-                up ? 'text-calm-green' : down ? 'text-calm-rose' : 'text-charcoal-mute'
-              )}
+              className={clsx('text-[10px]', up ? 'text-calm-green' : down ? 'text-calm-rose' : 'text-charcoal-mute')}
             >
               {up ? '▲' : down ? '▼' : '◆'}
             </span>
-          </>
+          </span>
         )}
       </div>
+
+      <span
+        className={clsx(
+          'mt-1.5 inline-flex max-w-full items-center gap-1 rounded-full px-1.5 py-0.5 text-[9.5px] font-medium tracking-wide',
+          driver
+            ? 'bg-calm-violet-bg/50 text-calm-violet ring-1 ring-calm-violet/15'
+            : 'bg-cream-deep text-charcoal-mute ring-1 ring-bordersoft'
+        )}
+      >
+        <span aria-hidden className="w-1 h-1 rounded-full bg-current opacity-60 shrink-0" />
+        <span className="truncate">{driver ? driver.label : 'Driver pending'}</span>
+      </span>
+
+      {open &&
+        createPortal(
+          <div
+            ref={popRef}
+            role="tooltip"
+            onMouseEnter={hoverCapable ? openNow : undefined}
+            onMouseLeave={hoverCapable ? closeSoon : undefined}
+            style={{ position: 'fixed', top: 0, left: 0, width: 264, visibility: 'hidden' }}
+            className="z-50 rounded-xl border border-bordersoft bg-white p-3 text-left shadow-[0_20px_44px_rgba(72,55,120,0.20)]"
+          >
+            <div className="flex items-center gap-1.5">
+              <span aria-hidden className="text-[11px] leading-none">
+                {meta.flag}
+              </span>
+              <span className="label-mute">{meta.name}</span>
+            </div>
+            {driver ? (
+              <>
+                <p className="mt-1.5 text-[11.5px] leading-snug text-charcoal-soft">{driver.summary}</p>
+                <ul className="mt-2 space-y-1">
+                  {driver.bullets.slice(0, 3).map((b) => (
+                    <li key={b} className="flex gap-1.5 text-[11px] text-charcoal-mute">
+                      <span aria-hidden className="mt-[5px] w-1 h-1 rounded-full bg-calm-violet/60 shrink-0" />
+                      <span>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            ) : (
+              <p className="mt-1.5 text-[11.5px] leading-snug text-charcoal-mute">
+                Price is live; driver insight is pending.
+              </p>
+            )}
+            {(driver?.source || updatedLabel) && (
+              <div className="mt-2 pt-2 border-t border-bordersoft flex items-center justify-between gap-2 text-[10px] text-charcoal-mute">
+                {driver?.source ? (
+                  driver.source.url ? (
+                    <a
+                      href={driver.source.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-calm-violet hover:underline truncate"
+                    >
+                      {driver.source.label}
+                    </a>
+                  ) : (
+                    <span className="truncate">{driver.source.label}</span>
+                  )
+                ) : (
+                  <span />
+                )}
+                {updatedLabel && <span className="shrink-0">{updatedLabel}</span>}
+              </div>
+            )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
