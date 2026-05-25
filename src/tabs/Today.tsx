@@ -12,7 +12,7 @@ import { HeadlineStack } from '../components/HeadlineStack';
 import { LiveWire } from '../components/LiveWire';
 import { SectorIntel, SectorPickerControl, useSectorSummaries } from '../components/SectorIntel';
 import type { CanonicalSector } from '../utils/sectorIntel';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { aiSignals } from '../data/signals';
 import { marketTemperature, indices } from '../data/markets';
 import { lensHeadlines } from '../data/lensHeadlines';
@@ -577,6 +577,22 @@ function IndexRow({ name, value, change }: { name: string; value: number | null;
   );
 }
 
+function IstClock() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const time = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Kolkata',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  }).format(now);
+  return <span className="tabular-nums">{time} IST</span>;
+}
+
 function Masthead({ liveFetchedAt }: { liveFetchedAt: string | null }) {
   const dateStr = todayLong();
   return (
@@ -589,7 +605,7 @@ function Masthead({ liveFetchedAt }: { liveFetchedAt: string | null }) {
             <span className="relative inline-flex rounded-full w-1.5 h-1.5 bg-calm-emerald" />
           </span>
           <span className="text-[10.5px] tracking-[0.22em] uppercase text-charcoal-soft font-semibold">
-            Live Market Brief · India / Global · 08:25 IST
+            Live Market Brief · India / Global · <IstClock />
           </span>
         </div>
         <span className="text-[10.5px] tracking-[0.22em] uppercase text-calm-emerald font-semibold hidden md:inline">
