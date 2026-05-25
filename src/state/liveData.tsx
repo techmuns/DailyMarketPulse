@@ -172,8 +172,12 @@ export function LiveDataProvider({ children }: { children: ReactNode }) {
         setLoading(false);
       }
 
-      // Phase 2 — upgrade to live intraday prices while the market is open.
-      if (alive && base && LIVE_MODE && isIndianMarketOpen()) {
+      // Phase 2 — overlay the freshest quotes from the Worker proxy so the
+      // card reflects the latest close (or live intraday prices while the
+      // market is open) instead of the last committed snapshot. Market
+      // hours only govern poll cadence (see schedule), not whether we
+      // refresh, so a stale live.json never strands the card on old data.
+      if (alive && base && LIVE_MODE) {
         const live = await overlayLiveQuotes(base);
         if (alive) setData(live);
       }
