@@ -238,6 +238,32 @@ function deriveMood(moves: number[]): MoodKey {
   return 'mixed';
 }
 
+// Plural-verb clause describing how a group of indices is trading, so
+// the narrative line stays consistent with the live mood + tiles
+// instead of the static mock copy.
+function groupClause(moves: (number | null)[]): string | null {
+  const valid = moves.filter((v): v is number => typeof v === 'number' && Number.isFinite(v));
+  if (valid.length === 0) return null;
+  const ups = valid.filter((m) => m > 0.05).length;
+  const downs = valid.filter((m) => m < -0.05).length;
+  if (ups > 0 && downs > 0) return 'are mixed';
+  const avg = valid.reduce((s, v) => s + v, 0) / valid.length;
+  if (avg >= 0.4) return 'trade firmly higher';
+  if (avg >= 0.05) return 'edge higher';
+  if (avg <= -0.4) return 'are under pressure';
+  if (avg <= -0.05) return 'drift lower';
+  return 'trade flat';
+}
+
+function describeWeather(india: (number | null)[], global: (number | null)[]): string | null {
+  const indiaClause = groupClause(india);
+  const globalClause = groupClause(global);
+  if (indiaClause && globalClause) return `Indian indices ${indiaClause} while US equities ${globalClause}.`;
+  if (indiaClause) return `Indian indices ${indiaClause}.`;
+  if (globalClause) return `US equities ${globalClause}.`;
+  return null;
+}
+
 interface ResolvedIndex {
   value: number | null;
   change: number | null;
@@ -290,6 +316,13 @@ function MarketWeatherCard() {
   const moodKey = moodInputs.length === 0 ? 'mixed' : deriveMood(moodInputs);
   const mood = MOOD[moodKey];
 
+  // In live mode, describe the actual index moves so the sentence matches
+  // the mood + tiles. Mock / unavailable states keep the editorial copy.
+  const liveLine = MOCK_MODE
+    ? null
+    : describeWeather([nifty.change, sensex.change, midcap.change], [nasdaq.change, spx.change]);
+  const summaryLine = liveLine ?? oneLine;
+
   // Sparkline source rules (per spec): mock spark is allowed ONLY in
   // mock mode. In live mode an unavailable feed must NOT fall back to
   // marketTemperature.spark — we render a muted placeholder strip
@@ -327,7 +360,7 @@ function MarketWeatherCard() {
       </div>
 
       <p className="relative mt-4 font-display italic text-[14px] md:text-[14.5px] text-charcoal-soft leading-snug">
-        {oneLine}
+        {summaryLine}
       </p>
 
       <div className="relative mt-4 grid grid-cols-2 gap-2.5">
