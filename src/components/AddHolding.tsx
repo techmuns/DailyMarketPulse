@@ -19,6 +19,16 @@ interface SearchResponse {
   success?: boolean;
 }
 
+// What the modal hands back to the Portfolio tab on "Add".
+export interface NewHolding {
+  ticker: string;
+  displayName: string;
+  sector: string;
+  weight: number;
+  thesis: string;
+  country?: string;
+}
+
 function toResults(json: SearchResponse): StockResult[] {
   const raw = json?.data?.results ?? {};
   return Object.entries(raw).map(([symbol, [country, name, sector]]) => ({
@@ -29,7 +39,7 @@ function toResults(json: SearchResponse): StockResult[] {
   }));
 }
 
-export function AddHolding() {
+export function AddHolding({ onAdd }: { onAdd: (h: NewHolding) => void }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -37,31 +47,52 @@ export function AddHolding() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="inline-flex items-center gap-1.5 rounded-lg border border-bordersoft bg-cream px-3 py-1.5 text-[12.5px] font-medium text-charcoal-soft shadow-soft transition hover:bg-ivory-100"
+        className="inline-flex items-center gap-1.5 rounded-full bg-calm-emerald px-3.5 py-2 text-[12px] font-semibold text-white shadow-soft transition hover:bg-[#0CA67F]"
       >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
           <path d="M12 5v14M5 12h14" />
         </svg>
         Add holding
       </button>
-      {/* Mounting the modal only while open keeps its state fresh on each
-          open without resetting via an effect. */}
-      <AnimatePresence>{open && <AddHoldingModal onClose={() => setOpen(false)} />}</AnimatePresence>
+      {/* Mounting only while open keeps form state fresh on each open. */}
+      <AnimatePresence>
+        {open && (
+          <AddHoldingModal
+            onClose={() => setOpen(false)}
+            onAdd={(h) => {
+              onAdd(h);
+              setOpen(false);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }
 
-function AddHoldingModal({ onClose }: { onClose: () => void }) {
-  const [query, setQuery] = useState('');
+function AddHoldingModal({ onClose, onAdd }: { onClose: () => void; onAdd: (h: NewHolding) => void }) {
+  // Form fields — the Ticker field doubles as the search box.
+  const [ticker, setTicker] = useState('');
+  const [displayName, setDisplayName] = useState('');
+  const [sector, setSector] = useState('');
+  const [weight, setWeight] = useState('');
+  const [thesis, setThesis] = useState('');
+  const [country, setCountry] = useState<string | undefined>(undefined);
+
+  // Search dropdown state.
   const [results, setResults] = useState<StockResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [total, setTotal] = useState<number | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [showResults, setShowResults] = useState(false);
+  // Set true right after a pick so the effect doesn't re-search the
+  // value we just auto-filled into the ticker field.
+  const justPicked = useRef(false);
 
-  // Focus the input on mount and close on Escape.
+  const tickerRef = useRef<HTMLInputElement>(null);
+
+  // Focus the ticker field on mount and close on Escape.
   useEffect(() => {
-    const t = setTimeout(() => inputRef.current?.focus(), 60);
+    const t = setTimeout(() => tickerRef.current?.focus(), 60);
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
@@ -73,16 +104,20 @@ function AddHoldingModal({ onClose }: { onClose: () => void }) {
   }, [onClose]);
 
   // Debounced search against the Worker proxy. user_index is fixed at
-  // 124 server-side, so the client only sends the query. An empty query
-  // is cleared in the change handler, so this effect only fetches.
+  // 124 server-side, so the client only sends the query.
   useEffect(() => {
-    const q = query.trim();
+    if (justPicked.current) {
+      justPicked.current = false;
+      return;
+    }
+    const q = ticker.trim();
     if (!q) return;
 
     const controller = new AbortController();
     const t = setTimeout(async () => {
       setLoading(true);
       setError(null);
+      setShowResults(true);
       try {
         const res = await fetch('/api/stock/search', {
           method: 'POST',
@@ -93,23 +128,19 @@ function AddHoldingModal({ onClose }: { onClose: () => void }) {
         if (!res.ok) {
           setError('Search is unavailable right now.');
           setResults([]);
-          setTotal(null);
           return;
         }
         const json: SearchResponse = await res.json();
         if (json.success === false) {
           setError(json.message || 'Search failed.');
           setResults([]);
-          setTotal(null);
           return;
         }
         setResults(toResults(json));
-        setTotal(json?.data?.total_results ?? null);
       } catch (err) {
         if ((err as Error).name === 'AbortError') return;
         setError('Could not reach search.');
         setResults([]);
-        setTotal(null);
       } finally {
         setLoading(false);
       }
@@ -119,16 +150,42 @@ function AddHoldingModal({ onClose }: { onClose: () => void }) {
       controller.abort();
       clearTimeout(t);
     };
-  }, [query]);
+  }, [ticker]);
 
-  const onChange = (val: string) => {
-    setQuery(val);
+  const onTickerChange = (val: string) => {
+    setTicker(val);
     if (!val.trim()) {
       setResults([]);
-      setTotal(null);
       setError(null);
       setLoading(false);
+      setShowResults(false);
     }
+  };
+
+  // Picking a result autofills three columns: ticker, display name, sector.
+  const pick = (r: StockResult) => {
+    justPicked.current = true;
+    setTicker(r.symbol);
+    setDisplayName(r.name);
+    setSector(r.sector);
+    setCountry(r.country);
+    setShowResults(false);
+    setResults([]);
+  };
+
+  const canAdd = ticker.trim().length > 0;
+
+  const submit = () => {
+    if (!canAdd) return;
+    const w = parseFloat(weight);
+    onAdd({
+      ticker: ticker.trim(),
+      displayName: displayName.trim() || ticker.trim(),
+      sector: sector.trim(),
+      weight: Number.isFinite(w) ? w : 0,
+      thesis: thesis.trim(),
+      country,
+    });
   };
 
   return (
@@ -148,12 +205,12 @@ function AddHoldingModal({ onClose }: { onClose: () => void }) {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: 12, scale: 0.98 }}
         transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-        className="fixed left-1/2 top-[12vh] z-50 w-[520px] max-w-[94vw] -translate-x-1/2 rounded-2xl border border-bordersoft bg-cream shadow-lift"
+        className="fixed left-1/2 top-[8vh] z-50 flex max-h-[84vh] w-[520px] max-w-[94vw] -translate-x-1/2 flex-col rounded-2xl border border-bordersoft bg-cream shadow-lift"
       >
-        <div className="flex items-start justify-between gap-3 border-b border-bordersoft px-5 py-4">
+        <div className="flex items-start justify-between gap-3 px-6 pt-5 pb-4">
           <div>
             <p className="label-mute">Portfolio</p>
-            <h2 className="h-display text-[17px] font-semibold mt-1">Add holding</h2>
+            <h2 className="h-display text-[18px] font-semibold mt-1">Add holding</h2>
           </div>
           <button
             onClick={onClose}
@@ -166,60 +223,119 @@ function AddHoldingModal({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
-        <div className="px-5 pt-4">
-          <div className="flex items-center gap-2 rounded-xl border border-bordersoft bg-ivory-100 px-3 py-2 focus-within:border-calm-violet">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 text-charcoal-mute">
-              <circle cx="11" cy="11" r="7" />
-              <path d="M21 21l-4.3-4.3" />
-            </svg>
+        <div className="overflow-y-auto px-6 pb-2 space-y-4">
+          {/* Ticker — doubles as the search box. */}
+          <div className="relative">
             <input
-              ref={inputRef}
-              value={query}
-              onChange={(e) => onChange(e.target.value)}
-              placeholder="Search a stock, e.g. RELI"
-              className="w-full bg-transparent text-[13.5px] text-charcoal placeholder:text-charcoal-mute outline-none"
+              ref={tickerRef}
+              value={ticker}
+              onChange={(e) => onTickerChange(e.target.value)}
+              onFocus={() => results.length > 0 && setShowResults(true)}
+              placeholder="e.g. RELIANCE.NS, INFY.NS, TCS.NS, AAPL"
+              autoComplete="off"
+              className="w-full rounded-lg border border-calm-emerald bg-cream px-3.5 py-2.5 text-[13.5px] text-charcoal placeholder:text-charcoal-mute outline-none focus:ring-2 focus:ring-calm-emerald/20"
             />
-            {loading && <span className="text-[11px] text-charcoal-mute tabular-nums">Searching…</span>}
+            <p className="mt-1.5 text-[11px] text-charcoal-mute">
+              Search a ticker — name &amp; sector autofill from market data.
+            </p>
+
+            {showResults && (ticker.trim() || loading) && (
+              <div className="absolute left-0 right-0 top-[44px] z-10 max-h-[240px] overflow-y-auto rounded-xl border border-bordersoft bg-cream shadow-lift">
+                {loading && <p className="px-3 py-3 text-[12px] text-charcoal-mute">Searching…</p>}
+                {error && !loading && <p className="px-3 py-3 text-[12px] text-calm-rose">{error}</p>}
+                {!loading && !error && results.length === 0 && ticker.trim() && (
+                  <p className="px-3 py-3 text-[12px] text-charcoal-mute">No matches found.</p>
+                )}
+                {!error &&
+                  results.map((r) => (
+                    <button
+                      key={r.symbol}
+                      type="button"
+                      onClick={() => pick(r)}
+                      className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left transition hover:bg-ivory-100"
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[12.5px] font-semibold text-charcoal">{r.symbol}</span>
+                          <span className="truncate text-[12px] text-charcoal-soft">{r.name}</span>
+                        </div>
+                        <div className="mt-0.5 text-[10.5px] text-charcoal-mute">{r.sector}</div>
+                      </div>
+                      <span className="shrink-0 rounded-md bg-cream-deep px-2 py-0.5 text-[10.5px] text-charcoal-mute">
+                        {r.country}
+                      </span>
+                    </button>
+                  ))}
+              </div>
+            )}
           </div>
+
+          <Field label="Display name" hint="Optional. Defaults to the ticker.">
+            <input
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              className="w-full rounded-lg border border-bordersoft bg-cream px-3.5 py-2.5 text-[13.5px] text-charcoal outline-none focus:border-calm-emerald"
+            />
+          </Field>
+
+          <Field label="Sector" hint="Free text — e.g. IT Services, Banks, Autos.">
+            <input
+              value={sector}
+              onChange={(e) => setSector(e.target.value)}
+              className="w-full rounded-lg border border-bordersoft bg-cream px-3.5 py-2.5 text-[13.5px] text-charcoal outline-none focus:border-calm-emerald"
+            />
+          </Field>
+
+          <Field label="Weight (%)" hint="Portfolio weight 0–100.">
+            <input
+              value={weight}
+              onChange={(e) => setWeight(e.target.value)}
+              type="number"
+              min={0}
+              max={100}
+              step="0.1"
+              className="w-full rounded-lg border border-bordersoft bg-cream px-3.5 py-2.5 text-[13.5px] text-charcoal outline-none focus:border-calm-emerald"
+            />
+          </Field>
+
+          <Field label="Thesis" hint="Optional one-liner. Shown in the drawer.">
+            <textarea
+              value={thesis}
+              onChange={(e) => setThesis(e.target.value)}
+              rows={2}
+              className="w-full resize-y rounded-lg border border-bordersoft bg-cream px-3.5 py-2.5 text-[13.5px] text-charcoal outline-none focus:border-calm-emerald"
+            />
+          </Field>
         </div>
 
-        <div className="max-h-[46vh] overflow-y-auto px-5 py-3">
-          {error && <p className="px-1 py-6 text-center text-[12.5px] text-calm-rose">{error}</p>}
-
-          {!error && total !== null && (
-            <p className="px-1 pb-2 text-[11px] text-charcoal-mute">
-              {total} {total === 1 ? 'match' : 'matches'}
-            </p>
-          )}
-
-          {!error &&
-            results.map((r) => (
-              <div
-                key={r.symbol}
-                className="flex items-center justify-between gap-3 rounded-lg px-2 py-2 transition hover:bg-ivory-100"
-              >
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[13px] font-semibold text-charcoal">{r.symbol}</span>
-                    <span className="truncate text-[12px] text-charcoal-soft">{r.name}</span>
-                  </div>
-                  <div className="mt-0.5 text-[10.5px] text-charcoal-mute">{r.sector}</div>
-                </div>
-                <span className="shrink-0 rounded-md bg-cream-deep px-2 py-0.5 text-[10.5px] text-charcoal-mute">
-                  {r.country}
-                </span>
-              </div>
-            ))}
-
-          {!error && !loading && query.trim() && results.length === 0 && (
-            <p className="px-1 py-6 text-center text-[12.5px] text-charcoal-mute">No matches found.</p>
-          )}
-
-          {!error && !query.trim() && (
-            <p className="px-1 py-6 text-center text-[12.5px] text-charcoal-mute">Start typing to search stocks.</p>
-          )}
+        <div className="flex items-center justify-end gap-3 px-6 py-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-lg px-3.5 py-2 text-[12.5px] font-medium text-charcoal-soft transition hover:bg-ivory-100"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={submit}
+            disabled={!canAdd}
+            className="inline-flex items-center gap-1.5 rounded-full bg-calm-emerald px-4 py-2 text-[12.5px] font-semibold text-white shadow-soft transition hover:bg-[#0CA67F] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Add
+          </button>
         </div>
       </motion.div>
     </>
+  );
+}
+
+function Field({ label, hint, children }: { label: string; hint: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="label-mute mb-1.5">{label}</div>
+      {children}
+      <p className="mt-1.5 text-[11px] text-charcoal-mute">{hint}</p>
+    </div>
   );
 }

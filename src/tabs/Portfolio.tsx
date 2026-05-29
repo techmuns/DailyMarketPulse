@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '../components/Card';
 import { SectionHeader } from '../components/SectionHeader';
@@ -14,12 +15,16 @@ import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
 import { AddHolding } from '../components/AddHolding';
+import type { NewHolding } from '../components/AddHolding';
+import type { Holding } from '../types';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
 import clsx from 'clsx';
 
 export function Portfolio({ hideBrief = false }: { hideBrief?: boolean } = {}) {
   const { openDrawer } = useStore();
-  const portfolio = useLiveOverlay(mockPortfolio, 'holdings');
+  const [added, setAdded] = useState<Holding[]>([]);
+  const livePortfolio = useLiveOverlay(mockPortfolio, 'holdings');
+  const portfolio = [...livePortfolio, ...added];
   const sortedByWeight = [...portfolio].sort((a, b) => b.weight - a.weight);
 
   const heat: HeatCell[] = sortedByWeight.map((h) => ({
@@ -45,7 +50,7 @@ export function Portfolio({ hideBrief = false }: { hideBrief?: boolean } = {}) {
           <p className="text-[12.5px] text-charcoal-mute mt-1.5">What changed since yesterday for your holdings.</p>
         </div>
         <div className="shrink-0 pt-1">
-          <AddHolding />
+          <AddHolding onAdd={(h) => setAdded((prev) => [...prev, toHolding(h)])} />
         </div>
       </header>
 
@@ -138,6 +143,30 @@ export function Portfolio({ hideBrief = false }: { hideBrief?: boolean } = {}) {
       </section>
     </motion.div>
   );
+}
+
+// Build a Holding from the Add-holding form. New holdings have no live
+// price/trend yet, so trend is zeroed to keep the table and heatmap safe.
+function toHolding(h: NewHolding): Holding {
+  return {
+    id: `p-user-${h.ticker.toLowerCase()}-${Date.now()}`,
+    title: h.displayName || h.ticker,
+    ticker: h.ticker,
+    sector: h.sector || '—',
+    category: 'portfolio',
+    current: 0,
+    previous: 0,
+    weight: h.weight,
+    thesis: h.thesis,
+    trend: { d1: 0, d5: 0, m1: 0, spark: [0, 0, 0, 0, 0, 0, 0] },
+    signal: 'monitor',
+    impact: 0,
+    affected: [h.ticker],
+    whyShown: h.thesis || 'Added manually to your book.',
+    source: 'Reliable media',
+    confidence: 0,
+    timestamp: new Date().toISOString(),
+  };
 }
 
 function Scorecard({ label, value, sub, dir, accent }: { label: string; value: string; sub?: string; dir?: number; accent?: 'navy' }) {
