@@ -13,6 +13,7 @@ import { pct } from '../utils/format';
 import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
+import { AddHolding } from '../components/AddHolding';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
 import clsx from 'clsx';
 
@@ -37,10 +38,15 @@ export function Portfolio({ hideBrief = false }: { hideBrief?: boolean } = {}) {
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
       {!hideBrief && <PulseBrief tabKey="Portfolio" />}
 
-      <header>
-        <p className="label-mute">Portfolio</p>
-        <h1 className="h-display text-[26px] font-semibold mt-1.5">Your book</h1>
-        <p className="text-[12.5px] text-charcoal-mute mt-1.5">What changed since yesterday for your holdings.</p>
+      <header className="flex items-start justify-between gap-4">
+        <div>
+          <p className="label-mute">Portfolio</p>
+          <h1 className="h-display text-[26px] font-semibold mt-1.5">Your book</h1>
+          <p className="text-[12.5px] text-charcoal-mute mt-1.5">What changed since yesterday for your holdings.</p>
+        </div>
+        <div className="shrink-0 pt-1">
+          <AddHolding />
+        </div>
       </header>
 
       {/* Scorecards */}
