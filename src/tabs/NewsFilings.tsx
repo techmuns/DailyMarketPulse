@@ -4,9 +4,11 @@ import { ChangeStripChip, SourceChip } from '../components/Chip';
 import { ToneDot, MeaningBadge } from '../components/Tone';
 import { PulseBrief } from '../components/PulseBrief';
 import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
-import { news, filings } from '../data/news';
+import { news as mockNews, filings } from '../data/news';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
+import { useNewsFeed } from '../state/newsFeed';
+import { formatFreshness } from '../state/liveData';
 import { timeAgo } from '../utils/format';
 import clsx from 'clsx';
 import type { NewsItem, Filing } from '../types';
@@ -16,6 +18,9 @@ type Scope = 'all' | 'portfolio' | 'watchlist' | 'broader' | 'filings';
 export function NewsFilings() {
   const [scope, setScope] = useState<Scope>('all');
   const { openDrawer } = useStore();
+  const { items: realNews, fetchedAt } = useNewsFeed();
+  const news = realNews ?? mockNews;
+  const isLiveNews = realNews != null;
 
   const rows: Array<
     { kind: 'news'; item: NewsItem } | { kind: 'filing'; item: Filing }
@@ -38,7 +43,11 @@ export function NewsFilings() {
         <div>
           <p className="label-mute">News & Filings</p>
           <h1 className="h-display text-[26px] font-semibold mt-1.5">News & Filing Impact Board</h1>
-          <p className="text-[12.5px] text-charcoal-mute mt-1.5">Portfolio first, then watchlist, then broader. Every item shows "Why shown" and a source label.</p>
+          <p className="text-[12.5px] text-charcoal-mute mt-1.5">
+            {isLiveNews
+              ? <>Live headlines via Yahoo Finance · {formatFreshness(fetchedAt)}. Signal &amp; impact are derived heuristics; filings remain demo data.</>
+              : 'Portfolio first, then watchlist, then broader. Every item shows "Why shown" and a source label.'}
+          </p>
         </div>
         <ScopeSelector value={scope} onChange={setScope} />
       </header>
