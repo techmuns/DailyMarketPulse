@@ -7,7 +7,7 @@ import { Sparkline } from '../components/Sparkline';
 import { ToneDot, MeaningBadge } from '../components/Tone';
 import { macro as mockMacro, macroPulseSummary } from '../data/macro';
 import { sectors as mockSectors } from '../data/markets';
-import { useMacroOverlay } from '../state/macroFeed';
+import { useMacroOverlay, useMacroFeed } from '../state/macroFeed';
 import { useMarketsFeed } from '../state/marketsFeed';
 import { useNewsFeed } from '../state/newsFeed';
 import { useAiSignals } from '../utils/useAiSignals';
@@ -38,6 +38,11 @@ export function Macro() {
         : m
     );
   }, [macroBase, newsItems]);
+  // Rows backed by a real feed (macro.json) plus the news-derived geo
+  // row; anything else is flagged demo when running live.
+  const { items: macroLive } = useMacroFeed();
+  const liveMode = macroLive != null;
+  const liveIds = new Set([...(macroLive?.map((i) => i.id) ?? []), 'm-geo']);
   const { sectors: liveSectors } = useMarketsFeed();
 
   // Sector reads derived from the live NSE sector moves when available,
@@ -84,12 +89,14 @@ export function Macro() {
               {macro.map((m) => {
                 const tone = getSignalTone(m);
                 const meaning = marketMeaning(m);
+                const isDemo = liveMode && !liveIds.has(m.id);
                 return (
                   <tr key={m.id} className={clsx('row-link', toneTokens(tone).rowClass)} onClick={() => openDrawer(aiSignals.find(s => s.category === 'macro') || aiSignals[0])}>
                     <td className="pl-5">
                       <div className="flex items-center gap-2">
                         <span className="text-[13px] font-semibold text-charcoal">{m.title}</span>
                         {meaning && <MeaningBadge tone={tone}>{meaning}</MeaningBadge>}
+                        {isDemo && <span className="chip bg-cream-deep text-charcoal-mute">demo</span>}
                       </div>
                       <div className="text-[10.5px] text-charcoal-mute capitalize mt-0.5">{m.category}</div>
                     </td>
