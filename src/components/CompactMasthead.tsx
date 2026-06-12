@@ -31,7 +31,7 @@ export function CompactMasthead({ section, chips = [], time = '08:25 IST' }: Pro
         boxShadow: '0 1px 0 rgba(255,255,255,0.5) inset, 0 4px 14px rgba(72,55,120,0.05)',
       }}
     >
-      <div className="max-w-[1320px] mx-auto py-2.5 md:py-3 flex items-center justify-between gap-4 flex-wrap">
+      <div className="py-2.5 md:py-3 flex items-center justify-between gap-4 flex-wrap">
         {/* Left: brand + section */}
         <div className="flex items-center gap-2 min-w-0">
           <PulseDot />
