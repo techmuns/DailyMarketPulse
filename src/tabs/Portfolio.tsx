@@ -5,7 +5,7 @@ import { SectionHeader } from '../components/SectionHeader';
 import { Heatmap } from '../components/Heatmap';
 import type { HeatCell } from '../components/Heatmap';
 import { portfolio as mockPortfolio, portfolioStats } from '../data/portfolio';
-import { useLiveOverlay } from '../state/liveData';
+import { useLiveOverlay, useLive } from '../state/liveData';
 import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
 import { ToneDot, MeaningBadge } from '../components/Tone';
@@ -20,12 +20,29 @@ import type { Holding } from '../types';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
 import clsx from 'clsx';
 
+// Aggregate scorecard stats from the live holdings, weighted by
+// position weight. Book NAV stays demo (needs real share quantities).
+function deriveStats(holdings: Holding[]) {
+  const totalW = holdings.reduce((s, h) => s + (h.weight || 0), 0) || 1;
+  const w = (k: 'd1' | 'd5' | 'm1') =>
+    Math.round((holdings.reduce((s, h) => s + (h.trend?.[k] ?? 0) * (h.weight || 0), 0) / totalW) * 100) / 100;
+  return {
+    bookValue: portfolioStats.bookValue,
+    todayChange: w('d1'),
+    d5Change: w('d5'),
+    m1Change: w('m1'),
+    positive: holdings.filter((h) => (h.trend?.d1 ?? 0) > 0).length,
+    negative: holdings.filter((h) => (h.trend?.d1 ?? 0) < 0).length,
+  };
+}
+
 export function Portfolio({ hideBrief = false }: { hideBrief?: boolean } = {}) {
   const { openDrawer } = useStore();
   const aiSignals = useAiSignals();
   const [added, setAdded] = useState<Holding[]>([]);
   const livePortfolio = useLiveOverlay(mockPortfolio, 'holdings');
   const portfolio = [...livePortfolio, ...added];
+  const stats = useLive().data != null ? deriveStats(portfolio) : portfolioStats;
   const sortedByWeight = [...portfolio].sort((a, b) => b.weight - a.weight);
 
   const heat: HeatCell[] = sortedByWeight.map((h) => ({
@@ -57,10 +74,10 @@ export function Portfolio({ hideBrief = false }: { hideBrief?: boolean } = {}) {
 
       {/* Scorecards */}
       <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Scorecard label="Book value" value={portfolioStats.bookValue} sub="mock NAV" accent="navy" />
-        <Scorecard label="Today" value={pct(portfolioStats.todayChange)} dir={portfolioStats.todayChange} sub={`${portfolioStats.positive}↑ / ${portfolioStats.negative}↓`} />
-        <Scorecard label="5-day" value={pct(portfolioStats.d5Change)} dir={portfolioStats.d5Change} sub="rolling" />
-        <Scorecard label="1-month" value={pct(portfolioStats.m1Change)} dir={portfolioStats.m1Change} sub="rolling" />
+        <Scorecard label="Book value" value={stats.bookValue} sub="demo NAV" accent="navy" />
+        <Scorecard label="Today" value={pct(stats.todayChange)} dir={stats.todayChange} sub={`${stats.positive}↑ / ${stats.negative}↓`} />
+        <Scorecard label="5-day" value={pct(stats.d5Change)} dir={stats.d5Change} sub="rolling" />
+        <Scorecard label="1-month" value={pct(stats.m1Change)} dir={stats.m1Change} sub="rolling" />
       </section>
 
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
