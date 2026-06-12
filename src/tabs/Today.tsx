@@ -11,6 +11,10 @@ import { PriorityLensSelector } from '../components/PriorityLens';
 import { HeadlineStack } from '../components/HeadlineStack';
 import { aiSignals } from '../data/signals';
 import { marketTemperature, indices } from '../data/markets';
+import { currencies as mkCurrencies } from '../data/currencies';
+import { commodities as mkCommodities } from '../data/commodities';
+import { portfolio as mkPortfolio } from '../data/portfolio';
+import { watchlist as mkWatchlist } from '../data/watchlist';
 import { lensHeadlines } from '../data/lensHeadlines';
 import { useStore } from '../state/store';
 import { todayLong, pct } from '../utils/format';
@@ -34,19 +38,65 @@ type FeedItem = {
   meaning?: string;
 };
 
+// Display metadata for live ids, pulled from the bundled mock arrays so
+// derived "Top changes" rows carry friendly names + lens grouping.
+const FEED_META: Record<string, { name: string; group: FeedItem['group']; scope: FeedItem['scope'] }> = {};
+for (const i of indices) FEED_META[i.id] = { name: i.title, group: 'markets', scope: 'broader' };
+for (const c of mkCurrencies) FEED_META[c.id] = { name: c.title, group: 'currency', scope: 'broader' };
+for (const c of mkCommodities) FEED_META[c.id] = { name: c.title, group: 'commodity', scope: 'broader' };
+for (const p of mkPortfolio) FEED_META[p.id] = { name: p.title, group: 'portfolio', scope: 'portfolio' };
+for (const w of mkWatchlist) FEED_META[w.id] = { name: w.title, group: 'markets', scope: 'watchlist' };
+
+const MOCK_BASE_FEED: FeedItem[] = [
+  { id: 'f-cur', group: 'currency', title: 'USD/INR weakness — 5-day trend', why: 'Importer cost pressure; exporter tailwind', affected: ['M&M', 'ASIANP', 'INFY', 'TCS'], signal: 'risk', change: '5-day trend', d1: 0.25, d5: 0.62, action: 'Add to thesis', impact: 85, scope: 'portfolio', meaning: 'FX Pressure' },
+  { id: 'f-port-mm', group: 'portfolio', title: 'M&M — FX + steel double squeeze', why: 'Auto inputs rising; margin watch', affected: ['M&M'], signal: 'risk', change: 'Risk increased', d1: -1.94, d5: -3.1, action: 'Assign follow-up', impact: 81, scope: 'portfolio', meaning: 'Margin Risk' },
+  { id: 'f-filing', group: 'filing', title: 'Asian Paints — 0.6% selective price hike', why: 'Pass-through retained; eases crude risk', affected: ['ASIANP'], signal: 'support', change: 'New today', d1: 0.4, d5: 0.7, action: 'Update thesis', impact: 62, scope: 'portfolio', meaning: 'Input Cost Relief' },
+  { id: 'f-macro-cpi', group: 'macro', title: 'India CPI cools to 4.62%', why: 'Rate-cut visibility improves', affected: ['HDFCB', 'BAJFIN'], signal: 'support', change: 'Support improved', d1: -4.0, d5: -4.0, impact: 78, scope: 'portfolio', meaning: 'Rate Support' },
+  { id: 'f-com-brent', group: 'commodity', title: 'Brent crude firms above $84', why: 'Input cost pressure for paints, aviation', affected: ['ASIANP', 'Aviation'], signal: 'risk', change: 'Repeated theme', d1: 2.06, d5: 3.4, action: 'Add to thesis', impact: 82, scope: 'portfolio', meaning: 'Input Cost ↑' },
+  { id: 'f-mkt-dmart', group: 'markets', title: 'DMART — 1.8x volume, no news', why: 'Quiet accumulation pattern', affected: ['DMART'], signal: 'monitor', change: 'New today', d1: 1.02, d5: 1.6, action: 'Read later', impact: 55, scope: 'watchlist', meaning: 'Volume Breakout' },
+  { id: 'f-news-rbi', group: 'news', title: 'RBI: room for accommodation', why: 'Reinforces rate-cut visibility', affected: ['Banks', 'NBFC'], signal: 'support', change: 'Changed since yesterday', d1: 0.0, d5: 0.0, impact: 76, scope: 'broader', meaning: 'Rate Support' },
+];
+
 export function Today() {
   const { lens, openDrawer } = useStore();
-  const liveFetchedAt = useLive().data?.fetchedAt ?? null;
+  const live = useLive();
+  const liveFetchedAt = live.data?.fetchedAt ?? null;
 
-  const baseFeed: FeedItem[] = useMemo(() => [
-    { id: 'f-cur', group: 'currency', title: 'USD/INR weakness — 5-day trend', why: 'Importer cost pressure; exporter tailwind', affected: ['M&M', 'ASIANP', 'INFY', 'TCS'], signal: 'risk', change: '5-day trend', d1: 0.25, d5: 0.62, action: 'Add to thesis', impact: 85, scope: 'portfolio', meaning: 'FX Pressure' },
-    { id: 'f-port-mm', group: 'portfolio', title: 'M&M — FX + steel double squeeze', why: 'Auto inputs rising; margin watch', affected: ['M&M'], signal: 'risk', change: 'Risk increased', d1: -1.94, d5: -3.1, action: 'Assign follow-up', impact: 81, scope: 'portfolio', meaning: 'Margin Risk' },
-    { id: 'f-filing', group: 'filing', title: 'Asian Paints — 0.6% selective price hike', why: 'Pass-through retained; eases crude risk', affected: ['ASIANP'], signal: 'support', change: 'New today', d1: 0.4, d5: 0.7, action: 'Update thesis', impact: 62, scope: 'portfolio', meaning: 'Input Cost Relief' },
-    { id: 'f-macro-cpi', group: 'macro', title: 'India CPI cools to 4.62%', why: 'Rate-cut visibility improves', affected: ['HDFCB', 'BAJFIN'], signal: 'support', change: 'Support improved', d1: -4.0, d5: -4.0, impact: 78, scope: 'portfolio', meaning: 'Rate Support' },
-    { id: 'f-com-brent', group: 'commodity', title: 'Brent crude firms above $84', why: 'Input cost pressure for paints, aviation', affected: ['ASIANP', 'Aviation'], signal: 'risk', change: 'Repeated theme', d1: 2.06, d5: 3.4, action: 'Add to thesis', impact: 82, scope: 'portfolio', meaning: 'Input Cost ↑' },
-    { id: 'f-mkt-dmart', group: 'markets', title: 'DMART — 1.8x volume, no news', why: 'Quiet accumulation pattern', affected: ['DMART'], signal: 'monitor', change: 'New today', d1: 1.02, d5: 1.6, action: 'Read later', impact: 55, scope: 'watchlist', meaning: 'Volume Breakout' },
-    { id: 'f-news-rbi', group: 'news', title: 'RBI: room for accommodation', why: 'Reinforces rate-cut visibility', affected: ['Banks', 'NBFC'], signal: 'support', change: 'Changed since yesterday', d1: 0.0, d5: 0.0, impact: 76, scope: 'broader', meaning: 'Rate Support' },
-  ], []);
+  // Derive "Top changes" from the live feed (biggest 1D moves across
+  // indices, FX, commodities and the book). Falls back to the curated
+  // demo feed when live.json has not loaded.
+  const baseFeed: FeedItem[] = useMemo(() => {
+    const data = live.data;
+    if (!data) return MOCK_BASE_FEED;
+    const rows: FeedItem[] = [];
+    (['indices', 'currencies', 'commodities', 'holdings'] as const).forEach((kind) => {
+      for (const it of data[kind] ?? []) {
+        const meta = FEED_META[it.id];
+        if (!meta || !it.trend) continue;
+        const d1 = it.trend.d1;
+        const d5 = it.trend.d5;
+        const up = d1 > 0;
+        const flat = Math.abs(d1) < 0.2;
+        const good = it.id === 'i-vix' ? !up : up; // a falling VIX is supportive
+        const signal: Signal = flat ? 'monitor' : good ? 'support' : 'risk';
+        rows.push({
+          id: `tc-${it.id}`,
+          group: meta.group,
+          title: meta.name,
+          why: `${up ? 'Up' : 'Down'} ${Math.abs(d1)}% on the day · ${d5 >= 0 ? '+' : ''}${d5}% over 5d.`,
+          affected: [meta.name],
+          signal,
+          change: flat ? undefined : good ? 'Support improved' : 'Risk increased',
+          d1,
+          d5,
+          impact: Math.min(100, Math.round(Math.abs(d1) * 12)),
+          scope: meta.scope,
+        });
+      }
+    });
+    rows.sort((a, b) => Math.abs(b.d1) - Math.abs(a.d1));
+    return rows.length ? rows.slice(0, 8) : MOCK_BASE_FEED;
+  }, [live.data]);
 
   const feed = useMemo(() => {
     const groupRank: Record<string, number> = {
@@ -193,19 +243,21 @@ const MOOD: Record<MoodKey, { label: string; chip: string; glyph: string; spark:
 // Pages environment) to opt into the live overlay. Local dev / any
 // build without the variable defaults to mock mode so the dashboard
 // renders against bundled data.
-const MOCK_MODE = import.meta.env.VITE_DATA_MODE !== 'live';
+// Live by default: the card uses public/data/live.json whenever it is
+// present, consistent with every other tab's overlay. Set
+// VITE_DATA_MODE=mock to force the demo view.
+const FORCE_MOCK = import.meta.env.VITE_DATA_MODE === 'mock';
 const FRESH_MS = 4 * 60 * 60 * 1000;
 
-type DataState = 'live' | 'delayed' | 'mock' | 'unavailable';
+type DataState = 'live' | 'delayed' | 'mock';
 
 function resolveDataState(fetchedAt: string | null): {
   state: DataState;
   ageMs: number | null;
 } {
-  if (MOCK_MODE) return { state: 'mock', ageMs: null };
-  if (!fetchedAt) return { state: 'unavailable', ageMs: null };
+  if (FORCE_MOCK || !fetchedAt) return { state: 'mock', ageMs: null };
   const t = Date.parse(fetchedAt);
-  if (Number.isNaN(t)) return { state: 'unavailable', ageMs: null };
+  if (Number.isNaN(t)) return { state: 'mock', ageMs: null };
   const ageMs = Date.now() - t;
   return { state: ageMs <= FRESH_MS ? 'live' : 'delayed', ageMs };
 }
@@ -251,25 +303,19 @@ function MarketWeatherCard() {
   // Index resolver — mock numbers in mock mode, real overlay values
   // in live mode, nulls when the live feed is missing a particular id.
   function pickIndex(id: string): ResolvedIndex {
-    if (MOCK_MODE) {
-      const m = indices.find((i) => i.id === id);
-      if (!m || !m.trend) return { value: null, change: null, d5: null, m1: null, spark: null };
-      return {
-        value: m.current as number,
-        change: m.trend.d1,
-        d5: m.trend.d5,
-        m1: m.trend.m1,
-        spark: m.trend.spark,
-      };
+    const l = !FORCE_MOCK ? liveCtx.data?.indices.find((i) => i.id === id) : undefined;
+    if (l) {
+      return { value: l.current, change: l.trend.d1, d5: l.trend.d5, m1: l.trend.m1, spark: l.trend.spark };
     }
-    const l = liveCtx.data?.indices.find((i) => i.id === id);
-    if (!l) return { value: null, change: null, d5: null, m1: null, spark: null };
+    // No live match — fall back to the bundled mock number for this id.
+    const m = indices.find((i) => i.id === id);
+    if (!m || !m.trend) return { value: null, change: null, d5: null, m1: null, spark: null };
     return {
-      value: l.current,
-      change: l.trend.d1,
-      d5: l.trend.d5,
-      m1: l.trend.m1,
-      spark: l.trend.spark,
+      value: m.current as number,
+      change: m.trend.d1,
+      d5: m.trend.d5,
+      m1: m.trend.m1,
+      spark: m.trend.spark,
     };
   }
 
@@ -290,7 +336,7 @@ function MarketWeatherCard() {
   // mock mode. In live mode an unavailable feed must NOT fall back to
   // marketTemperature.spark — we render a muted placeholder strip
   // instead.
-  const sparkData: number[] | null = nifty.spark ?? (MOCK_MODE ? spark : null);
+  const sparkData: number[] | null = nifty.spark ?? (FORCE_MOCK ? spark : null);
 
   return (
     <div
@@ -381,7 +427,7 @@ function DataStateChip({ state, ageMs }: { state: DataState; ageMs: number | nul
   return (
     <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-cream-deep ring-1 ring-bordersoft text-[9.5px] tracking-[0.18em] uppercase font-semibold text-charcoal-mute shrink-0">
       <span className="w-1.5 h-1.5 rounded-full bg-charcoal-mute/60" />
-      {state === 'mock' ? 'Mock data' : 'Data unavailable'}
+      Mock data
     </span>
   );
 }

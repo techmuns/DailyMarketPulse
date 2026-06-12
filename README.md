@@ -9,9 +9,10 @@ This is not a generic news dashboard — it is a portfolio-aware daily
 market cockpit covering macro, markets, currency, commodities, news,
 filings, events, portfolio impact, watchlist impact, and actions.
 
-This repo is a mock-data MVP. All data is clearly marked as mock/demo
-and kept in structured files under `src/data/` so it can be swapped for
-live feeds without touching UI components.
+Live market data is fetched by scheduled GitHub Actions (Yahoo Finance
+via `scripts/fetch-*.mjs`) into `public/data/*.json` and overlaid onto
+the UI at runtime. The bundled `src/data/*` files are the typed fallback
+shown when a feed is missing, so the dashboard always renders.
 
 ## Stack
 
@@ -73,25 +74,30 @@ shared types in `src/types/index.ts`. Swap the in-file constants with
 the result of a live fetch (or a TanStack Query hook) — UI components
 read against the type contract, not the source.
 
-## Production environment
+## Data feeds
 
-The Market Weather card decides between mock and live data via the
-`VITE_DATA_MODE` build-time environment variable:
+Scheduled GitHub Actions refresh the live feeds into `public/data/`:
 
-- **Production (Cloudflare Pages):** set `VITE_DATA_MODE=live` in the
-  project's environment variables (Cloudflare Pages → Settings →
-  Environment variables → Production). Without it, the deployed
-  dashboard shows the "Mock data" chip even when `public/data/live.json`
-  is present.
-- **Local development / `npm run dev` / `npm run build` without the
-  variable:** defaults to mock mode so the dashboard renders against
-  bundled `src/data/*` without needing a fetched feed.
+| File | Script | Powers |
+|------|--------|--------|
+| `live.json` | `fetch-data.mjs` | Index / FX / commodity / holding prices + trends |
+| `news.json` | `fetch-news.mjs` | News & Filings headlines |
+| `events.json` | `fetch-events.mjs` | Earnings & ex-dividend dates |
+| `markets.json` | `fetch-markets.mjs` | Sector heatmap, breadth, gainers/losers, unusual volume |
 
-State labels:
+Every tab reads live data when its feed is present and falls back to the
+bundled `src/data/*` mock otherwise — no env flag required. Prices,
+trends, news headlines, earnings dates, sectors, breadth and movers are
+real (Yahoo Finance). Editorial/analytical fields (signal, impact, "why
+shown", AI narratives) are derived heuristics or demo content.
 
-- `Live · updated Xm/Xh ago` — `VITE_DATA_MODE=live` and
-  `public/data/live.json` is fresh (≤ 4h old).
-- `Delayed · updated Xh ago` — live mode with stale data (> 4h).
-- `Mock data` — mock mode (default).
-- `Data unavailable` — live mode but no `live.json` was loaded.
+### Market Weather data state
+
+The Today tab's Market Weather card is **live by default** whenever
+`public/data/live.json` is present. Set `VITE_DATA_MODE=mock` to force
+the demo view. State labels:
+
+- `Live · updated Xm/Xh ago` — `live.json` is fresh (≤ 4h old).
+- `Delayed · updated Xh ago` — `live.json` present but stale (> 4h).
+- `Mock data` — no `live.json` loaded, or `VITE_DATA_MODE=mock`.
 
