@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import clsx from 'clsx';
-import { pulseBriefs } from '../data/pulseBriefs';
 import type { BriefKey } from '../data/pulseBriefs';
+import { useDerivedBrief } from '../utils/useDerivedBrief';
 import { topChanges } from '../data/topChanges';
 import { useSpeech } from '../utils/useSpeech';
 import { buildTopFiveAudioScript } from '../utils/topFiveScript';
@@ -19,7 +19,7 @@ interface Props {
 type PlayState = 'idle' | 'loading' | 'playing';
 
 export function PulseBrief({ tabKey, className }: Props) {
-  const brief = pulseBriefs[tabKey];
+  const brief = useDerivedBrief(tabKey);
   const { speak, stop: stopBrowser, isSpeaking, supported } = useSpeech();
   const { openDrawer } = useStore();
   const tokens = toneTokens(brief.tone);
