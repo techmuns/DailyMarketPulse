@@ -3,9 +3,9 @@ import { AnimatePresence, motion } from 'framer-motion';
 import clsx from 'clsx';
 import type { BriefKey } from '../data/pulseBriefs';
 import { useDerivedBrief } from '../utils/useDerivedBrief';
-import { topChanges } from '../data/topChanges';
 import { useSpeech } from '../utils/useSpeech';
 import { buildTopFiveAudioScript } from '../utils/topFiveScript';
+import { useTopChanges } from '../utils/useTopChanges';
 import { generateTopFiveAudio, revokeAudio } from '../services/audioService';
 import { toneTokens } from '../utils/tone';
 import { aiSignals } from '../data/signals';
@@ -20,6 +20,7 @@ type PlayState = 'idle' | 'loading' | 'playing';
 
 export function PulseBrief({ tabKey, className }: Props) {
   const brief = useDerivedBrief(tabKey);
+  const topChanges = useTopChanges();
   const { speak, stop: stopBrowser, isSpeaking, supported } = useSpeech();
   const { openDrawer } = useStore();
   const tokens = toneTokens(brief.tone);
@@ -90,7 +91,7 @@ export function PulseBrief({ tabKey, className }: Props) {
     } else {
       setState('idle');
     }
-  }, [state, stopAudio, supported, speak]);
+  }, [state, stopAudio, supported, speak, topChanges]);
 
   const audioCapable = supported || isPremiumModeEnabled();
   const label =
