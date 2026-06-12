@@ -154,7 +154,7 @@ function StatusBadge() {
   return (
     <span className="inline-flex items-center justify-center gap-1.5 px-2 py-0.5 rounded-full bg-calm-emerald-bg text-calm-emerald text-[9.5px] font-medium tracking-wide w-full">
       <span className="w-1 h-1 rounded-full bg-calm-emerald inline-block" />
-      Live · mock
+      Live data
     </span>
   );
 }
@@ -168,7 +168,7 @@ function StatusDot() {
         <span className="absolute inset-0 rounded-full bg-calm-emerald opacity-60 animate-ping" />
         <span className="relative w-1.5 h-1.5 rounded-full bg-calm-emerald" />
       </span>
-      Live · mock
+      Live data
     </span>
   );
 }
