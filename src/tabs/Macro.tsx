@@ -4,7 +4,8 @@ import { PulseBrief } from '../components/PulseBrief';
 import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
 import { ToneDot, MeaningBadge } from '../components/Tone';
-import { macro, macroPulseSummary } from '../data/macro';
+import { macro as mockMacro, macroPulseSummary } from '../data/macro';
+import { useMacroOverlay } from '../state/macroFeed';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
 import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
@@ -12,6 +13,7 @@ import clsx from 'clsx';
 
 export function Macro() {
   const { openDrawer } = useStore();
+  const macro = useMacroOverlay(mockMacro);
 
   const sectorReads = [
     { sector: 'Banks', signal: 'support' as const, note: 'Liquidity + dovish CPI' },
