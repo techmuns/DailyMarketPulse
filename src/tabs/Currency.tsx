@@ -8,7 +8,7 @@ import { PulseBrief } from '../components/PulseBrief';
 import { currencies as mockCurrencies, currencySummary } from '../data/currencies';
 import { useLiveOverlay, useLive } from '../state/liveData';
 import { currencySignal } from '../utils/deriveSignal';
-import { aiSignals } from '../data/signals';
+import { useAiSignals } from '../utils/useAiSignals';
 import { useStore } from '../state/store';
 import { num } from '../utils/format';
 import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
@@ -16,6 +16,7 @@ import clsx from 'clsx';
 
 export function Currency() {
   const { openDrawer } = useStore();
+  const aiSignals = useAiSignals();
   const overlaid = useLiveOverlay(mockCurrencies, 'currencies');
   const isLive = useLive().data != null;
   // When live, recompute the tone from the real move via domain rules.

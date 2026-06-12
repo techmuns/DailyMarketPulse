@@ -12,7 +12,7 @@ import { ToneDot, MeaningBadge } from '../components/Tone';
 import { PulseBrief } from '../components/PulseBrief';
 import { pct } from '../utils/format';
 import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
-import { aiSignals } from '../data/signals';
+import { useAiSignals } from '../utils/useAiSignals';
 import { useStore } from '../state/store';
 import { AddHolding } from '../components/AddHolding';
 import type { NewHolding } from '../components/AddHolding';
@@ -22,6 +22,7 @@ import clsx from 'clsx';
 
 export function Portfolio({ hideBrief = false }: { hideBrief?: boolean } = {}) {
   const { openDrawer } = useStore();
+  const aiSignals = useAiSignals();
   const [added, setAdded] = useState<Holding[]>([]);
   const livePortfolio = useLiveOverlay(mockPortfolio, 'holdings');
   const portfolio = [...livePortfolio, ...added];

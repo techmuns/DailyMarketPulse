@@ -7,7 +7,7 @@ import type { BaseItem } from '../types';
 import { num } from '../utils/format';
 import { getSignalTone, marketMeaning, toneTokens } from '../utils/tone';
 import { useStore } from '../state/store';
-import { aiSignals } from '../data/signals';
+import { useAiSignals } from '../utils/useAiSignals';
 
 interface Props {
   item: BaseItem;
@@ -17,6 +17,7 @@ interface Props {
 
 export function TrendCard({ item, unit, className }: Props) {
   const { openDrawer } = useStore();
+  const aiSignals = useAiSignals();
   const tone = getSignalTone(item);
   const tokens = toneTokens(tone);
   const meaning = marketMeaning(item);

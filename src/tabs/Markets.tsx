@@ -12,12 +12,13 @@ import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
 import clsx from 'clsx';
 import { useStore } from '../state/store';
-import { aiSignals } from '../data/signals';
+import { useAiSignals } from '../utils/useAiSignals';
 import { num } from '../utils/format';
 import { getSignalTone, toneTokens } from '../utils/tone';
 
 export function Markets() {
   const { openDrawer } = useStore();
+  const aiSignals = useAiSignals();
   const indices = useLiveOverlay(mockIndices, 'indices');
   const mkt = useMarketsFeed();
   const sectors = mkt.sectors ?? mockSectors;
@@ -116,6 +117,7 @@ function BreadthStat({ label, value, accent }: { label: string; value: number | 
 
 function MoverTable({ title, items, volume }: { title: string; items: MoverItem[]; volume?: boolean }) {
   const { openDrawer } = useStore();
+  const aiSignals = useAiSignals();
   return (
     <Card title={title} subtitle="Portfolio first, broader below">
       <table className="tbl mt-2">

@@ -8,7 +8,7 @@ import { buildTopFiveAudioScript } from '../utils/topFiveScript';
 import { useTopChanges } from '../utils/useTopChanges';
 import { generateTopFiveAudio, revokeAudio } from '../services/audioService';
 import { toneTokens } from '../utils/tone';
-import { aiSignals } from '../data/signals';
+import { useAiSignals } from '../utils/useAiSignals';
 import { useStore } from '../state/store';
 
 interface Props {
@@ -23,6 +23,7 @@ export function PulseBrief({ tabKey, className }: Props) {
   const topChanges = useTopChanges();
   const { speak, stop: stopBrowser, isSpeaking, supported } = useSpeech();
   const { openDrawer } = useStore();
+  const aiSignals = useAiSignals();
   const tokens = toneTokens(brief.tone);
 
   const [state, setState] = useState<PlayState>('idle');

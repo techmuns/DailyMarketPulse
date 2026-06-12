@@ -7,7 +7,7 @@ import { ToneDot, MeaningBadge } from '../components/Tone';
 import { PulseBrief } from '../components/PulseBrief';
 import { watchlist as mockWatchlist } from '../data/watchlist';
 import { useLiveOverlay } from '../state/liveData';
-import { aiSignals } from '../data/signals';
+import { useAiSignals } from '../utils/useAiSignals';
 import { useStore } from '../state/store';
 import { num } from '../utils/format';
 import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
@@ -15,6 +15,7 @@ import clsx from 'clsx';
 
 export function Watchlist({ hideBrief = false }: { hideBrief?: boolean } = {}) {
   const { openDrawer } = useStore();
+  const aiSignals = useAiSignals();
   const watchlist = useLiveOverlay(mockWatchlist, 'holdings');
   const opp = watchlist.filter((w) => w.signal === 'support' || w.signal === 'monitor');
   const risk = watchlist.filter((w) => w.signal === 'risk');

@@ -12,12 +12,13 @@ import type { HeatCell } from '../components/Heatmap';
 import { commodities as mockCommodities, commoditySummary } from '../data/commodities';
 import { useLiveOverlay, useLive } from '../state/liveData';
 import { commoditySignal } from '../utils/deriveSignal';
-import { aiSignals } from '../data/signals';
+import { useAiSignals } from '../utils/useAiSignals';
 import { useStore } from '../state/store';
 import { num } from '../utils/format';
 
 export function Commodities() {
   const { openDrawer } = useStore();
+  const aiSignals = useAiSignals();
   const overlaid = useLiveOverlay(mockCommodities, 'commodities');
   const isLive = useLive().data != null;
   // When live, recompute the tone from the real move via domain rules.

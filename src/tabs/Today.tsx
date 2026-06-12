@@ -9,7 +9,7 @@ import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
 import { PriorityLensSelector } from '../components/PriorityLens';
 import { HeadlineStack } from '../components/HeadlineStack';
-import { aiSignals } from '../data/signals';
+import { useAiSignals } from '../utils/useAiSignals';
 import { marketTemperature, indices } from '../data/markets';
 import { currencies as mkCurrencies } from '../data/currencies';
 import { commodities as mkCommodities } from '../data/commodities';
@@ -60,6 +60,7 @@ const MOCK_BASE_FEED: FeedItem[] = [
 
 export function Today() {
   const { lens, openDrawer } = useStore();
+  const aiSignals = useAiSignals();
   const live = useLive();
   const liveFetchedAt = live.data?.fetchedAt ?? null;
 

@@ -5,7 +5,7 @@ import { ToneDot, MeaningBadge } from '../components/Tone';
 import { PulseBrief } from '../components/PulseBrief';
 import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
 import { news as mockNews, filings } from '../data/news';
-import { aiSignals } from '../data/signals';
+import { useAiSignals } from '../utils/useAiSignals';
 import { useStore } from '../state/store';
 import { useNewsFeed } from '../state/newsFeed';
 import { formatFreshness } from '../state/liveData';
@@ -18,6 +18,7 @@ type Scope = 'all' | 'portfolio' | 'watchlist' | 'broader' | 'filings';
 export function NewsFilings() {
   const [scope, setScope] = useState<Scope>('all');
   const { openDrawer } = useStore();
+  const aiSignals = useAiSignals();
   const { items: realNews, fetchedAt } = useNewsFeed();
   const news = realNews ?? mockNews;
   const isLiveNews = realNews != null;

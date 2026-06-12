@@ -8,13 +8,14 @@ import { macro as mockMacro, macroPulseSummary } from '../data/macro';
 import { sectors as mockSectors } from '../data/markets';
 import { useMacroOverlay } from '../state/macroFeed';
 import { useMarketsFeed } from '../state/marketsFeed';
-import { aiSignals } from '../data/signals';
+import { useAiSignals } from '../utils/useAiSignals';
 import { useStore } from '../state/store';
 import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
 import clsx from 'clsx';
 
 export function Macro() {
   const { openDrawer } = useStore();
+  const aiSignals = useAiSignals();
   const macro = useMacroOverlay(mockMacro);
   const { sectors: liveSectors } = useMarketsFeed();
 
