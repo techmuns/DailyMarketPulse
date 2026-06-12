@@ -84,15 +84,17 @@ Scheduled GitHub Actions refresh the live feeds into `public/data/`:
 | `news.json` | `fetch-news.mjs` | News & Filings headlines |
 | `events.json` | `fetch-events.mjs` | Earnings & ex-dividend dates |
 | `markets.json` | `fetch-markets.mjs` | Sector heatmap, breadth, gainers/losers, unusual volume |
-| `macro.json` | `fetch-macro.mjs` | US 10Y (Yahoo `^TNX`) + India CPI (World Bank) |
+| `macro.json` | `fetch-macro.mjs` | US 10Y (Yahoo `^TNX`); India CPI + IIP + US Fed Funds (keyless FRED CSV) |
 | `filings.json` | `fetch-filings.mjs` | Corporate filings (BSE India announcements API) |
 
 Every tab reads live data when its feed is present and falls back to the
 bundled `src/data/*` mock otherwise — no env flag required. Prices,
-trends, news, earnings, sectors, breadth, movers, US 10Y, CPI and filings
-are real; the Pulse Brief, lens headlines, AI signals and per-row tone are
-derived from the live numbers. Still demo (no free source — needs the MUNS
-backend): RBI repo rate, IIP, system liquidity, Fed-path, and FII/DII.
+trends, news, earnings, sectors, breadth, movers, US 10Y, CPI, IIP, Fed
+Funds and filings are real; the Pulse Brief, lens headlines, AI signals,
+geopolitics read and per-row tone are derived from the live numbers. The
+only remaining demo rows — **RBI repo rate** and **system liquidity** —
+have no free, keyless source; they are tagged "demo" in the Macro tab and
+go live once the MUNS backend is wired in.
 
 ### Market Weather data state
 
