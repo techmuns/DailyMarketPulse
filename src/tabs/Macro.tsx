@@ -86,17 +86,15 @@ export function Macro() {
               </tr>
             </thead>
             <tbody>
-              {macro.map((m) => {
+              {(liveMode ? macro.filter((m) => liveIds.has(m.id)) : macro).map((m) => {
                 const tone = getSignalTone(m);
                 const meaning = marketMeaning(m);
-                const isDemo = liveMode && !liveIds.has(m.id);
                 return (
                   <tr key={m.id} className={clsx('row-link', toneTokens(tone).rowClass)} onClick={() => openDrawer(aiSignals.find(s => s.category === 'macro') || aiSignals[0])}>
                     <td className="pl-5">
                       <div className="flex items-center gap-2">
                         <span className="text-[13px] font-semibold text-charcoal">{m.title}</span>
                         {meaning && <MeaningBadge tone={tone}>{meaning}</MeaningBadge>}
-                        {isDemo && <span className="chip bg-cream-deep text-charcoal-mute">demo</span>}
                       </div>
                       <div className="text-[10.5px] text-charcoal-mute capitalize mt-0.5">{m.category}</div>
                     </td>
