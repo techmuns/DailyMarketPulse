@@ -36,20 +36,11 @@ jobs:
       - name: Fetch market data
         run: node scripts/fetch-data.mjs
 
-      - name: Fetch news
-        run: node scripts/fetch-news.mjs || echo "news fetch failed — keeping existing news.json"
+      - name: Merge macro indicators into live data (FRED, keyless)
+        run: node scripts/fetch-macro.mjs || echo "macro merge failed — keeping live.json as-is"
 
-      - name: Fetch events
-        run: node scripts/fetch-events.mjs || echo "events fetch failed — keeping existing events.json"
-
-      - name: Fetch markets internals
-        run: node scripts/fetch-markets.mjs || echo "markets fetch failed — keeping existing markets.json"
-
-      - name: Fetch macro
-        run: node scripts/fetch-macro.mjs || echo "macro fetch failed — keeping existing macro.json"
-
-      - name: Fetch filings
-        run: node scripts/fetch-filings.mjs || echo "filings fetch failed — keeping existing filings.json"
+      - name: Fetch supplemental feed (Yahoo news + movers -> moneycontrol.json)
+        run: node scripts/fetch-supplemental.mjs || echo "supplemental fetch failed — keeping existing moneycontrol.json"
 
       - name: Commit if changed
         run: |
@@ -57,11 +48,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add public/data/live.json
-          [ -f public/data/news.json ] && git add public/data/news.json || true
-          [ -f public/data/events.json ] && git add public/data/events.json || true
-          [ -f public/data/markets.json ] && git add public/data/markets.json || true
-          [ -f public/data/macro.json ] && git add public/data/macro.json || true
-          [ -f public/data/filings.json ] && git add public/data/filings.json || true
+          [ -f public/data/moneycontrol.json ] && git add public/data/moneycontrol.json || true
           if git diff --staged --quiet; then
             echo "No data changes — skipping commit."
             exit 0
