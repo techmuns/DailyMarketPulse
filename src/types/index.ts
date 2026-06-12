@@ -107,6 +107,7 @@ export interface Filing extends BaseItem {
   filingType: string;
   company: string;
   summary: string;
+  url?: string;
 }
 
 export interface EventItem extends BaseItem {

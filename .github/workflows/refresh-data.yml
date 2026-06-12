@@ -48,6 +48,9 @@ jobs:
       - name: Fetch macro
         run: node scripts/fetch-macro.mjs || echo "macro fetch failed — keeping existing macro.json"
 
+      - name: Fetch filings
+        run: node scripts/fetch-filings.mjs || echo "filings fetch failed — keeping existing filings.json"
+
       - name: Commit if changed
         run: |
           set -e
@@ -58,6 +61,7 @@ jobs:
           [ -f public/data/events.json ] && git add public/data/events.json || true
           [ -f public/data/markets.json ] && git add public/data/markets.json || true
           [ -f public/data/macro.json ] && git add public/data/macro.json || true
+          [ -f public/data/filings.json ] && git add public/data/filings.json || true
           if git diff --staged --quiet; then
             echo "No data changes — skipping commit."
             exit 0

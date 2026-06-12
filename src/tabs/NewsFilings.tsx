@@ -4,7 +4,8 @@ import { ChangeStripChip, SourceChip } from '../components/Chip';
 import { ToneDot, MeaningBadge } from '../components/Tone';
 import { PulseBrief } from '../components/PulseBrief';
 import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
-import { news as mockNews, filings } from '../data/news';
+import { news as mockNews, filings as mockFilings } from '../data/news';
+import { useFilingsFeed } from '../state/filingsFeed';
 import { useAiSignals } from '../utils/useAiSignals';
 import { useStore } from '../state/store';
 import { useNewsFeed } from '../state/newsFeed';
@@ -22,6 +23,8 @@ export function NewsFilings() {
   const { items: realNews, fetchedAt } = useNewsFeed();
   const news = realNews ?? mockNews;
   const isLiveNews = realNews != null;
+  const { items: realFilings } = useFilingsFeed();
+  const filings = realFilings ?? mockFilings;
 
   const rows: Array<
     { kind: 'news'; item: NewsItem } | { kind: 'filing'; item: Filing }
@@ -46,7 +49,7 @@ export function NewsFilings() {
           <h1 className="h-display text-[26px] font-semibold mt-1.5">News & Filing Impact Board</h1>
           <p className="text-[12.5px] text-charcoal-mute mt-1.5">
             {isLiveNews
-              ? <>Live headlines via Yahoo Finance · {formatFreshness(fetchedAt)}. Signal &amp; impact are derived heuristics; filings remain demo data.</>
+              ? <>Live headlines via Yahoo Finance · {formatFreshness(fetchedAt)}. {realFilings ? 'Filings via BSE India.' : 'Filings are demo data.'} Signal &amp; impact are derived heuristics.</>
               : 'Portfolio first, then watchlist, then broader. Every item shows "Why shown" and a source label.'}
           </p>
         </div>
