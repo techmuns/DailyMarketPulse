@@ -8,6 +8,7 @@ import watermarkUrl from './assets/logos/munshot-logo.png';
 import { StoreProvider } from './state/store';
 import { LiveDataProvider } from './state/liveData';
 import { NewsFeedProvider } from './state/newsFeed';
+import { EventsFeedProvider } from './state/eventsFeed';
 import { Today } from './tabs/Today';
 import { Macro } from './tabs/Macro';
 import { Markets } from './tabs/Markets';
@@ -42,6 +43,7 @@ function App() {
   return (
     <LiveDataProvider>
     <NewsFeedProvider>
+    <EventsFeedProvider>
     <StoreProvider>
       <div className="min-h-screen text-charcoal">
         <SideNav active={tab} onChange={setTab} />
@@ -81,6 +83,7 @@ function App() {
         </div>
       </div>
     </StoreProvider>
+    </EventsFeedProvider>
     </NewsFeedProvider>
     </LiveDataProvider>
   );
