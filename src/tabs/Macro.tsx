@@ -5,7 +5,9 @@ import { Delta } from '../components/Delta';
 import { Sparkline } from '../components/Sparkline';
 import { ToneDot, MeaningBadge } from '../components/Tone';
 import { macro as mockMacro, macroPulseSummary } from '../data/macro';
+import { sectors as mockSectors } from '../data/markets';
 import { useMacroOverlay } from '../state/macroFeed';
+import { useMarketsFeed } from '../state/marketsFeed';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
 import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
@@ -14,17 +16,21 @@ import clsx from 'clsx';
 export function Macro() {
   const { openDrawer } = useStore();
   const macro = useMacroOverlay(mockMacro);
+  const { sectors: liveSectors } = useMarketsFeed();
 
-  const sectorReads = [
-    { sector: 'Banks', signal: 'support' as const, note: 'Liquidity + dovish CPI' },
-    { sector: 'NBFC', signal: 'support' as const, note: 'Funding cost easing' },
-    { sector: 'Autos', signal: 'risk' as const, note: 'FX + steel cost squeeze' },
-    { sector: 'IT', signal: 'support' as const, note: 'INR + US yields tailwind' },
-    { sector: 'Paints', signal: 'risk' as const, note: 'Crude input pressure' },
-    { sector: 'Real Estate', signal: 'support' as const, note: 'Rate path improving' },
-    { sector: 'FMCG', signal: 'monitor' as const, note: 'Palm oil + CPO firm' },
-    { sector: 'Capital Goods', signal: 'support' as const, note: 'IIP firming' },
-  ];
+  // Sector reads derived from the live NSE sector moves when available,
+  // else the bundled demo sectors.
+  const sectorSource = liveSectors ?? mockSectors;
+  const sectorReads = sectorSource.slice(0, 8).map((s) => {
+    const d1 = s.trend?.d1 ?? (typeof s.current === 'number' ? s.current : 0);
+    const signal = d1 >= 0.3 ? ('support' as const) : d1 <= -0.3 ? ('risk' as const) : ('monitor' as const);
+    return { sector: s.title, signal, note: `${d1 >= 0 ? '+' : ''}${d1}% on the day` };
+  });
+  const upN = sectorSource.filter((s) => (s.trend?.d1 ?? 0) > 0).length;
+  const downN = sectorSource.filter((s) => (s.trend?.d1 ?? 0) < 0).length;
+  const pulseSummary = liveSectors
+    ? `${upN} NSE sectors advancing, ${downN} declining on the day.`
+    : macroPulseSummary;
 
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
@@ -33,7 +39,7 @@ export function Macro() {
       <header>
         <p className="label-mute">Macro</p>
         <h1 className="h-display text-[26px] font-semibold mt-1.5">Pulse</h1>
-        <p className="text-[12.5px] text-charcoal-mute mt-1.5">{macroPulseSummary}</p>
+        <p className="text-[12.5px] text-charcoal-mute mt-1.5">{pulseSummary}</p>
       </header>
 
       <section>
