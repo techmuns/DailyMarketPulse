@@ -42,6 +42,9 @@ jobs:
       - name: Fetch events
         run: node scripts/fetch-events.mjs || echo "events fetch failed — keeping existing events.json"
 
+      - name: Fetch markets internals
+        run: node scripts/fetch-markets.mjs || echo "markets fetch failed — keeping existing markets.json"
+
       - name: Commit if changed
         run: |
           set -e
@@ -50,6 +53,7 @@ jobs:
           git add public/data/live.json
           [ -f public/data/news.json ] && git add public/data/news.json || true
           [ -f public/data/events.json ] && git add public/data/events.json || true
+          [ -f public/data/markets.json ] && git add public/data/markets.json || true
           if git diff --staged --quiet; then
             echo "No data changes — skipping commit."
             exit 0
