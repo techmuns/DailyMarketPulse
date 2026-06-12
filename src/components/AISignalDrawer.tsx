@@ -136,7 +136,7 @@ export function AISignalDrawer() {
               </table>
 
               <div className="text-[10.5px] text-charcoal-mute pt-3 border-t border-bordersoft tracking-wide">
-                Demo data · generated for the Daily Market Pulse MVP.
+                Illustrative AI read — open the underlying source to verify.
               </div>
             </div>
           </motion.aside>

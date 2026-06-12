@@ -4,6 +4,7 @@ import { SideNav } from './components/SideNav';
 import type { TabKey } from './components/SideNav';
 import { AISignalDrawer } from './components/AISignalDrawer';
 import { HeadlineDrawer } from './components/HeadlineDrawer';
+import { SourceModal } from './components/SourceModal';
 import watermarkUrl from './assets/logos/munshot-logo.png';
 import { StoreProvider } from './state/store';
 import { LiveDataProvider, LIVE_MODE, useLive } from './state/liveData';
@@ -61,6 +62,7 @@ function App() {
         <FooterLine />
         <AISignalDrawer />
         <HeadlineDrawer />
+        <SourceModal />
         <div
           aria-hidden
           className="pointer-events-none fixed bottom-5 right-5 z-10 hidden sm:flex items-center gap-2.5 pl-2 pr-3.5 py-2 rounded-full bg-cream/70 backdrop-blur-md ring-1 ring-bordersoft/60 shadow-soft"

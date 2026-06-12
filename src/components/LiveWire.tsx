@@ -9,6 +9,7 @@
 
 import { useLiveHeadlines, LiveHeadlinesChip } from '../state/liveData';
 import { SectionHeader } from './SectionHeader';
+import { useStore } from '../state/store';
 
 interface Props {
   title: string;
@@ -19,6 +20,7 @@ interface Props {
 }
 
 export function LiveWire({ title, eyebrow = 'Live wire', hint, keywords, limit = 6 }: Props) {
+  const { openSource } = useStore();
   const state = useLiveHeadlines(keywords);
   const items = state.items.slice(0, limit);
 
@@ -41,11 +43,10 @@ export function LiveWire({ title, eyebrow = 'Live wire', hint, keywords, limit =
       <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {items.map((n) => (
           <li key={n.url}>
-            <a
-              href={n.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group block rounded-2xl border border-bordersoft/70 bg-cream shadow-soft hover:shadow-lift transition-shadow px-4 py-3 h-full"
+            <button
+              type="button"
+              onClick={() => openSource({ title: n.title, url: n.url })}
+              className="group block w-full text-left rounded-2xl border border-bordersoft/70 bg-cream shadow-soft hover:shadow-lift transition-shadow px-4 py-3 h-full"
             >
               <div className="flex items-start gap-3">
                 <span className="relative inline-flex w-1.5 h-1.5 mt-1.5 shrink-0">
@@ -67,7 +68,7 @@ export function LiveWire({ title, eyebrow = 'Live wire', hint, keywords, limit =
                   </div>
                 </div>
               </div>
-            </a>
+            </button>
           </li>
         ))}
       </ul>
