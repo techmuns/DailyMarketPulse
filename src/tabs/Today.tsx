@@ -16,6 +16,7 @@ import { commodities as mkCommodities } from '../data/commodities';
 import { portfolio as mkPortfolio } from '../data/portfolio';
 import { watchlist as mkWatchlist } from '../data/watchlist';
 import { lensHeadlines } from '../data/lensHeadlines';
+import { useLensHeadlines } from '../utils/useLensHeadlines';
 import { useStore } from '../state/store';
 import { todayLong, pct } from '../utils/format';
 import { useLive, formatFreshness } from '../state/liveData';
@@ -124,7 +125,9 @@ export function Today() {
       : lens === 'Sectoral' ? 'sectoral'
       : lens === 'Portfolio Related' ? 'portfolio'
       : 'custom';
-  const stripHeadlines = lensHeadlines.filter((h) => h.lensType === lensType);
+  const derivedHeadlines = useLensHeadlines();
+  const allHeadlines = derivedHeadlines ?? lensHeadlines;
+  const stripHeadlines = allHeadlines.filter((h) => h.lensType === lensType);
   const stripTitle: Record<LensType, string> = {
     global: 'Top global headlines',
     sectoral: 'Sector headlines',

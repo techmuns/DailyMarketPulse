@@ -109,7 +109,21 @@ export function HeadlineDrawer() {
 
               <Section label="Suggested action">
                 <div className="rounded-xl border border-bordersoft bg-cream-deep px-3.5 py-3 text-[12.5px] text-charcoal-soft">
-                  {h.action}
+                  {h.url ? (
+                    <a
+                      href={h.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-calm-emerald hover:underline"
+                    >
+                      {h.action}
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2">
+                        <path d="M7 17L17 7M9 7h8v8" />
+                      </svg>
+                    </a>
+                  ) : (
+                    h.action
+                  )}
                 </div>
               </Section>
             </div>

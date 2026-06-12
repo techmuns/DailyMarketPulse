@@ -41,6 +41,7 @@ export interface LensHeadline {
   sourceType: SourceLabel;
   action: string;
   timestamp: string;
+  url?: string;
 }
 
 export interface Trend {
