@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { SectionHeader } from '../components/SectionHeader';
 import { PulseBrief } from '../components/PulseBrief';
@@ -8,6 +9,7 @@ import { macro as mockMacro, macroPulseSummary } from '../data/macro';
 import { sectors as mockSectors } from '../data/markets';
 import { useMacroOverlay } from '../state/macroFeed';
 import { useMarketsFeed } from '../state/marketsFeed';
+import { useNewsFeed } from '../state/newsFeed';
 import { useAiSignals } from '../utils/useAiSignals';
 import { useStore } from '../state/store';
 import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
@@ -16,7 +18,26 @@ import clsx from 'clsx';
 export function Macro() {
   const { openDrawer } = useStore();
   const aiSignals = useAiSignals();
-  const macro = useMacroOverlay(mockMacro);
+  const macroBase = useMacroOverlay(mockMacro);
+  const { items: newsItems } = useNewsFeed();
+  // Geopolitics is a qualitative read — derive it from how many
+  // geopolitics-related headlines are in today's live news feed.
+  const macro = useMemo(() => {
+    if (!newsItems) return macroBase;
+    const hits = newsItems.filter((n) =>
+      /red sea|shipping|war|conflict|sanction|tariff|geopolit|middle east|strait|opec/i.test(n.title)
+    ).length;
+    return macroBase.map((m) =>
+      m.id === 'm-geo'
+        ? {
+            ...m,
+            current: hits >= 3 ? 'Elevated' : hits >= 1 ? 'Moderate' : 'Calm',
+            signal: hits >= 3 ? ('risk' as const) : hits >= 1 ? ('monitor' as const) : ('support' as const),
+            whyShown: `${hits} geopolitics-related headline${hits === 1 ? '' : 's'} in today's feed.`,
+          }
+        : m
+    );
+  }, [macroBase, newsItems]);
   const { sectors: liveSectors } = useMarketsFeed();
 
   // Sector reads derived from the live NSE sector moves when available,
