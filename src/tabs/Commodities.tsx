@@ -10,14 +10,20 @@ import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
 import clsx from 'clsx';
 import type { HeatCell } from '../components/Heatmap';
 import { commodities as mockCommodities, commoditySummary } from '../data/commodities';
-import { useLiveOverlay } from '../state/liveData';
+import { useLiveOverlay, useLive } from '../state/liveData';
+import { commoditySignal } from '../utils/deriveSignal';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
 import { num } from '../utils/format';
 
 export function Commodities() {
   const { openDrawer } = useStore();
-  const commodities = useLiveOverlay(mockCommodities, 'commodities');
+  const overlaid = useLiveOverlay(mockCommodities, 'commodities');
+  const isLive = useLive().data != null;
+  // When live, recompute the tone from the real move via domain rules.
+  const commodities = isLive
+    ? overlaid.map((c) => ({ ...c, signal: commoditySignal(c.id, c.trend?.d1 ?? 0) }))
+    : overlaid;
 
   const pressureCells: HeatCell[] = [
     { id: 'h-asianp', label: 'ASIANP — Paints', value: -1.51, sub: 'Crude + TiO2' },

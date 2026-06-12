@@ -6,7 +6,8 @@ import { Sparkline } from '../components/Sparkline';
 import { ToneDot, MeaningBadge } from '../components/Tone';
 import { PulseBrief } from '../components/PulseBrief';
 import { currencies as mockCurrencies, currencySummary } from '../data/currencies';
-import { useLiveOverlay } from '../state/liveData';
+import { useLiveOverlay, useLive } from '../state/liveData';
+import { currencySignal } from '../utils/deriveSignal';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
 import { num } from '../utils/format';
@@ -15,7 +16,12 @@ import clsx from 'clsx';
 
 export function Currency() {
   const { openDrawer } = useStore();
-  const currencies = useLiveOverlay(mockCurrencies, 'currencies');
+  const overlaid = useLiveOverlay(mockCurrencies, 'currencies');
+  const isLive = useLive().data != null;
+  // When live, recompute the tone from the real move via domain rules.
+  const currencies = isLive
+    ? overlaid.map((c) => ({ ...c, signal: currencySignal(c.id, c.trend?.d1 ?? 0) }))
+    : overlaid;
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
       <PulseBrief tabKey="Currency" />
