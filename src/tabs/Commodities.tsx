@@ -10,11 +10,32 @@ import { getSignalTone, toneTokens, marketMeaning } from '../utils/tone';
 import clsx from 'clsx';
 import type { HeatCell } from '../components/Heatmap';
 import { commodities as mockCommodities, commoditySummary } from '../data/commodities';
+import { portfolio as mockPortfolio } from '../data/portfolio';
+import { watchlist as mockWatchlist } from '../data/watchlist';
 import { useLiveOverlay, useLive } from '../state/liveData';
 import { commoditySignal } from '../utils/deriveSignal';
 import { useAiSignals } from '../utils/useAiSignals';
 import { useStore } from '../state/store';
 import { num } from '../utils/format';
+
+// Book names whose margins are driven by a commodity input cost.
+const COMMODITY_EXPOSURE: Record<string, string> = {
+  'p-asianp': 'Crude / TiO2',
+  'p-mm': 'Steel + aluminium',
+  'p-titan': 'Gold',
+  'p-relian': 'Crude / energy',
+};
+
+const MOCK_PRESSURE_CELLS: HeatCell[] = [
+  { id: 'h-asianp', label: 'ASIANP — Paints', value: -1.51, sub: 'Crude + TiO2' },
+  { id: 'h-mm', label: 'M&M — Autos', value: -1.94, sub: 'Steel + alu' },
+  { id: 'h-hul', label: 'HUL — FMCG', value: -0.3, sub: 'Palm oil' },
+  { id: 'h-avia', label: 'Aviation', value: -0.6, sub: 'Crude' },
+  { id: 'h-titan', label: 'TITAN — Jewellery', value: 0.74, sub: 'Gold' },
+  { id: 'h-tatast', label: 'TATAST — Steel', value: 1.7, sub: 'LME firm' },
+  { id: 'h-hindal', label: 'HINDALCO', value: 1.1, sub: 'Aluminium' },
+  { id: 'h-sugar', label: 'Sugar producers', value: -0.2, sub: 'Raw soft' },
+];
 
 export function Commodities() {
   const { openDrawer } = useStore();
@@ -26,16 +47,19 @@ export function Commodities() {
     ? overlaid.map((c) => ({ ...c, signal: commoditySignal(c.id, c.trend?.d1 ?? 0) }))
     : overlaid;
 
-  const pressureCells: HeatCell[] = [
-    { id: 'h-asianp', label: 'ASIANP — Paints', value: -1.51, sub: 'Crude + TiO2' },
-    { id: 'h-mm', label: 'M&M — Autos', value: -1.94, sub: 'Steel + alu' },
-    { id: 'h-hul', label: 'HUL — FMCG', value: -0.3, sub: 'Palm oil' },
-    { id: 'h-avia', label: 'Aviation', value: -0.6, sub: 'Crude' },
-    { id: 'h-titan', label: 'TITAN — Jewellery', value: 0.74, sub: 'Gold' },
-    { id: 'h-tatast', label: 'TATAST — Steel', value: 1.7, sub: 'LME firm' },
-    { id: 'h-hindal', label: 'HINDALCO', value: 1.1, sub: 'Aluminium' },
-    { id: 'h-sugar', label: 'Sugar producers', value: -0.2, sub: 'Raw soft' },
-  ];
+  // Input-cost pressure on the book's commodity-sensitive names, using
+  // their live 1D move; falls back to demo cells in mock mode.
+  const book = useLiveOverlay([...mockPortfolio, ...mockWatchlist], 'holdings');
+  const pressureCells: HeatCell[] = isLive
+    ? book
+        .filter((h) => COMMODITY_EXPOSURE[h.id])
+        .map((h) => ({
+          id: h.id,
+          label: `${h.title} — ${COMMODITY_EXPOSURE[h.id]}`,
+          value: h.trend?.d1 ?? 0,
+          sub: COMMODITY_EXPOSURE[h.id],
+        }))
+    : MOCK_PRESSURE_CELLS;
 
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="space-y-9">
