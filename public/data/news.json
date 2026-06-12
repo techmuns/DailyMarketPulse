@@ -1,0 +1,749 @@
+{
+  "fetchedAt": "2026-06-12T10:16:07.654Z",
+  "source": "yahoo-finance",
+  "note": "title/url/publisher/timestamp are real; signal/impact/whyShown/scope are derived heuristics.",
+  "items": [
+    {
+      "id": "yn-21d44515-f469-38d7-87da-c9e9ba99ca74",
+      "title": "3 Small-Cap Stocks That Concern Us",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/3-small-cap-stocks-concern-101320027.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "VFC",
+        "BTU",
+        "NOG"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Reliable media",
+      "publisher": "StockStory",
+      "confidence": 60,
+      "timestamp": "2026-06-12T10:13:20.000Z",
+      "changeStrip": "New today",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-df055d91-a53a-32ff-8c9c-cd72c3a28990",
+      "title": "Piper Sandler Adjusts Price Target on Adobe to $240 From $280",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/piper-sandler-adjusts-price-target-101048066.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "ADBE"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Reliable media",
+      "publisher": "MT Newswires",
+      "confidence": 60,
+      "timestamp": "2026-06-12T10:10:48.000Z",
+      "changeStrip": "New today",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-d6cbf7cf-6432-3936-a952-5280b25b6e2b",
+      "title": "Ford Motor Recalling 255,404 Focus Vehicles Over Potential Engine Issue",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/sectors/technology/articles/ford-motor-recalling-255-404-101004973.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "Markets"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Reliable media",
+      "publisher": "MT Newswires",
+      "confidence": 60,
+      "timestamp": "2026-06-12T10:10:04.000Z",
+      "changeStrip": "New today",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-7988c0b6-ef0f-33f5-ae39-046a72f57f5b",
+      "title": "Net Asset Value(s)",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/net-asset-value-100900533.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "SDVY.L",
+        "SMID.L"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Company source",
+      "publisher": "Business Wire",
+      "confidence": 60,
+      "timestamp": "2026-06-12T10:09:00.000Z",
+      "changeStrip": "New today",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-f3c7d5ec-53eb-3570-9498-93d832eb3c94",
+      "title": "Global Leadership Driven by Technology: DongCheng awarded the No. 1 position in global angle grinder sales for three consecutive years (2022-2024)",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/sectors/technology/articles/global-leadership-driven-technology-dongcheng-100800063.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "Markets"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Reliable media",
+      "publisher": "CNW Group",
+      "confidence": 60,
+      "timestamp": "2026-06-12T10:08:00.000Z",
+      "changeStrip": "New today",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-f1e1d482-6cfe-375a-b795-0cef9248d4ed",
+      "title": "BMO Capital Adjusts Price Target on Adobe to $230 From $285",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/bmo-capital-adjusts-price-target-100754527.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "ADBE"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Reliable media",
+      "publisher": "MT Newswires",
+      "confidence": 60,
+      "timestamp": "2026-06-12T10:07:54.000Z",
+      "changeStrip": "New today",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-316e1bb9-eeba-30fe-8162-f107f729d9fb",
+      "title": "Mizuho Adjusts Price Target on Adobe to $245 From $270",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/mizuho-adjusts-price-target-adobe-100739644.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "ADBE"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Reliable media",
+      "publisher": "MT Newswires",
+      "confidence": 60,
+      "timestamp": "2026-06-12T10:07:39.000Z",
+      "changeStrip": "New today",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-94678bad-c458-3823-b396-4a2ee982586e",
+      "title": "Truist Lowers Price Target on National Health Investors to $81 From $89, Keeps Buy Rating",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/sectors/healthcare/articles/truist-lowers-price-target-national-100720532.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "NHI",
+        "FDS"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Reliable media",
+      "publisher": "MT Newswires",
+      "confidence": 60,
+      "timestamp": "2026-06-12T10:07:20.000Z",
+      "changeStrip": "New today",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-808818ae-f099-331c-afe4-8492c0b0b620",
+      "title": "South Korea ex-president gets 30 years in jail over North drone incursion",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/m/808818ae-f099-331c-afe4-8492c0b0b620/south-korea-ex-president-gets.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "Markets"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Reliable media",
+      "publisher": "AFP",
+      "confidence": 60,
+      "timestamp": "2026-06-12T10:05:38.000Z",
+      "changeStrip": "New today",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-52d15707-7266-32d2-ba0d-ccd60aeb9603",
+      "title": "World shares surge and oil prices slip over 4% after Trump claims a breakthrough in Iran war talks",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/markets/world-indices/articles/asian-shares-surge-oil-prices-042912249.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "CL",
+        "^GSPC",
+        "^DJI"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Reliable media",
+      "publisher": "Associated Press",
+      "confidence": 60,
+      "timestamp": "2026-06-12T04:29:12.000Z",
+      "changeStrip": "New today",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-a58da0df-26d5-337f-912c-d9148165e7bf",
+      "title": "This ‘boring’ stock has had a 500% return over 5 years",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/m/a58da0df-26d5-337f-912c-d9148165e7bf/this-%E2%80%98boring%E2%80%99-stock-has-had-a.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "CW",
+        "NVDA",
+        "GOOG"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Reliable media",
+      "publisher": "TheStreet",
+      "confidence": 60,
+      "timestamp": "2026-06-11T15:33:00.000Z",
+      "changeStrip": "New today",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-fb9c3530-4571-390d-a7b7-8705a9af3109",
+      "title": "Net Asset Value(s)",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/net-asset-value-150700292.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "Markets"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Company source",
+      "publisher": "Business Wire",
+      "confidence": 60,
+      "timestamp": "2026-06-11T15:07:00.000Z",
+      "changeStrip": "New today",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-6f3c4cfb-88d2-31ca-9d66-de389c523f63",
+      "title": "Tech-Sector, Persian Gulf Roil Asian Stock Markets",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/markets/world-indices/articles/tech-sector-persian-gulf-roil-103605779.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "^SSEC",
+        "^N225",
+        "^HSI"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Reliable media",
+      "publisher": "MT Newswires",
+      "confidence": 60,
+      "timestamp": "2026-06-11T10:36:05.000Z",
+      "changeStrip": "New today",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-71aafbb7-aba6-32b1-ac47-5eb4eefb0643",
+      "title": "Oil Prices Rise as U.S.-Iran Tensions Escalate",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/m/71aafbb7-aba6-32b1-ac47-5eb4eefb0643/oil-prices-rise-as-u.s.-iran.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "CL"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Reliable media",
+      "publisher": "The Wall Street Journal",
+      "confidence": 60,
+      "timestamp": "2026-06-11T05:25:00.000Z",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-0f4eed62-dbde-32f0-98fa-e06bb25e72a7",
+      "title": "Tech Hesitation, Geopolitics Blunt Asian Stock Markets",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/markets/world-indices/articles/tech-hesitation-geopolitics-blunt-asian-104614115.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "^N225",
+        "^HSI",
+        "^SSEC"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Reliable media",
+      "publisher": "MT Newswires",
+      "confidence": 60,
+      "timestamp": "2026-06-10T10:46:14.000Z",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-e4e1000a-537d-3006-a5f3-781b796d187d",
+      "title": "Tech sell-off deepens but oil prices stay flat despite renewed Iran tensions",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/m/e4e1000a-537d-3006-a5f3-781b796d187d/tech-sell-off-deepens-but-oil.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "CL"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Reliable media",
+      "publisher": "Euronews",
+      "confidence": 60,
+      "timestamp": "2026-06-10T07:04:24.000Z",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-7d8e936c-a241-3c48-a219-115c64528c8e",
+      "title": "Tech Revival Lifts Asian Stock Markets",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/markets/world-indices/articles/tech-revival-lifts-asian-stock-104608880.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "^N225",
+        "^SSEC",
+        "^HSI",
+        "5706.T"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Reliable media",
+      "publisher": "MT Newswires",
+      "confidence": 60,
+      "timestamp": "2026-06-09T10:46:08.000Z",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-edf19057-8a9a-369e-a7e3-5caa6dd5d964",
+      "title": "Persistent Recognized Among India's Leading Impactful Companies in Hurun India Impact 50 - 2026",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/sectors/technology/articles/persistent-recognized-among-indias-leading-093000573.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "PERSISTENT"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Company source",
+      "publisher": "PR Newswire",
+      "confidence": 60,
+      "timestamp": "2026-06-09T09:30:00.000Z",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-6a69a2f9-fe25-3e5f-94c6-be28acae28f4",
+      "title": "Tech Rout Visits Asian Stock Markets",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/markets/world-indices/articles/tech-rout-visits-asian-stock-103728805.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "^N225",
+        "^HSI",
+        "^SSEC",
+        "CL"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Reliable media",
+      "publisher": "MT Newswires",
+      "confidence": 60,
+      "timestamp": "2026-06-08T10:37:28.000Z",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-7b935c10-5ab4-3f91-aea3-0db3552436fd",
+      "title": "5 'Boring' Stocks That Crushed the Nasdaq-100 Over Past 5 Years",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/m/7b935c10-5ab4-3f91-aea3-0db3552436fd/5-%27boring%27-stocks-that.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "^GSPC",
+        "NVDA",
+        "MSFT",
+        "TSLA"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Reliable media",
+      "publisher": "TheStreet",
+      "confidence": 60,
+      "timestamp": "2026-06-04T17:47:00.000Z",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-58c8c875-920b-3b03-98ad-4fe9e876f865",
+      "title": "Time to Diversify Internationally?",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/m/58c8c875-920b-3b03-98ad-4fe9e876f865/time-to-diversify.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "NVDA",
+        "MELI",
+        "SOFI"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Opinion",
+      "publisher": "Motley Fool",
+      "confidence": 60,
+      "timestamp": "2026-05-30T22:04:43.000Z",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-084cb67b-9ad9-3342-89ce-d87c2de09ed7",
+      "title": "Bajaj Finserv launches 'Finserv Intelligence' to back India's AI & deep-tech research and innovation; Partners IIT Bombay",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/sectors/technology/articles/bajaj-finserv-launches-finserv-intelligence-072700062.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "BAJAJFINSV"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Company source",
+      "publisher": "PR Newswire",
+      "confidence": 60,
+      "timestamp": "2026-05-29T07:27:00.000Z",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-e9783cfd-9c81-36d4-ae1d-3e5757c9f155",
+      "title": "BofA’s Hartnett Warns Mega-IPOs Risk Bubble Like Roaring ‘20s",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/bofa-hartnett-warns-mega-ipos-124137913.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "SPAX.PVT",
+        "^GSPC",
+        "BAC",
+        "V"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Reliable media",
+      "publisher": "Bloomberg",
+      "confidence": 60,
+      "timestamp": "2026-05-22T12:41:37.000Z",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-cb22daba-fce9-3890-a792-b0506bbe0f10",
+      "title": "How Trump trampled on Modi’s dream of an Indian superpower",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/m/cb22daba-fce9-3890-a792-b0506bbe0f10/how-trump-trampled-on-modi%E2%80%99s.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "Markets"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Reliable media",
+      "publisher": "The Telegraph",
+      "confidence": 60,
+      "timestamp": "2026-05-20T06:00:00.000Z",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-11d796d7-9ca5-386f-947f-16149f885ddf",
+      "title": "Move Over, Magnificent 7, Now There's the AI 11",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/m/11d796d7-9ca5-386f-947f-16149f885ddf/move-over%2C-magnificent-7%2C-now.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "FLUT",
+        "NVDA",
+        "DKNG",
+        "UA"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Opinion",
+      "publisher": "Motley Fool",
+      "confidence": 60,
+      "timestamp": "2026-05-19T16:04:25.000Z",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-94071715-da75-333d-b62c-1ffd031d7488",
+      "title": "India is Losing Investors Fast Amid Global AI Boom",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/m/94071715-da75-333d-b62c-1ffd031d7488/india-is-losing-investors.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "Markets"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Reliable media",
+      "publisher": "BeInCrypto",
+      "confidence": 60,
+      "timestamp": "2026-05-17T12:45:20.000Z",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-211dea40-4485-34db-8c9b-be8fa3b1a7ce",
+      "title": "India brings back COVID-era work-from-home rules and asks farmers to halve fertilizer use as the Iran war chokes its oil lifeline",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/news/india-brings-back-covid-era-175640242.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "Markets"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Reliable media",
+      "publisher": "Fortune",
+      "confidence": 60,
+      "timestamp": "2026-05-12T17:56:40.000Z",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    },
+    {
+      "id": "yn-012c07cd-1545-3c49-adb1-9f980638e4aa",
+      "title": "HarperCollins is proud to announce the forthcoming publication of A Beginner's Guide to the Indian Stock Market by Karthik Rangappa",
+      "category": "news",
+      "summary": "",
+      "url": "https://finance.yahoo.com/markets/stocks/articles/harpercollins-proud-announce-forthcoming-publication-105000278.html",
+      "scope": "broader",
+      "signal": "monitor",
+      "impact": 40,
+      "affected": [
+        "Markets"
+      ],
+      "whyShown": "Broader market headline.",
+      "source": "Company source",
+      "publisher": "PR Newswire",
+      "confidence": 60,
+      "timestamp": "2026-04-21T10:50:00.000Z",
+      "derived": [
+        "signal",
+        "impact",
+        "whyShown",
+        "scope",
+        "confidence"
+      ]
+    }
+  ]
+}

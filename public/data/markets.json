@@ -1,0 +1,365 @@
+{
+  "fetchedAt": "2026-06-12T10:16:12.198Z",
+  "source": "yahoo-finance",
+  "sectors": [
+    {
+      "id": "s-it",
+      "title": "IT Services",
+      "sector": "IT",
+      "category": "sector",
+      "current": -0.09,
+      "previous": 0,
+      "trend": {
+        "d1": -0.09,
+        "d5": -4.19,
+        "m1": -4.02,
+        "spark": [
+          29300.6,
+          29010.3,
+          28653.55,
+          28516.25,
+          28279.95,
+          27821.05,
+          27795.75
+        ]
+      },
+      "signal": "monitor",
+      "impact": 55,
+      "affected": [
+        "IT"
+      ],
+      "whyShown": "NSE IT Services index down 0.09% on the day.",
+      "source": "Reliable media",
+      "confidence": 85,
+      "timestamp": "2026-06-12T10:16:12.387Z"
+    },
+    {
+      "id": "s-banks",
+      "title": "Banks",
+      "sector": "Banks",
+      "category": "sector",
+      "current": 2.97,
+      "previous": 0,
+      "trend": {
+        "d1": 2.97,
+        "d5": 4.25,
+        "m1": 2.55,
+        "spark": [
+          54307.85,
+          54496.25,
+          54063.75,
+          55194.5,
+          55100.3,
+          55176.75,
+          56814.8
+        ]
+      },
+      "signal": "support",
+      "impact": 55,
+      "affected": [
+        "Banks"
+      ],
+      "whyShown": "NSE Banks index up 2.97% on the day.",
+      "source": "Reliable media",
+      "confidence": 85,
+      "timestamp": "2026-06-12T10:16:12.668Z"
+    },
+    {
+      "id": "s-auto",
+      "title": "Autos",
+      "sector": "Autos",
+      "category": "sector",
+      "current": 1.95,
+      "previous": 0,
+      "trend": {
+        "d1": 1.95,
+        "d5": 0.49,
+        "m1": 1.95,
+        "spark": [
+          26144.35,
+          26165.95,
+          25681.8,
+          26025.65,
+          25833.55,
+          25790.35,
+          26293.85
+        ]
+      },
+      "signal": "support",
+      "impact": 55,
+      "affected": [
+        "Autos"
+      ],
+      "whyShown": "NSE Autos index up 1.95% on the day.",
+      "source": "Reliable media",
+      "confidence": 85,
+      "timestamp": "2026-06-12T10:16:12.969Z"
+    },
+    {
+      "id": "s-fmcg",
+      "title": "FMCG",
+      "sector": "FMCG",
+      "category": "sector",
+      "current": 0.63,
+      "previous": 0,
+      "trend": {
+        "d1": 0.63,
+        "d5": 1.09,
+        "m1": -4.04,
+        "spark": [
+          48216,
+          48302.45,
+          48098.65,
+          48447.4,
+          48957,
+          48521.8,
+          48827.6
+        ]
+      },
+      "signal": "support",
+      "impact": 55,
+      "affected": [
+        "FMCG"
+      ],
+      "whyShown": "NSE FMCG index up 0.63% on the day.",
+      "source": "Reliable media",
+      "confidence": 85,
+      "timestamp": "2026-06-12T10:16:13.224Z"
+    },
+    {
+      "id": "s-pharma",
+      "title": "Pharma",
+      "sector": "Pharma",
+      "category": "sector",
+      "current": 0.3,
+      "previous": 0,
+      "trend": {
+        "d1": 0.3,
+        "d5": 0.54,
+        "m1": 5.28,
+        "spark": [
+          24177.95,
+          24248.05,
+          24147.65,
+          24290.3,
+          24160.75,
+          24306.95,
+          24380.05
+        ]
+      },
+      "signal": "support",
+      "impact": 55,
+      "affected": [
+        "Pharma"
+      ],
+      "whyShown": "NSE Pharma index up 0.3% on the day.",
+      "source": "Reliable media",
+      "confidence": 85,
+      "timestamp": "2026-06-12T10:16:13.501Z"
+    },
+    {
+      "id": "s-metals",
+      "title": "Metals",
+      "sector": "Metals",
+      "category": "sector",
+      "current": 0.95,
+      "previous": 0,
+      "trend": {
+        "d1": 0.95,
+        "d5": -2.78,
+        "m1": -1.47,
+        "spark": [
+          13436,
+          13221.65,
+          12913.65,
+          12987.1,
+          12766.45,
+          12733.6,
+          12854.5
+        ]
+      },
+      "signal": "support",
+      "impact": 55,
+      "affected": [
+        "Metals"
+      ],
+      "whyShown": "NSE Metals index up 0.95% on the day.",
+      "source": "Reliable media",
+      "confidence": 85,
+      "timestamp": "2026-06-12T10:16:13.730Z"
+    },
+    {
+      "id": "s-energy",
+      "title": "Energy",
+      "sector": "Energy",
+      "category": "sector",
+      "current": 1.52,
+      "previous": 0,
+      "trend": {
+        "d1": 1.52,
+        "d5": -2.73,
+        "m1": -4.26,
+        "spark": [
+          40445.75,
+          40346.1,
+          39685.45,
+          39752.95,
+          38949.3,
+          38655.9,
+          39244.45
+        ]
+      },
+      "signal": "support",
+      "impact": 55,
+      "affected": [
+        "Energy"
+      ],
+      "whyShown": "NSE Energy index up 1.52% on the day.",
+      "source": "Reliable media",
+      "confidence": 85,
+      "timestamp": "2026-06-12T10:16:14.006Z"
+    },
+    {
+      "id": "s-realty",
+      "title": "Realty",
+      "sector": "Realty",
+      "category": "sector",
+      "current": 3.53,
+      "previous": 0,
+      "trend": {
+        "d1": 3.53,
+        "d5": 0.09,
+        "m1": -3.05,
+        "spark": [
+          764.6,
+          768.9,
+          749.2,
+          761.4,
+          748.15,
+          743.35,
+          769.6
+        ]
+      },
+      "signal": "support",
+      "impact": 55,
+      "affected": [
+        "Realty"
+      ],
+      "whyShown": "NSE Realty index up 3.53% on the day.",
+      "source": "Reliable media",
+      "confidence": 85,
+      "timestamp": "2026-06-12T10:16:14.282Z"
+    }
+  ],
+  "breadth": {
+    "advancers": 38,
+    "decliners": 13,
+    "unchanged": 0,
+    "newHighs": 0,
+    "newLows": 1,
+    "aboveSMA50": 39,
+    "aboveSMA200": 43
+  },
+  "gainers": [
+    {
+      "ticker": "SHRIRAMFIN",
+      "name": "SHRIRAM FINANCE LIMITED",
+      "pct": 7.75,
+      "reason": "+7.75% — among today's top movers.",
+      "scope": "broader",
+      "volumeX": 1.29
+    },
+    {
+      "ticker": "BPCL",
+      "name": "BHARAT PETROLEUM CORP  LT",
+      "pct": 5.59,
+      "reason": "+5.59% — among today's top movers.",
+      "scope": "broader",
+      "volumeX": 0.88
+    },
+    {
+      "ticker": "BAJFINANCE",
+      "name": "BAJAJ FINANCE LIMITED",
+      "pct": 5.49,
+      "reason": "+5.49% — among today's top movers.",
+      "scope": "portfolio",
+      "volumeX": 1.16
+    },
+    {
+      "ticker": "LT",
+      "name": "LARSEN & TOUBRO LTD.",
+      "pct": 4.85,
+      "reason": "+4.85% — among today's top movers.",
+      "scope": "broader",
+      "volumeX": 0.92
+    },
+    {
+      "ticker": "TITAN",
+      "name": "TITAN COMPANY LIMITED",
+      "pct": 3.95,
+      "reason": "+3.95% — among today's top movers.",
+      "scope": "portfolio",
+      "volumeX": 0.88
+    }
+  ],
+  "losers": [
+    {
+      "ticker": "NESTLEIND",
+      "name": "NESTLE INDIA LIMITED",
+      "pct": -3.29,
+      "reason": "-3.29% — among today's laggards.",
+      "scope": "broader",
+      "volumeX": 1.13
+    },
+    {
+      "ticker": "ONGC",
+      "name": "OIL AND NATURAL GAS CORP.",
+      "pct": -2.53,
+      "reason": "-2.53% — among today's laggards.",
+      "scope": "broader",
+      "volumeX": 1.59
+    },
+    {
+      "ticker": "TECHM",
+      "name": "TECH MAHINDRA LIMITED",
+      "pct": -2.45,
+      "reason": "-2.45% — among today's laggards.",
+      "scope": "broader",
+      "volumeX": 0.96
+    },
+    {
+      "ticker": "SBILIFE",
+      "name": "SBI LIFE INSURANCE CO LTD",
+      "pct": -0.76,
+      "reason": "-0.76% — among today's laggards.",
+      "scope": "broader",
+      "volumeX": 1.09
+    },
+    {
+      "ticker": "TATACONSUM",
+      "name": "TATA CONSUMER PRODUCT LTD",
+      "pct": -0.71,
+      "reason": "-0.71% — among today's laggards.",
+      "scope": "broader",
+      "volumeX": 0.67
+    }
+  ],
+  "unusualVolume": [
+    {
+      "ticker": "ONGC",
+      "name": "OIL AND NATURAL GAS CORP.",
+      "pct": -2.53,
+      "reason": "1.59x average volume.",
+      "scope": "broader",
+      "volumeX": 1.59
+    },
+    {
+      "ticker": "HINDALCO",
+      "name": "HINDALCO  INDUSTRIES  LTD",
+      "pct": -0.26,
+      "reason": "1.51x average volume.",
+      "scope": "broader",
+      "volumeX": 1.51
+    }
+  ]
+}

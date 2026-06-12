@@ -1,0 +1,65 @@
+{
+  "fetchedAt": "2026-06-12T10:19:55.404Z",
+  "source": "yahoo-finance + FRED + world-bank",
+  "note": "Overlay onto src/data/macro by id. System liquidity (LAF) has no parseable source and stays hidden in live mode.",
+  "items": [
+    {
+      "id": "m-us10y",
+      "current": 4.46,
+      "unit": "%",
+      "trend": {
+        "d1": -0.08,
+        "d5": -0.01,
+        "m1": 0.11,
+        "spark": [
+          4.49,
+          4.48,
+          4.54,
+          4.55,
+          4.53,
+          4.54,
+          4.46
+        ]
+      }
+    },
+    {
+      "id": "m-cpi-in",
+      "current": 4.95,
+      "unit": "%",
+      "asOf": "2024",
+      "trend": {
+        "d1": 0,
+        "d5": 0,
+        "m1": -0.7,
+        "spark": [
+          3.94,
+          3.73,
+          6.62,
+          5.13,
+          6.7,
+          5.65,
+          4.95
+        ]
+      }
+    },
+    {
+      "id": "m-repo",
+      "current": 5.25,
+      "unit": "%",
+      "trend": {
+        "d1": 0,
+        "d5": 0,
+        "m1": 0,
+        "spark": [
+          5.25,
+          5.25,
+          5.25,
+          5.25,
+          5.25,
+          5.25,
+          5.25
+        ]
+      }
+    }
+  ]
+}
