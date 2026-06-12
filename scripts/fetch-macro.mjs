@@ -11,8 +11,11 @@
 // required). A freshness guard drops any series whose latest observation
 // is stale so we never overlay an out-of-date number.
 //
-// Still no free source (kept demo): RBI repo rate, system liquidity (LAF).
-// Behaviour mirrors fetch-data.mjs: per-source try/catch, never throws.
+//   - m-repo   RBI policy repo rate    -> scraped from rbi.org.in (best-effort)
+//
+// Only system liquidity (LAF) has no parseable source; that row stays
+// hidden in live mode. Behaviour mirrors fetch-data.mjs: per-source
+// try/catch, never throws.
 
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -51,6 +54,30 @@ async function fetchUS10Y() {
       spark: closes.slice(-7).map(round),
     },
   };
+}
+
+// ---------- RBI policy repo rate (scraped from rbi.org.in) ----------
+// Authoritative public source. Best-effort: if the markup doesn't yield
+// a plausible rate the row simply stays hidden (never faked).
+async function fetchRbiRepo() {
+  const res = await fetch('https://www.rbi.org.in/', {
+    headers: { 'User-Agent': UA, Accept: 'text/html,application/xhtml+xml' },
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const html = await res.text();
+  const patterns = [
+    /Policy Repo Rate[^%]{0,120}?(\d{1,2}\.\d{1,2})\s*%/i,
+    /Repo Rate[^%]{0,80}?(\d{1,2}\.\d{1,2})\s*%/i,
+  ];
+  let rate = null;
+  for (const re of patterns) {
+    const m = html.match(re);
+    if (m) { rate = Number(m[1]); break; }
+  }
+  if (rate == null || !Number.isFinite(rate) || rate < 1 || rate > 20) {
+    throw new Error('no plausible repo rate in markup');
+  }
+  return { id: 'm-repo', current: round(rate), unit: '%', trend: { d1: 0, d5: 0, m1: 0, spark: Array(7).fill(round(rate)) } };
 }
 
 // ---------- FRED (keyless CSV) ----------
@@ -128,6 +155,7 @@ async function run() {
     cpi,
     await runSource('india-iip (FRED)', () => fredYoY('m-iip', 'INDPROINDMISMEI')),
     await runSource('us-fed-funds (FRED)', () => fredLevel('m-fed', 'FEDFUNDS')),
+    await runSource('rbi-repo (RBI scrape)', fetchRbiRepo),
   ];
   const items = results.filter(Boolean);
 
@@ -139,7 +167,7 @@ async function run() {
   const out = {
     fetchedAt: new Date().toISOString(),
     source: 'yahoo-finance + FRED + world-bank',
-    note: 'Overlay onto src/data/macro by id. RBI repo rate and system liquidity have no free source and stay demo.',
+    note: 'Overlay onto src/data/macro by id. System liquidity (LAF) has no parseable source and stays hidden in live mode.',
     items,
   };
   await fs.mkdir(OUT_DIR, { recursive: true });
