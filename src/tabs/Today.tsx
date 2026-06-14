@@ -16,7 +16,7 @@ import { useStore } from '../state/store';
 import { todayLong, pct } from '../utils/format';
 import { useLive, formatFreshness } from '../state/liveData';
 import clsx from 'clsx';
-import type { LensType, Signal } from '../types';
+import type { ChangeStrip, LensType, Signal } from '../types';
 
 type FeedItem = {
   id: string;
@@ -25,7 +25,7 @@ type FeedItem = {
   why: string;
   affected: string[];
   signal: Signal;
-  change?: string;
+  change?: ChangeStrip;
   d1: number;
   d5: number;
   action?: string;
@@ -137,7 +137,7 @@ export function Today() {
                     <td className="pl-5 font-mono text-[11px] text-charcoal-mute tabular-nums">{String(i + 1).padStart(2, '0')}</td>
                     <td>
                       <div className="flex items-center gap-2 flex-wrap">
-                        {f.change && <ChangeStripChip value={f.change as any} />}
+                        {f.change && <ChangeStripChip value={f.change} />}
                         {f.meaning && <MeaningBadge tone={tone}>{f.meaning}</MeaningBadge>}
                         <span className="text-[13px] font-medium text-charcoal">{f.title}</span>
                       </div>

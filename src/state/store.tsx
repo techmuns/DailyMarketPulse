@@ -1,3 +1,7 @@
+// This state module intentionally co-locates its provider component with
+// the matching context hook; Fast Refresh reloads provider consumers
+// regardless, so the react-refresh single-export constraint doesn't apply.
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { AISignal, LensHeadline, PriorityLens } from '../types';

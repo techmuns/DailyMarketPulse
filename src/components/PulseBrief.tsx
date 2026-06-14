@@ -6,7 +6,7 @@ import type { BriefKey } from '../data/pulseBriefs';
 import { topChanges } from '../data/topChanges';
 import { useSpeech } from '../utils/useSpeech';
 import { buildTopFiveAudioScript } from '../utils/topFiveScript';
-import { generateTopFiveAudio, revokeAudio } from '../services/audioService';
+import { generateTopFiveAudio } from '../services/audioService';
 import { toneTokens } from '../utils/tone';
 import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
@@ -20,13 +20,12 @@ type PlayState = 'idle' | 'loading' | 'playing';
 
 export function PulseBrief({ tabKey, className }: Props) {
   const brief = pulseBriefs[tabKey];
-  const { speak, stop: stopBrowser, isSpeaking, supported } = useSpeech();
+  const { speak, stop: stopBrowser, supported } = useSpeech();
   const { openDrawer } = useStore();
   const tokens = toneTokens(brief.tone);
 
   const [state, setState] = useState<PlayState>('idle');
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const lastUrlRef = useRef<string | null>(null);
 
   const stopAudio = useCallback(() => {
     if (audioRef.current) {
@@ -43,17 +42,8 @@ export function PulseBrief({ tabKey, className }: Props) {
   useEffect(() => {
     return () => {
       stopAudio();
-      revokeAudio(lastUrlRef.current);
-      lastUrlRef.current = null;
     };
   }, [tabKey, stopAudio]);
-
-  // If the browser TTS finishes (or errors) on its own, reset state.
-  useEffect(() => {
-    if (state === 'playing' && !audioRef.current && !isSpeaking) {
-      setState('idle');
-    }
-  }, [isSpeaking, state]);
 
   const onPlay = useCallback(async () => {
     if (state === 'playing' || state === 'loading') {
@@ -63,11 +53,11 @@ export function PulseBrief({ tabKey, className }: Props) {
     const script = buildTopFiveAudioScript(topChanges);
     setState('loading');
 
-    // Try premium first.
+    // Try premium first. The audio service caches blob URLs by script
+    // hash for the session, so we must not revoke them here — a revoked
+    // URL would break the next cached playback.
     const premium = await generateTopFiveAudio(script);
     if (premium?.url) {
-      revokeAudio(lastUrlRef.current);
-      lastUrlRef.current = premium.url;
       const audio = new Audio(premium.url);
       audio.onended = () => setState('idle');
       audio.onerror = () => {
@@ -83,9 +73,10 @@ export function PulseBrief({ tabKey, className }: Props) {
       return;
     }
 
-    // Fall back to browser speech.
+    // Fall back to browser speech. onDone fires when the utterance ends
+    // or errors, so state returns to idle without polling isSpeaking.
     if (supported) {
-      speak(script);
+      speak(script, () => setState('idle'));
       setState('playing');
     } else {
       setState('idle');

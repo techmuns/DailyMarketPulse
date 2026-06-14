@@ -1,3 +1,4 @@
+import type { ElementType } from 'react';
 import clsx from 'clsx';
 import { deltaColor, pct } from '../utils/format';
 
@@ -29,7 +30,7 @@ export function Heatmap({ cells, cols = 4, showSub = true, onClick, maxAbs = 2 }
           c.value >= 0
             ? `rgba(15, 143, 111, ${0.06 + intensity * 0.32})`
             : `rgba(200, 107, 107, ${0.06 + intensity * 0.32})`;
-        const Comp: any = onClick ? 'button' : 'div';
+        const Comp: ElementType = onClick ? 'button' : 'div';
         return (
           <Comp
             key={c.id}

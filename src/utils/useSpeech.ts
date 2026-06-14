@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 interface UseSpeechReturn {
-  speak: (text: string) => void;
+  speak: (text: string, onDone?: () => void) => void;
   stop: () => void;
   isSpeaking: boolean;
   supported: boolean;
@@ -76,7 +76,7 @@ export function useSpeech(): UseSpeechReturn {
   }, [supported]);
 
   const speak = useCallback(
-    (text: string) => {
+    (text: string, onDone?: () => void) => {
       if (!supported || !text.trim()) return;
       window.speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
@@ -90,8 +90,17 @@ export function useSpeech(): UseSpeechReturn {
       u.pitch = 1.10;
       u.volume = 1.0;
       u.onstart = () => setIsSpeaking(true);
-      u.onend = () => setIsSpeaking(false);
-      u.onerror = () => setIsSpeaking(false);
+      // Fire onDone on both natural end and error so the caller can
+      // reliably reset its UI without polling isSpeaking (which is still
+      // false in the gap between speak() and the async onstart event).
+      u.onend = () => {
+        setIsSpeaking(false);
+        onDone?.();
+      };
+      u.onerror = () => {
+        setIsSpeaking(false);
+        onDone?.();
+      };
       utterRef.current = u;
       window.speechSynthesis.speak(u);
     },

@@ -16,7 +16,7 @@ import { aiSignals } from '../data/signals';
 import { useStore } from '../state/store';
 import { AddHolding } from '../components/AddHolding';
 import type { NewHolding } from '../components/AddHolding';
-import type { Holding } from '../types';
+import type { ChangeStrip, Holding } from '../types';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
 import clsx from 'clsx';
 
@@ -189,7 +189,7 @@ function Scorecard({ label, value, sub, dir, accent }: { label: string; value: s
   );
 }
 
-function Read({ change, text }: { change: any; text: string }) {
+function Read({ change, text }: { change: ChangeStrip; text: string }) {
   return (
     <li className="flex items-start gap-2.5">
       <span className="chip bg-cream-deep text-charcoal-mute shrink-0 mt-0.5">{change}</span>

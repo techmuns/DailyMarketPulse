@@ -64,7 +64,7 @@ export function Macro() {
                       <div className="text-[10.5px] text-charcoal-mute capitalize mt-0.5">{m.category}</div>
                     </td>
                     <td className="font-display font-medium text-charcoal tabular-nums">
-                      {typeof m.current === 'number' ? m.current : m.current}
+                      {m.current}
                       {m.unit && <span className="text-[10px] text-charcoal-mute ml-1">{m.unit}</span>}
                     </td>
                     <td><Delta value={m.trend!.d1} /></td>

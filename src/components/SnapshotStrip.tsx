@@ -1,3 +1,4 @@
+import type { ElementType } from 'react';
 import clsx from 'clsx';
 import { Sparkline } from './Sparkline';
 import { deltaColor, pct } from '../utils/format';
@@ -23,7 +24,7 @@ export function SnapshotStrip({ items }: Props) {
     <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
       {items.map((i) => {
         const t = toneTokens(i.tone);
-        const Comp: any = i.onClick ? 'button' : 'div';
+        const Comp: ElementType = i.onClick ? 'button' : 'div';
         return (
           <Comp
             key={i.key}

@@ -141,8 +141,6 @@ async function fetchNews() {
   );
 
   const items = [];
-  const re =
-    /<li[^>]*class="[^"]*clearfix[^"]*"[^>]*>([\s\S]*?)<\/li>|<h2[^>]*>\s*<a[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>\s*<\/h2>/gi;
 
   // Primary: list items with article cards
   const listRe =

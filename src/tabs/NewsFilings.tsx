@@ -59,7 +59,7 @@ export function NewsFilings() {
           <tbody>
             {rows.map((r) => {
               const item = r.item;
-              const tags = (item as any).affected as string[];
+              const tags = item.affected;
               const scope = r.kind === 'news' ? (item as NewsItem).scope : 'portfolio';
               const tone = getSignalTone({ ...item, scope });
               const meaning = marketMeaning({ ...item, category: r.kind === 'filing' ? 'filing' : 'news' });

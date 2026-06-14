@@ -3,6 +3,10 @@
 // data by id. Mock fields like signal / whyShown / impact / source are
 // left untouched.
 
+// This state module intentionally co-locates its provider component with
+// the context hooks/helpers; Fast Refresh reloads provider consumers
+// regardless, so the react-refresh single-export constraint doesn't apply.
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { Trend } from '../types';
