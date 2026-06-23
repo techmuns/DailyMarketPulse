@@ -14,7 +14,8 @@ import { marketTemperature, indices } from '../data/markets';
 import { lensHeadlines } from '../data/lensHeadlines';
 import { useStore } from '../state/store';
 import { todayLong, pct } from '../utils/format';
-import { useLive, formatFreshness } from '../state/liveData';
+import { useLive, useDataState, formatFreshness } from '../state/liveData';
+import type { DataState } from '../state/liveData';
 import clsx from 'clsx';
 import type { LensType, Signal } from '../types';
 
@@ -188,27 +189,9 @@ const MOOD: Record<MoodKey, { label: string; chip: string; glyph: string; spark:
 // and (when present) NIFTY Midcap; if breadth disagrees we fall back
 // to "mixed" regardless of magnitude.
 
-// Data-state machinery for the Market Weather card.
-// Production must export VITE_DATA_MODE=live (set in the Cloudflare
-// Pages environment) to opt into the live overlay. Local dev / any
-// build without the variable defaults to mock mode so the dashboard
-// renders against bundled data.
-const MOCK_MODE = import.meta.env.VITE_DATA_MODE !== 'live';
-const FRESH_MS = 4 * 60 * 60 * 1000;
-
-type DataState = 'live' | 'delayed' | 'mock' | 'unavailable';
-
-function resolveDataState(fetchedAt: string | null): {
-  state: DataState;
-  ageMs: number | null;
-} {
-  if (MOCK_MODE) return { state: 'mock', ageMs: null };
-  if (!fetchedAt) return { state: 'unavailable', ageMs: null };
-  const t = Date.parse(fetchedAt);
-  if (Number.isNaN(t)) return { state: 'unavailable', ageMs: null };
-  const ageMs = Date.now() - t;
-  return { state: ageMs <= FRESH_MS ? 'live' : 'delayed', ageMs };
-}
+// Data-state (live / delayed / mock / unavailable) is derived centrally
+// in state/liveData so the Market Weather chip, the sidebar badge and the
+// footer always agree. See resolveDataState / useDataState there.
 
 function formatAge(ageMs: number): string {
   const mins = Math.max(0, Math.floor(ageMs / 60000));
@@ -245,13 +228,12 @@ interface ResolvedIndex {
 function MarketWeatherCard() {
   const { oneLine, spark } = marketTemperature;
   const liveCtx = useLive();
-  const fetchedAt = liveCtx.data?.fetchedAt ?? null;
-  const { state, ageMs } = resolveDataState(fetchedAt);
+  const { state, ageMs } = useDataState();
 
   // Index resolver — mock numbers in mock mode, real overlay values
   // in live mode, nulls when the live feed is missing a particular id.
   function pickIndex(id: string): ResolvedIndex {
-    if (MOCK_MODE) {
+    if (state === 'mock') {
       const m = indices.find((i) => i.id === id);
       if (!m || !m.trend) return { value: null, change: null, d5: null, m1: null, spark: null };
       return {
@@ -290,7 +272,7 @@ function MarketWeatherCard() {
   // mock mode. In live mode an unavailable feed must NOT fall back to
   // marketTemperature.spark — we render a muted placeholder strip
   // instead.
-  const sparkData: number[] | null = nifty.spark ?? (MOCK_MODE ? spark : null);
+  const sparkData: number[] | null = nifty.spark ?? (state === 'mock' ? spark : null);
 
   return (
     <div

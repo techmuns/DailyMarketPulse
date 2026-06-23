@@ -66,6 +66,45 @@ export function useLive(): LiveCtx {
   return useContext(Ctx);
 }
 
+export type DataState = 'live' | 'delayed' | 'mock' | 'unavailable';
+
+// Freshness window. The refresh-data cron runs twice a day (01:30 and
+// 13:30 UTC, ~12h apart), so a snapshot within ~13h belongs to the
+// current cycle and reads as "live"; anything older means a refresh was
+// missed, which we surface as "delayed" so the UI never overstates how
+// current it is.
+export const FRESH_MS = 13 * 60 * 60 * 1000;
+
+// Explicit escape hatch for demos / screenshots: VITE_DATA_MODE=mock
+// forces the bundled mock scaffold regardless of the fetched feed. Any
+// other value (including unset) lets the real live.json drive the state.
+const FORCE_MOCK = import.meta.env.VITE_DATA_MODE === 'mock';
+
+// Single source of truth for live/mock status, derived purely from the
+// fetched payload's timestamp. Shared by the Today chip, the sidebar
+// badge and the footer so they can never disagree.
+export function resolveDataState(fetchedAt: string | null): {
+  state: DataState;
+  ageMs: number | null;
+} {
+  if (FORCE_MOCK) return { state: 'mock', ageMs: null };
+  if (!fetchedAt) return { state: 'unavailable', ageMs: null };
+  const t = Date.parse(fetchedAt);
+  if (Number.isNaN(t)) return { state: 'unavailable', ageMs: null };
+  const ageMs = Date.now() - t;
+  return { state: ageMs <= FRESH_MS ? 'live' : 'delayed', ageMs };
+}
+
+// Hook flavour that reads the live context and derives the current state.
+export function useDataState(): {
+  state: DataState;
+  ageMs: number | null;
+  fetchedAt: string | null;
+} {
+  const fetchedAt = useLive().data?.fetchedAt ?? null;
+  return { ...resolveDataState(fetchedAt), fetchedAt };
+}
+
 /**
  * Overlay live `current` + `trend` values onto a mock array by id.
  * Items without a live match fall through unchanged.

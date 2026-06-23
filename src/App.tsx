@@ -6,7 +6,8 @@ import { AISignalDrawer } from './components/AISignalDrawer';
 import { HeadlineDrawer } from './components/HeadlineDrawer';
 import watermarkUrl from './assets/logos/munshot-logo.png';
 import { StoreProvider } from './state/store';
-import { LiveDataProvider } from './state/liveData';
+import { LiveDataProvider, useDataState } from './state/liveData';
+import type { DataState } from './state/liveData';
 import { Today } from './tabs/Today';
 import { Macro } from './tabs/Macro';
 import { Markets } from './tabs/Markets';
@@ -15,6 +16,24 @@ import { Commodities } from './tabs/Commodities';
 import { NewsFilings } from './tabs/NewsFilings';
 import { Book } from './tabs/Book';
 import { Events } from './tabs/Events';
+
+const FOOTER_LABEL: Record<DataState, string> = {
+  live: 'Live data',
+  delayed: 'Delayed data',
+  mock: 'Mock data',
+  unavailable: 'Data unavailable',
+};
+
+// Footer lives inside LiveDataProvider so it can mirror the same data
+// state as the sidebar badge and the Today chip.
+function SiteFooter() {
+  const { state } = useDataState();
+  return (
+    <footer className="max-w-[1320px] mx-auto px-6 pb-10 pt-4 text-[10.5px] text-charcoal-mute tracking-wider uppercase border-t border-bordersoft/60 mt-10">
+      Daily Market Pulse · By Munshot · {FOOTER_LABEL[state]}
+    </footer>
+  );
+}
 
 function renderTab(tab: TabKey) {
   switch (tab) {
@@ -56,9 +75,7 @@ function App() {
             </motion.div>
           </AnimatePresence>
         </main>
-        <footer className="max-w-[1320px] mx-auto px-6 pb-10 pt-4 text-[10.5px] text-charcoal-mute tracking-wider uppercase border-t border-bordersoft/60 mt-10">
-          Daily Market Pulse · By Munshot · Mock data
-        </footer>
+        <SiteFooter />
         <AISignalDrawer />
         <HeadlineDrawer />
         <div

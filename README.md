@@ -75,23 +75,20 @@ read against the type contract, not the source.
 
 ## Production environment
 
-The Market Weather card decides between mock and live data via the
-`VITE_DATA_MODE` build-time environment variable:
-
-- **Production (Cloudflare Pages):** set `VITE_DATA_MODE=live` in the
-  project's environment variables (Cloudflare Pages → Settings →
-  Environment variables → Production). Without it, the deployed
-  dashboard shows the "Mock data" chip even when `public/data/live.json`
-  is present.
-- **Local development / `npm run dev` / `npm run build` without the
-  variable:** defaults to mock mode so the dashboard renders against
-  bundled `src/data/*` without needing a fetched feed.
+The dashboard decides between live and mock data from the **fetched feed
+itself** — no build flag required. At boot it loads
+`public/data/live.json` (produced by the GitHub Action) and derives the
+state from the payload's `fetchedAt` timestamp. The same state drives the
+Market Weather chip, the sidebar badge and the footer, so they always
+agree.
 
 State labels:
 
-- `Live · updated Xm/Xh ago` — `VITE_DATA_MODE=live` and
-  `public/data/live.json` is fresh (≤ 4h old).
-- `Delayed · updated Xh ago` — live mode with stale data (> 4h).
-- `Mock data` — mock mode (default).
-- `Data unavailable` — live mode but no `live.json` was loaded.
+- `Live` — `public/data/live.json` loaded and within the current refresh
+  cycle (≤ 13h old; the cron refreshes twice a day).
+- `Delayed` — `live.json` loaded but a refresh was missed (> 13h old).
+- `Data unavailable` — no `live.json` could be loaded.
+- `Mock data` — only when `VITE_DATA_MODE=mock` is set explicitly, a
+  deliberate escape hatch for demos / screenshots that forces the bundled
+  `src/data/*` scaffold regardless of the fetched feed.
 
