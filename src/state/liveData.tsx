@@ -284,6 +284,14 @@ export function useDataSource(section: LiveKind): DataSourceState {
   return { kind: ageMs <= FRESH_MS ? 'live' : 'delayed', live: list.length, ageMs };
 }
 
+// Overall feed state for the global status badge (sidebar + drawer),
+// independent of any single section. Indices is the canonical core feed
+// and shares fetchedAt with every other overlay kind, so its DataSource
+// state represents the live.json snapshot as a whole.
+export function useFeedState(): DataSourceState {
+  return useDataSource('indices');
+}
+
 // MoneyControl-driven hooks for movers + FII/DII flows.
 //
 // useLiveMovers(kind) returns live gainers/losers from moneycontrol

@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { AnimatePresence, motion } from 'framer-motion';
 import logoUrl from '../assets/logos/munshot-logo-w.png';
+import { useFeedState } from '../state/liveData';
+import type { DataSourceState } from '../state/liveData';
 
 export type TabKey =
   | 'Today'
@@ -169,11 +171,55 @@ function Brand() {
   );
 }
 
+// Visual treatment per feed state, shared by both badge variants. Driven
+// by the real live feed (see useFeedState) so the badge reports the
+// actual state instead of a hardcoded "Live · mock" label.
+const STATUS_VIEW: Record<
+  DataSourceState['kind'],
+  { label: string; chip: string; pill: string; dot: string; ping: boolean }
+> = {
+  live: {
+    label: 'Live',
+    chip: 'bg-calm-emerald-bg text-calm-emerald',
+    pill: 'bg-calm-emerald-bg/70 ring-1 ring-calm-emerald/20 text-calm-emerald',
+    dot: 'bg-calm-emerald',
+    ping: true,
+  },
+  delayed: {
+    label: 'Delayed',
+    chip: 'bg-calm-amber-bg text-calm-amber',
+    pill: 'bg-calm-amber-bg/70 ring-1 ring-calm-amber/25 text-calm-amber',
+    dot: 'bg-calm-amber',
+    ping: false,
+  },
+  mock: {
+    label: 'Mock',
+    chip: 'bg-cream-deep text-charcoal-mute',
+    pill: 'bg-cream-deep ring-1 ring-bordersoft text-charcoal-mute',
+    dot: 'bg-charcoal-mute/60',
+    ping: false,
+  },
+  unavailable: {
+    label: 'Offline',
+    chip: 'bg-cream-deep text-charcoal-mute',
+    pill: 'bg-cream-deep ring-1 ring-bordersoft text-charcoal-mute',
+    dot: 'bg-charcoal-mute/60',
+    ping: false,
+  },
+};
+
 function StatusBadge() {
+  const { kind } = useFeedState();
+  const v = STATUS_VIEW[kind];
   return (
-    <span className="inline-flex items-center justify-center gap-1.5 px-2 py-0.5 rounded-full bg-calm-emerald-bg text-calm-emerald text-[9.5px] font-medium tracking-wide w-full">
-      <span className="w-1 h-1 rounded-full bg-calm-emerald inline-block" />
-      Live · mock
+    <span
+      className={clsx(
+        'inline-flex items-center justify-center gap-1.5 px-2 py-0.5 rounded-full text-[9.5px] font-medium tracking-wide w-full',
+        v.chip
+      )}
+    >
+      <span className={clsx('w-1 h-1 rounded-full inline-block', v.dot)} />
+      {v.label}
     </span>
   );
 }
@@ -181,13 +227,22 @@ function StatusBadge() {
 // Slim variant used inside the hover-reveal desktop capsule — just a
 // pulsing dot + tiny label, no chip background.
 function StatusDot() {
+  const { kind } = useFeedState();
+  const v = STATUS_VIEW[kind];
   return (
-    <span className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-full bg-calm-emerald-bg/70 ring-1 ring-calm-emerald/20 text-[9px] tracking-[0.18em] uppercase font-semibold text-calm-emerald w-fit mx-auto">
+    <span
+      className={clsx(
+        'inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] tracking-[0.18em] uppercase font-semibold w-fit mx-auto',
+        v.pill
+      )}
+    >
       <span className="relative inline-flex w-1.5 h-1.5">
-        <span className="absolute inset-0 rounded-full bg-calm-emerald opacity-60 animate-ping" />
-        <span className="relative w-1.5 h-1.5 rounded-full bg-calm-emerald" />
+        {v.ping && (
+          <span className={clsx('absolute inset-0 rounded-full opacity-60 animate-ping', v.dot)} />
+        )}
+        <span className={clsx('relative w-1.5 h-1.5 rounded-full', v.dot)} />
       </span>
-      Live · mock
+      {v.label}
     </span>
   );
 }
