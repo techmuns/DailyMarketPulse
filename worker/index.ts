@@ -12,9 +12,14 @@ interface Env {
   ASSETS: { fetch: (req: Request) => Promise<Response> };
   TTS_API_KEY?: string;
   TTS_PROVIDER?: string;
+  MUNS_ACCESS_TOKEN?: string;
 }
 
 const MAX_SCRIPT_BYTES = 4 * 1024; // ~4 KB cap
+
+// Static user index required by the MUNS stock search API.
+const STOCK_SEARCH_USER_INDEX = 124;
+const STOCK_SEARCH_URL = 'https://devde.muns.io/stock/search';
 
 export default {
   async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -31,9 +36,60 @@ export default {
       }
       return handleQuote(req, ctx);
     }
+    if (url.pathname === '/api/stock/search') {
+      if (req.method !== 'POST') {
+        return json({ ok: false, reason: 'method-not-allowed' }, 405);
+      }
+      return handleStockSearch(req, env);
+    }
     return env.ASSETS.fetch(req);
   },
 };
+
+/* ---------- MUNS stock search proxy ---------- */
+//
+// POST /api/stock/search  { query }
+//
+// Proxies ticker search to the MUNS API, attaching the bearer token
+// from the Worker environment so it never reaches the browser. The
+// user_index is fixed server-side; the client only sends the query.
+
+async function handleStockSearch(req: Request, env: Env): Promise<Response> {
+  if (!env.MUNS_ACCESS_TOKEN) {
+    return json({ success: false, message: 'no-token' }, 503);
+  }
+
+  let body: { query?: string };
+  try {
+    body = await req.json();
+  } catch {
+    return json({ success: false, message: 'bad-json' }, 400);
+  }
+  const query = (body.query ?? '').trim();
+  if (!query) return json({ success: false, message: 'empty-query' }, 400);
+
+  let upstream: Response;
+  try {
+    upstream = await fetch(STOCK_SEARCH_URL, {
+      method: 'POST',
+      headers: {
+        accept: '*/*',
+        authorization: `Bearer ${env.MUNS_ACCESS_TOKEN}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ query, user_index: STOCK_SEARCH_USER_INDEX }),
+    });
+  } catch (err) {
+    console.error('stock search upstream error:', err);
+    return json({ success: false, message: 'upstream-error' }, 502);
+  }
+
+  const text = await upstream.text();
+  return new Response(text, {
+    status: upstream.status,
+    headers: { 'content-type': 'application/json' },
+  });
+}
 
 /* ---------- Yahoo quote proxy ---------- */
 //

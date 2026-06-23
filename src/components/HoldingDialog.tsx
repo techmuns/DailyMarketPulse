@@ -4,11 +4,45 @@
 // feedback if the symbol doesn't resolve on Yahoo. Sector / weight /
 // thesis are free-form and not validated against any list.
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { fetchQuote } from '../state/quotes';
 import type { UserHolding, HoldingPatch } from '../state/userBook';
 import clsx from 'clsx';
+
+// One match from the MUNS stock search API. The API returns each result
+// keyed by symbol with a [country, name, sector] tuple.
+interface StockResult {
+  symbol: string;
+  country: string;
+  name: string;
+  sector: string;
+}
+
+interface SearchResponse {
+  data?: {
+    total_results?: number;
+    results?: Record<string, [string, string, string]>;
+  };
+  message?: string;
+  success?: boolean;
+}
+
+function toResults(json: SearchResponse): StockResult[] {
+  const raw = json?.data?.results ?? {};
+  return Object.entries(raw).map(([symbol, [country, name, sector]]) => ({
+    symbol,
+    country,
+    name,
+    sector,
+  }));
+}
+
+// MUNS returns bare symbols (e.g. RELIANCE); Yahoo — used by the submit
+// validation — expects an exchange suffix for Indian listings.
+function toYahooSymbol(symbol: string, country: string): string {
+  return country === 'India' ? `${symbol}.NS` : symbol;
+}
 
 export interface DialogInitial {
   ticker?: string;
@@ -37,6 +71,15 @@ export function HoldingDialog({ open, mode, surface, initial, onClose, onSubmit 
   const [error, setError] = useState<string | null>(null);
   const [resolvedPrice, setResolvedPrice] = useState<number | null>(null);
 
+  // Ticker search dropdown state.
+  const [results, setResults] = useState<StockResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [showResults, setShowResults] = useState(false);
+  // Set right after a pick so the debounced effect doesn't re-search the
+  // value we just auto-filled into the ticker field.
+  const justPicked = useRef(false);
+
   // Reset when opened with new initial values.
   useEffect(() => {
     if (!open) return;
@@ -48,7 +91,83 @@ export function HoldingDialog({ open, mode, surface, initial, onClose, onSubmit 
     setValidating(false);
     setError(null);
     setResolvedPrice(null);
+    setResults([]);
+    setSearching(false);
+    setSearchError(null);
+    setShowResults(false);
+    justPicked.current = false;
   }, [open, initial]);
+
+  // Debounced ticker search against the Worker proxy. user_index is fixed
+  // server-side at 124, so the client only sends the query.
+  useEffect(() => {
+    if (!open) return;
+    if (justPicked.current) {
+      justPicked.current = false;
+      return;
+    }
+    const q = ticker.trim();
+    if (!q) return;
+
+    const controller = new AbortController();
+    const t = setTimeout(async () => {
+      setSearching(true);
+      setSearchError(null);
+      setShowResults(true);
+      try {
+        const res = await fetch('/api/stock/search', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ query: q }),
+          signal: controller.signal,
+        });
+        if (!res.ok) {
+          setSearchError('Search is unavailable right now.');
+          setResults([]);
+          return;
+        }
+        const json: SearchResponse = await res.json();
+        if (json.success === false) {
+          setSearchError(json.message || 'Search failed.');
+          setResults([]);
+          return;
+        }
+        setResults(toResults(json));
+      } catch (err) {
+        if ((err as Error).name === 'AbortError') return;
+        setSearchError('Could not reach search.');
+        setResults([]);
+      } finally {
+        setSearching(false);
+      }
+    }, 300);
+
+    return () => {
+      controller.abort();
+      clearTimeout(t);
+    };
+  }, [ticker, open]);
+
+  function onTickerChange(val: string) {
+    setTicker(val);
+    if (!val.trim()) {
+      setResults([]);
+      setSearchError(null);
+      setSearching(false);
+      setShowResults(false);
+    }
+  }
+
+  // Picking a result autofills ticker (with Yahoo suffix), display name,
+  // and sector.
+  function pickResult(r: StockResult) {
+    justPicked.current = true;
+    setTicker(toYahooSymbol(r.symbol, r.country));
+    setTitle(r.name);
+    setSector(r.sector);
+    setShowResults(false);
+    setResults([]);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -125,13 +244,57 @@ export function HoldingDialog({ open, mode, surface, initial, onClose, onSubmit 
               onSubmit={handleSubmit}
               className="flex-1 min-h-0 overflow-y-auto px-6 py-4 space-y-3"
             >
-              <Field
-                label="Ticker (Yahoo symbol)"
-                hint="e.g. RELIANCE.NS, INFY.NS, TCS.NS, AAPL"
-                value={ticker}
-                onChange={setTicker}
-                autoFocus
-              />
+              <label className="block relative">
+                <div className="text-[10.5px] tracking-[0.18em] uppercase font-semibold text-charcoal-mute">
+                  Ticker (Yahoo symbol)
+                </div>
+                <input
+                  type="text"
+                  value={ticker}
+                  autoFocus
+                  autoComplete="off"
+                  onChange={(e) => onTickerChange(e.target.value)}
+                  onFocus={() => results.length > 0 && setShowResults(true)}
+                  className="mt-1 w-full bg-white border border-bordersoft rounded-lg px-3 py-2 text-[13px] text-charcoal placeholder:text-charcoal-mute focus:outline-none focus:ring-2 focus:ring-calm-emerald/30 focus:border-calm-emerald"
+                />
+                <div className="text-[10.5px] text-charcoal-mute mt-1">
+                  e.g. RELIANCE.NS, INFY.NS, TCS.NS, AAPL
+                </div>
+
+                {showResults && (ticker.trim() || searching) && (
+                  <div className="absolute left-0 right-0 top-[58px] z-10 max-h-[240px] overflow-y-auto rounded-lg border border-bordersoft bg-white shadow-lift">
+                    {searching && (
+                      <p className="px-3 py-2.5 text-[12px] text-charcoal-mute">Searching…</p>
+                    )}
+                    {searchError && !searching && (
+                      <p className="px-3 py-2.5 text-[12px] text-calm-rose">{searchError}</p>
+                    )}
+                    {!searching && !searchError && results.length === 0 && ticker.trim() && (
+                      <p className="px-3 py-2.5 text-[12px] text-charcoal-mute">No matches found.</p>
+                    )}
+                    {!searchError &&
+                      results.map((r) => (
+                        <button
+                          key={r.symbol}
+                          type="button"
+                          onClick={() => pickResult(r)}
+                          className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left transition hover:bg-cream-deep/60"
+                        >
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-[12.5px] font-semibold text-charcoal">{r.symbol}</span>
+                              <span className="truncate text-[12px] text-charcoal-soft">{r.name}</span>
+                            </div>
+                            <div className="mt-0.5 text-[10.5px] text-charcoal-mute">{r.sector}</div>
+                          </div>
+                          <span className="shrink-0 rounded-md bg-cream-deep px-2 py-0.5 text-[10.5px] text-charcoal-mute">
+                            {r.country}
+                          </span>
+                        </button>
+                      ))}
+                  </div>
+                )}
+              </label>
               <Field
                 label="Display name"
                 hint="Optional. Defaults to the ticker."
