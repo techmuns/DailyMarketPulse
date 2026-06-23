@@ -368,6 +368,45 @@ interface ResolvedIndex {
   spark: number[] | null;
 }
 
+// Subtle amber "heat haze" mood glyph shown beside the Market Weather
+// narrative. Purely decorative — a small stroked sun with two soft heat
+// waves at low opacity, so it reads as a quiet mood cue rather than an
+// illustration. No background, no glow.
+function WeatherMoodGlyph({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 32 32"
+      fill="none"
+      aria-hidden
+      className={className}
+      style={{ color: '#D7A14A' }}
+    >
+      {/* sun disc */}
+      <circle
+        cx="13"
+        cy="11.5"
+        r="4"
+        fill="currentColor"
+        fillOpacity="0.12"
+        stroke="currentColor"
+        strokeOpacity="0.65"
+        strokeWidth="1.3"
+      />
+      {/* three soft rays on the upper arc */}
+      <g stroke="currentColor" strokeOpacity="0.45" strokeWidth="1.3" strokeLinecap="round">
+        <line x1="13" y1="5.4" x2="13" y2="3.6" />
+        <line x1="8.8" y1="7.2" x2="7.5" y2="5.9" />
+        <line x1="17.2" y1="7.2" x2="18.5" y2="5.9" />
+      </g>
+      {/* two heat-haze waves */}
+      <g stroke="currentColor" strokeOpacity="0.45" strokeWidth="1.3" strokeLinecap="round" fill="none">
+        <path d="M6 20 Q9 18.3 12 20 T18 20 T24 20" />
+        <path d="M8 24 Q10.8 25.6 13.6 24 T19.2 24" />
+      </g>
+    </svg>
+  );
+}
+
 function MarketWeatherCard() {
   const { oneLine, spark } = marketTemperature;
   const liveCtx = useLive();
@@ -479,9 +518,12 @@ function MarketWeatherCard() {
         <DataStateChip state={state} ageMs={ageMs} />
       </div>
 
-      <p className="relative mt-4 font-display italic text-[14px] md:text-[14.5px] text-charcoal-soft leading-snug">
-        {summaryLine}
-      </p>
+      <div className="relative mt-4 flex items-start gap-2.5">
+        <WeatherMoodGlyph className="mt-0.5 h-7 w-7 shrink-0" />
+        <p className="font-display italic text-[14px] md:text-[14.5px] text-charcoal-soft leading-snug">
+          {summaryLine}
+        </p>
+      </div>
 
       <div className="relative mt-4 space-y-3">
         {geographies.map((geo) => (
