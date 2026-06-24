@@ -105,7 +105,7 @@ export function Portfolio({ hideBrief = false }: { hideBrief?: boolean } = {}) {
 
       {/* TEMPORARY host-integration diagnostic — remove once confirmed working */}
       <div style={{ fontSize: 11, fontFamily: 'monospace', color: '#6b7280', padding: '4px 8px', background: '#f3f4f6', borderRadius: 6, border: '1px solid #e5e7eb', wordBreak: 'break-all' }}>
-        host-debug · sdk={String(hostCtx.diag.sdkAvailable)} · iframe={String(hostCtx.diag.inIframe)} · msgs={hostCtx.diag.messages} · channel={hostCtx.diag.channelId || '—'} · token={String(host.debug.tokenPresent)} · status={host.debug.status} · http={String(host.debug.httpStatus)} · raw={host.debug.rawType || '—'} · count={host.debug.count} · active={String(host.active)}{host.debug.error ? ` · err=${host.debug.error}` : ''}
+        host-debug · sdk={String(hostCtx.diag.sdkAvailable)} · iframe={String(hostCtx.diag.inIframe)} · nudges={hostCtx.diag.nudges} · msgs={hostCtx.diag.messages} · channel={hostCtx.diag.channelId || '—'} · token={String(host.debug.tokenPresent)} · status={host.debug.status} · http={String(host.debug.httpStatus)} · raw={host.debug.rawType || '—'} · count={host.debug.count} · active={String(host.active)}{host.debug.error ? ` · err=${host.debug.error}` : ''}
       </div>
 
       <section>
