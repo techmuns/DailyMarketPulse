@@ -1,6 +1,6 @@
 // src/hooks/useHostContext.ts
 import { useEffect, useState } from "react";
-import { sdk, sdkAvailable, inIframe, type SessionContext } from "../lib/sdk";
+import { sdk, sdkAvailable, inIframe, sdkNudges, type SessionContext } from "../lib/sdk";
 
 const EMPTY_SESSION: SessionContext = {
   token: null, userName: null, email: null, orgId: null, orgName: null,
@@ -33,14 +33,27 @@ export function useHostContext() {
 
     sync();                    // apply already-cached context (host:init may
                                // have arrived before this component mounted)
-    return sdk.onMessage(() => {
+    const unsub = sdk.onMessage(() => {
       setMessages((n) => n + 1); // count every host message
       sync();
-    });                        // re-sync on every host message; returns unsub
+    });                        // re-sync on every host message
+
+    // Poll briefly so the diagnostic reflects nudge attempts and any late
+    // channel/token, even if no host message ever triggers a re-render.
+    let ticks = 0;
+    const iv = window.setInterval(() => {
+      sync();
+      if (++ticks >= 16 || sdk.getChannelId()) window.clearInterval(iv);
+    }, 700);
+
+    return () => {
+      unsub();
+      window.clearInterval(iv);
+    };
   }, []);
 
   return {
     session, ticker, tickerCompany, tickerCountry, selectedSymbol,
-    diag: { sdkAvailable, inIframe, channelId, messages },
+    diag: { sdkAvailable, inIframe, channelId, messages, nudges: sdkNudges },
   };
 }
