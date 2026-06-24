@@ -8,6 +8,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <title>Daily Market Pulse — Calm Alpha</title>
     <meta name="description" content="A calm, AI-powered daily market cockpit for investors." />
+
+    <!-- REQUIRED: classic script, in <head>, before the app module.
+         Defines window.MunshotDashboardSDK. Do NOT add type="module",
+         async, or defer — load order matters. -->
+    <script src="https://munshot.s3.ap-south-1.amazonaws.com/SDK+script/munshot-dashboard-sdk.v1.0.0.min.js"></script>
   </head>
   <body>
     <div id="root"></div>
