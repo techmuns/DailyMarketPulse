@@ -9,6 +9,7 @@ import { useLiveOverlay, DataSourceChip } from '../state/liveData';
 import { useUserBook, mergeUserBook } from '../state/userBook';
 import { useQuote } from '../state/quotes';
 import { useHostPortfolio } from '../hooks/useHostPortfolio';
+import { useHostContext } from '../hooks/useHostContext';
 import { HoldingDialog } from '../components/HoldingDialog';
 import type { DialogInitial } from '../components/HoldingDialog';
 import { Delta } from '../components/Delta';
@@ -30,6 +31,7 @@ export function Portfolio({ hideBrief = false }: { hideBrief?: boolean } = {}) {
   // portfolio_list datasource) replaces the demo book as the base list.
   // Standalone (no host session) falls back to the bundled demo data.
   const host = useHostPortfolio();
+  const hostCtx = useHostContext();
   const base = host.active ? host.holdings : mockPortfolio;
   const merged = useMemo(
     () => mergeUserBook(base, bookState.portfolio),
@@ -102,8 +104,8 @@ export function Portfolio({ hideBrief = false }: { hideBrief?: boolean } = {}) {
       </section>
 
       {/* TEMPORARY host-integration diagnostic — remove once confirmed working */}
-      <div style={{ fontSize: 11, fontFamily: 'monospace', color: '#6b7280', padding: '4px 8px', background: '#f3f4f6', borderRadius: 6, border: '1px solid #e5e7eb' }}>
-        host-debug · token={String(host.debug.tokenPresent)} · status={host.debug.status} · http={String(host.debug.httpStatus)} · raw={host.debug.rawType || '—'} · count={host.debug.count} · active={String(host.active)}{host.debug.error ? ` · err=${host.debug.error}` : ''}
+      <div style={{ fontSize: 11, fontFamily: 'monospace', color: '#6b7280', padding: '4px 8px', background: '#f3f4f6', borderRadius: 6, border: '1px solid #e5e7eb', wordBreak: 'break-all' }}>
+        host-debug · sdk={String(hostCtx.diag.sdkAvailable)} · iframe={String(hostCtx.diag.inIframe)} · msgs={hostCtx.diag.messages} · channel={hostCtx.diag.channelId || '—'} · token={String(host.debug.tokenPresent)} · status={host.debug.status} · http={String(host.debug.httpStatus)} · raw={host.debug.rawType || '—'} · count={host.debug.count} · active={String(host.active)}{host.debug.error ? ` · err=${host.debug.error}` : ''}
       </div>
 
       <section>
