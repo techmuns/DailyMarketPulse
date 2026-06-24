@@ -53,6 +53,19 @@ function yahooSymbol(ticker: string, country?: string | null): string {
   return isIndia ? `${ticker}.NS` : ticker;
 }
 
+// The portfolio_list response may be a bare array or wrapped in a common
+// envelope ({ data: [...] }, { items: [...] }, etc.). Find the array either way.
+function extractList(payload: unknown): PortfolioListItem[] {
+  if (Array.isArray(payload)) return payload as PortfolioListItem[];
+  if (payload && typeof payload === "object") {
+    const obj = payload as Record<string, unknown>;
+    for (const k of ["data", "items", "portfolio", "results", "list", "holdings"]) {
+      if (Array.isArray(obj[k])) return obj[k] as PortfolioListItem[];
+    }
+  }
+  return [];
+}
+
 function toHolding(item: PortfolioListItem, equalWeight: number): Holding {
   return {
     id: item.id,
@@ -76,21 +89,41 @@ function toHolding(item: PortfolioListItem, equalWeight: number): Holding {
   };
 }
 
+// TEMPORARY diagnostic surfaced in the UI so we can see, in the deployed
+// iframe, exactly why host holdings may not appear. Remove once confirmed.
+export interface HostPortfolioDebug {
+  tokenPresent: boolean;
+  status: "idle" | "loading" | "ok" | "error";
+  httpStatus: number | null;
+  rawType: string; // "array" | "object:<keys>" | "null" | typeof
+  count: number; // items parsed out of the response
+  error: string | null;
+}
+
 export interface HostPortfolioState {
   holdings: Holding[];
   error: string | null;
   active: boolean; // true once host holdings have been loaded
+  debug: HostPortfolioDebug;
 }
 
 export function useHostPortfolio(): HostPortfolioState {
   const { session } = useHostContext();
   const [holdings, setHoldings] = useState<Holding[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [debug, setDebug] = useState<HostPortfolioDebug>({
+    tokenPresent: false,
+    status: "idle",
+    httpStatus: null,
+    rawType: "",
+    count: 0,
+    error: null,
+  });
 
   useEffect(() => {
     if (!session.token) return; // no host session — caller keeps its mock data
     const ctrl = new AbortController();
-
+    let httpStatus: number | null = null;
     fetch(PORTFOLIO_LIST_URL, {
       headers: {
         Authorization: `Bearer ${session.token}`,
@@ -99,11 +132,17 @@ export function useHostPortfolio(): HostPortfolioState {
       signal: ctrl.signal,
     })
       .then((r) => {
+        httpStatus = r.status;
         if (!r.ok) throw new Error(`portfolio/list ${r.status}`);
         return r.json();
       })
-      .then((rows: PortfolioListItem[]) => {
-        const list = Array.isArray(rows) ? rows : [];
+      .then((payload: unknown) => {
+        const list = extractList(payload);
+        const rawType = Array.isArray(payload)
+          ? "array"
+          : payload && typeof payload === "object"
+            ? `object:{${Object.keys(payload as object).join(",")}}`
+            : String(payload);
         const ordered = [...list].sort((a, b) => (a.rank ?? 0) - (b.rank ?? 0));
         const w = ordered.length
           ? Math.round((100 / ordered.length) * 10) / 10
@@ -115,6 +154,14 @@ export function useHostPortfolio(): HostPortfolioState {
         }));
         setHoldings(base.map((b) => b.holding)); // show the list right away
         setError(null);
+        setDebug({
+          tokenPresent: true,
+          status: "ok",
+          httpStatus,
+          rawType,
+          count: base.length,
+          error: null,
+        });
         if (base.length === 0) return;
 
         // Enrich with live price + trend from the Worker (Yahoo).
@@ -142,11 +189,26 @@ export function useHostPortfolio(): HostPortfolioState {
           });
       })
       .catch((e) => {
-        if (!ctrl.signal.aborted) setError(String(e));
+        if (!ctrl.signal.aborted) {
+          setError(String(e));
+          setDebug({
+            tokenPresent: true,
+            status: "error",
+            httpStatus,
+            rawType: "",
+            count: 0,
+            error: String(e),
+          });
+        }
       });
 
     return () => ctrl.abort();
   }, [session.token]); // re-fetch when the host session refreshes
 
-  return { holdings, error, active: holdings.length > 0 };
+  return {
+    holdings,
+    error,
+    active: holdings.length > 0,
+    debug: { ...debug, tokenPresent: !!session.token },
+  };
 }

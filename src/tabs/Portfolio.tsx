@@ -89,6 +89,11 @@ export function Portfolio({ hideBrief = false }: { hideBrief?: boolean } = {}) {
         </Card>
       </section>
 
+      {/* TEMPORARY host-integration diagnostic — remove once confirmed working */}
+      <div style={{ fontSize: 11, fontFamily: 'monospace', color: '#6b7280', padding: '4px 8px', background: '#f3f4f6', borderRadius: 6, border: '1px solid #e5e7eb' }}>
+        host-debug · token={String(hostPortfolio.debug.tokenPresent)} · status={hostPortfolio.debug.status} · http={String(hostPortfolio.debug.httpStatus)} · raw={hostPortfolio.debug.rawType || '—'} · count={hostPortfolio.debug.count} · active={String(hostPortfolio.active)}{hostPortfolio.debug.error ? ` · err=${hostPortfolio.debug.error}` : ''}
+      </div>
+
       <section>
         <SectionHeader title="Portfolio Impact Board" eyebrow="Holdings" hint="Weight, today's move, 5D trend, impact driver and action." />
         <div className="card overflow-hidden">
