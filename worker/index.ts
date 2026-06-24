@@ -36,6 +36,12 @@ export default {
       }
       return handleStockSearch(req, env);
     }
+    if (url.pathname === '/api/quotes') {
+      if (req.method !== 'POST') {
+        return json({ ok: false, reason: 'method-not-allowed' }, 405);
+      }
+      return handleQuotes(req, ctx);
+    }
     return env.ASSETS.fetch(req);
   },
 };
@@ -77,6 +83,102 @@ async function handleStockSearch(req: Request, env: Env): Promise<Response> {
     status: upstream.status,
     headers: { 'content-type': 'application/json' },
   });
+}
+
+/* ---------- Live quotes (Yahoo Finance) ---------- */
+
+// Per-symbol trend, computed exactly like scripts/fetch-data.mjs so live
+// host-portfolio holdings match the rest of the app's numbers.
+interface Quote {
+  current: number;
+  trend: { d1: number; d5: number; m1: number; spark: number[] };
+}
+
+const MAX_QUOTE_TICKERS = 60;
+
+// Fetches recent daily closes for host-portfolio tickers and returns the
+// current price + 1D/5D/1M change + a 7-point spark for each. Runs in the
+// Worker (server-side) so the browser never hits Yahoo directly (CORS) and
+// every user holding can get live data, not just the build-time symbol list.
+async function handleQuotes(req: Request, ctx: ExecutionContext): Promise<Response> {
+  let body: { tickers?: unknown };
+  try {
+    body = await req.json();
+  } catch {
+    return json({ ok: false, reason: 'bad-json' }, 400);
+  }
+
+  const tickers = Array.isArray(body.tickers)
+    ? body.tickers
+        .filter((t): t is string => typeof t === 'string' && t.trim().length > 0)
+        .slice(0, MAX_QUOTE_TICKERS)
+    : [];
+  if (tickers.length === 0) return json({ ok: false, reason: 'no-tickers' }, 400);
+
+  const quotes = (
+    await Promise.all(
+      tickers.map(async (ticker) => {
+        try {
+          const q = await fetchQuoteCached(ticker, ctx);
+          return { ticker, ...q };
+        } catch (err) {
+          console.warn('quote skip', ticker, (err as Error).message);
+          return null; // skip failed symbols; client falls back to neutral values
+        }
+      }),
+    )
+  ).filter((q): q is { ticker: string } & Quote => q !== null);
+
+  return json({ quotes });
+}
+
+async function fetchQuoteCached(symbol: string, ctx: ExecutionContext): Promise<Quote> {
+  const cacheKey = new Request(`https://internal.quotes/v1/${encodeURIComponent(symbol)}`);
+  const cache = caches.default;
+  const cached = await cache.match(cacheKey);
+  if (cached) return cached.json();
+
+  const quote = await fetchQuote(symbol);
+  const resp = new Response(JSON.stringify(quote), {
+    headers: { 'content-type': 'application/json', 'cache-control': 'public, max-age=600' },
+  });
+  ctx.waitUntil(cache.put(cacheKey, resp.clone()));
+  return quote;
+}
+
+async function fetchQuote(symbol: string): Promise<Quote> {
+  const u = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(
+    symbol,
+  )}?range=2mo&interval=1d`;
+  const r = await fetch(u, {
+    headers: { 'user-agent': 'Mozilla/5.0', accept: 'application/json' },
+  });
+  if (!r.ok) throw new Error(`yahoo ${r.status}`);
+  const j: any = await r.json();
+  const result = j?.chart?.result?.[0];
+  const closes: number[] = (result?.indicators?.quote?.[0]?.close ?? []).filter(
+    (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v),
+  );
+  if (closes.length < 2) throw new Error(`only ${closes.length} valid closes`);
+  return { current: round(closes[closes.length - 1]), trend: computeTrend(closes) };
+}
+
+function computeTrend(closes: number[]): Quote['trend'] {
+  const last = closes[closes.length - 1];
+  const prev1 = closes[closes.length - 2] ?? last;
+  const prev5 = closes[closes.length - 6] ?? closes[0];
+  const prev1m = closes[0];
+  const pct = (a: number, b: number) => (b === 0 ? 0 : ((a - b) / b) * 100);
+  return {
+    d1: round(pct(last, prev1)),
+    d5: round(pct(last, prev5)),
+    m1: round(pct(last, prev1m)),
+    spark: closes.slice(-7).map(round),
+  };
+}
+
+function round(v: number): number {
+  return Math.round(v * 100) / 100;
 }
 
 async function handleTTS(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {

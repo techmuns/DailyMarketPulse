@@ -17,6 +17,7 @@ import { useStore } from '../state/store';
 import { AddHolding } from '../components/AddHolding';
 import type { NewHolding } from '../components/AddHolding';
 import type { Holding } from '../types';
+import { useHostPortfolio } from '../hooks/useHostPortfolio';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, ReferenceLine } from 'recharts';
 import clsx from 'clsx';
 
@@ -24,7 +25,11 @@ export function Portfolio({ hideBrief = false }: { hideBrief?: boolean } = {}) {
   const { openDrawer } = useStore();
   const [added, setAdded] = useState<Holding[]>([]);
   const livePortfolio = useLiveOverlay(mockPortfolio, 'holdings');
-  const portfolio = [...livePortfolio, ...added];
+  // When deployed inside the Munshot host, populate the book from the user's
+  // real portfolio (portfolio_list datasource). Standalone, fall back to mock.
+  const hostPortfolio = useHostPortfolio();
+  const basePortfolio = hostPortfolio.active ? hostPortfolio.holdings : livePortfolio;
+  const portfolio = [...basePortfolio, ...added];
   const sortedByWeight = [...portfolio].sort((a, b) => b.weight - a.weight);
 
   const heat: HeatCell[] = sortedByWeight.map((h) => ({
