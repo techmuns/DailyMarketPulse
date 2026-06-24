@@ -106,6 +106,13 @@ export interface CreateClientConfig {
 type SdkFactory = (config: CreateClientConfig) => DashboardClientSdk;
 type SdkCtor = new (config: CreateClientConfig) => DashboardClientSdk;
 
+// True when the real Munshot SDK bundle was found on window (i.e. the classic
+// <script> loaded and we are NOT on the no-op fallback). Set in initSdk().
+export let sdkAvailable = false;
+// True when this document is running inside an iframe (has a parent window).
+export const inIframe =
+  typeof window !== "undefined" && window.parent && window.parent !== window;
+
 declare global {
   interface Window {
     MunshotDashboardSDK?: {
@@ -148,7 +155,9 @@ function initSdk(): DashboardClientSdk {
   const factory = g?.createDashboardClientSdk ?? g?.createClient;
   if (typeof factory === "function") {
     try {
-      return factory(config);
+      const client = factory(config);
+      sdkAvailable = true;
+      return client;
     } catch (err) {
       console.error("[dashboard] SDK factory failed", err);
     }
@@ -157,7 +166,9 @@ function initSdk(): DashboardClientSdk {
   const Ctor = g?.DashboardClientSdk ?? g?.Client;
   if (typeof Ctor === "function") {
     try {
-      return new Ctor(config);
+      const client = new Ctor(config);
+      sdkAvailable = true;
+      return client;
     } catch (err) {
       console.error("[dashboard] SDK constructor failed", err);
     }
