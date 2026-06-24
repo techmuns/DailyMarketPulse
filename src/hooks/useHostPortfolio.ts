@@ -8,9 +8,11 @@
 //   GET https://devde.muns.io/portfolio/list   (Authorization: Bearer <token>)
 //
 // The endpoint returns holdings only (ticker / company / sector / industry /
-// rank) — it carries no live price, weight or trend. Those fields are filled
-// the same way manually-added holdings are: weight is equal-weighted so the
-// heatmap/contribution visuals stay sane, and price/trend are zeroed.
+// rank) — it carries no live price, weight or trend. Weight is equal-weighted
+// so the heatmap/contribution visuals stay sane. Live price + trend are then
+// fetched per holding from the Worker's /api/quotes endpoint (Yahoo Finance),
+// so any user holding lights up — not just the build-time symbol list. Until
+// quotes arrive (or if they fail) the holdings render with neutral values.
 //
 // When there is no host session (running standalone outside the iframe, where
 // the SDK is the no-op client), `active` is false and the caller keeps its
@@ -21,6 +23,7 @@ import { useHostContext } from "./useHostContext";
 import type { Holding } from "../types";
 
 const PORTFOLIO_LIST_URL = "https://devde.muns.io/portfolio/list";
+const QUOTES_URL = "/api/quotes"; // Worker endpoint, same origin as the iframe
 
 // Shape returned by the portfolio_list datasource.
 interface PortfolioListItem {
@@ -35,6 +38,21 @@ interface PortfolioListItem {
   industry?: string | null;
 }
 
+// Live quote returned by /api/quotes (Yahoo, via the Worker).
+interface Quote {
+  ticker: string; // the Yahoo symbol that was requested
+  current: number;
+  trend: Holding["trend"];
+}
+
+// Map a portfolio ticker to a Yahoo Finance symbol. Indian (NSE) listings need
+// the ".NS" suffix; US and other listings use the bare ticker.
+function yahooSymbol(ticker: string, country?: string | null): string {
+  const c = (country || "").trim().toLowerCase();
+  const isIndia = c === "in" || c === "ind" || c === "india";
+  return isIndia ? `${ticker}.NS` : ticker;
+}
+
 function toHolding(item: PortfolioListItem, equalWeight: number): Holding {
   return {
     id: item.id,
@@ -46,8 +64,7 @@ function toHolding(item: PortfolioListItem, equalWeight: number): Holding {
     previous: 0,
     weight: equalWeight,
     thesis: "",
-    // No live price feed for host holdings from this endpoint — zeroed, exactly
-    // like the app already does for manually-added holdings.
+    // Neutral until /api/quotes fills in live price + trend (or if it fails).
     trend: { d1: 0, d5: 0, m1: 0, spark: [0, 0, 0, 0, 0, 0, 0] },
     signal: "monitor",
     impact: 0,
@@ -91,8 +108,38 @@ export function useHostPortfolio(): HostPortfolioState {
         const w = ordered.length
           ? Math.round((100 / ordered.length) * 10) / 10
           : 0;
-        setHoldings(ordered.map((item) => toHolding(item, w)));
+        // base holdings keep their original index so quotes can merge back by symbol
+        const base = ordered.map((item) => ({
+          holding: toHolding(item, w),
+          symbol: yahooSymbol(item.ticker, item.country),
+        }));
+        setHoldings(base.map((b) => b.holding)); // show the list right away
         setError(null);
+        if (base.length === 0) return;
+
+        // Enrich with live price + trend from the Worker (Yahoo).
+        return fetch(QUOTES_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tickers: base.map((b) => b.symbol) }),
+          signal: ctrl.signal,
+        })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((payload: { quotes?: Quote[] } | null) => {
+            if (!payload?.quotes?.length) return;
+            const bySymbol = new Map(payload.quotes.map((q) => [q.ticker, q]));
+            setHoldings(
+              base.map(({ holding, symbol }) => {
+                const q = bySymbol.get(symbol);
+                return q
+                  ? { ...holding, current: q.current, trend: q.trend }
+                  : holding;
+              }),
+            );
+          })
+          .catch(() => {
+            // Live quotes are best-effort; keep the neutral-valued holdings.
+          });
       })
       .catch((e) => {
         if (!ctrl.signal.aborted) setError(String(e));
