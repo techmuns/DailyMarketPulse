@@ -184,3 +184,26 @@ function initSdk(): DashboardClientSdk {
 // Single client for the whole app. Created at import time so its message
 // listener is live before host:init can arrive.
 export const sdk: DashboardClientSdk = initSdk();
+
+// Number of proactive handshake nudges sent (diagnostic; surfaced in the UI).
+export let sdkNudges = 0;
+
+// Proactive handshake nudge.
+//
+// The documented flow is host-initiated: the host posts `host:init` first and
+// the SDK auto-replies with `dashboard:ready`. But if the host build instead
+// waits for the dashboard to announce itself, nothing ever arrives (msgs=0,
+// no channelId) and we deadlock. To cover that case we ping the parent a few
+// times after load; the moment a channelId exists (host:init received) we stop.
+// Harmless to a spec-compliant host: a stray early `dashboard:ready` is ignored.
+if (typeof window !== "undefined" && sdkAvailable && inIframe) {
+  let tries = 0;
+  const nudge = () => {
+    if (sdk.getChannelId()) return; // connected — host:init arrived, stop
+    sdk.ready();          // announce the dashboard
+    sdk.requestContext(); // ask the host to (re)send context
+    sdkNudges = ++tries;
+    if (tries < 8) window.setTimeout(nudge, 700);
+  };
+  window.setTimeout(nudge, 300);
+}
