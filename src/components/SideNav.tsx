@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import clsx from 'clsx';
 import { AnimatePresence, motion } from 'framer-motion';
 import logoUrl from '../assets/logos/munshot-logo-w.png';
@@ -119,25 +119,6 @@ const Icons = {
   ),
 };
 
-function PinIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      width="13"
-      height="13"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      <path d="M12 17v5" />
-      <path d="M9 9a3 3 0 0 1 3-3h0a3 3 0 0 1 3 3v3l2.5 4h-11L9 12V9Z" />
-    </svg>
-  );
-}
-
 // Per-section icon hues used when an item is inactive. Active items
 // fold into the emerald active pill (white-on-emerald).
 const ITEMS: { key: TabKey; label: string; Icon: React.FC<IconProps>; color: string }[] = [
@@ -224,8 +205,8 @@ function StatusBadge() {
   );
 }
 
-// Slim variant used inside the hover-reveal desktop capsule — just a
-// pulsing dot + tiny label, no chip background.
+// Slim variant used inside the desktop capsule — just a pulsing dot +
+// tiny label, no chip background.
 function StatusDot() {
   const { kind } = useFeedState();
   const v = STATUS_VIEW[kind];
@@ -244,88 +225,6 @@ function StatusDot() {
       </span>
       {v.label}
     </span>
-  );
-}
-
-/**
- * Slim always-visible rail. Shows the Munshot mark plus a vertical
- * stack of section icons so the user can see at a glance that the
- * nav is here and clickable, without taking dashboard width.
- *
- * Hovering anywhere on the rail (or the wider hover-trigger column)
- * expands the full capsule. Clicking an icon both switches the tab
- * and pins the capsule open; the pin button inside the capsule
- * lets the user fix it open even on mouseleave.
- */
-function SlimRail({
-  active,
-  onChange,
-  faded,
-}: {
-  active: TabKey;
-  onChange: (t: TabKey) => void;
-  faded: boolean;
-}) {
-  // Five most-used surfaces. Watchlist is a sub-view inside Portfolio
-  // Management so we surface Portfolio here and keep the full set in
-  // the expanded panel.
-  const RAIL_ITEMS: TabKey[] = ['Today', 'Macro', 'Markets', 'Portfolio Management', 'News & Filings'];
-  const railSet = ITEMS.filter((i) => RAIL_ITEMS.includes(i.key));
-  return (
-    <motion.div
-      aria-hidden={faded}
-      initial={false}
-      animate={{ opacity: faded ? 0 : 1 }}
-      transition={{ duration: 0.18 }}
-      className="absolute left-3 top-1/2 -translate-y-1/2 w-[44px] flex flex-col items-center gap-2 py-3 rounded-[22px] border backdrop-blur-[14px] pointer-events-auto"
-      style={CAPSULE_GLASS_STYLE}
-    >
-      <div
-        aria-hidden
-        className="absolute left-0 top-3 bottom-3 w-[2px] rounded-r-full"
-        style={{ background: 'linear-gradient(180deg, #0F8F6F 0%, #8C79C9 100%)' }}
-      />
-      <MunshotMark size={22} />
-      <div className="h-px w-6 bg-bordersoft/60" />
-      <ul className="flex flex-col gap-1 items-center">
-        {railSet.map(({ key, Icon: ItemIcon, color, label }) => {
-          const isActive = key === active;
-          return (
-            <li key={key}>
-              <button
-                type="button"
-                title={label}
-                aria-label={label}
-                onClick={() => onChange(key)}
-                className={clsx(
-                  'relative w-8 h-8 rounded-full inline-flex items-center justify-center transition',
-                  isActive
-                    ? 'text-white'
-                    : 'text-charcoal-soft hover:bg-cream/60'
-                )}
-              >
-                {isActive && (
-                  <span
-                    className="absolute inset-0 rounded-full"
-                    style={{
-                      background: 'linear-gradient(135deg, #0F8F6F 0%, #18A77B 100%)',
-                      boxShadow: '0 4px 12px rgba(15,143,111,0.28)',
-                    }}
-                  />
-                )}
-                <ItemIcon
-                  className="relative z-10 w-[15px] h-[15px]"
-                  style={{
-                    color: isActive ? '#FFFFFF' : color,
-                    opacity: isActive ? 1 : 0.78,
-                  }}
-                />
-              </button>
-            </li>
-          );
-        })}
-      </ul>
-    </motion.div>
   );
 }
 
@@ -386,27 +285,6 @@ export function SideNav({ active, onChange }: Props) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const close = () => setMobileOpen(false);
 
-  // Desktop expand state. `hoverOpen` is true while the cursor is over
-  // the rail or capsule. `pinned` is toggled by the pin button inside
-  // the expanded panel and stays open until explicitly closed. The
-  // expanded panel is visible when either is true.
-  const [hoverOpen, setHoverOpen] = useState(false);
-  const [pinned, setPinned] = useState(false);
-  const open = hoverOpen || pinned;
-  const closeTimer = useRef<number | null>(null);
-  const cancelClose = () => {
-    if (closeTimer.current !== null) {
-      window.clearTimeout(closeTimer.current);
-      closeTimer.current = null;
-    }
-  };
-  const scheduleClose = () => {
-    if (pinned) return;
-    cancelClose();
-    closeTimer.current = window.setTimeout(() => setHoverOpen(false), 160);
-  };
-  useEffect(() => cancelClose, []);
-
   return (
     <>
       {/* Mobile top capsule */}
@@ -427,77 +305,25 @@ export function SideNav({ active, onChange }: Props) {
         </div>
       </div>
 
-      {/* Desktop nav. Outer wrapper is pointer-events-none so dashboard
-          content underneath stays clickable; the slim rail + expanded
-          capsule re-enable pointer events on themselves. The rail is
-          always visible (44px wide); hovering or clicking the pin
-          inside the capsule expands the full nav. */}
-      <div className="hidden md:block fixed left-0 top-0 bottom-0 w-[220px] z-30 pointer-events-none">
-        <div
-          className="absolute left-0 top-0 bottom-0 w-[60px]"
-          onMouseEnter={() => {
-            cancelClose();
-            setHoverOpen(true);
-          }}
-          onMouseLeave={scheduleClose}
-        >
-          <SlimRail active={active} onChange={onChange} faded={open} />
-        </div>
-
-        <motion.aside
-          initial={false}
-          animate={{ x: open ? 20 : -200, opacity: open ? 1 : 0 }}
-          transition={{ type: 'spring', stiffness: 320, damping: 34 }}
-          onMouseEnter={() => {
-            cancelClose();
-            setHoverOpen(true);
-          }}
-          onMouseLeave={scheduleClose}
-          className="absolute left-0 top-1/2 w-[200px] flex flex-col gap-3.5 pt-[18px] pb-[14px] px-[14px] rounded-[36px] border backdrop-blur-[18px] pointer-events-auto h-[min(78vh,640px)] min-h-[520px] max-h-[calc(100vh-3rem)]"
-          style={{ ...CAPSULE_GLASS_STYLE, y: '-50%' }}
-          aria-label="Primary navigation"
-          aria-hidden={!open}
-        >
-          <div className="flex items-center justify-between gap-2">
-            <Brand />
-            <button
-              type="button"
-              onClick={() => {
-                setPinned((p) => !p);
-                if (pinned) {
-                  // Unpinning while cursor is away should also close.
-                  setHoverOpen(false);
-                }
-              }}
-              aria-label={pinned ? 'Unpin and close navigation' : 'Pin navigation open'}
-              title={pinned ? 'Unpin' : 'Pin open'}
-              className={clsx(
-                'inline-flex items-center justify-center w-7 h-7 rounded-full transition shrink-0',
-                pinned
-                  ? 'bg-calm-emerald text-white shadow-soft'
-                  : 'text-charcoal-mute hover:text-charcoal hover:bg-cream/60',
-              )}
-            >
-              {pinned ? <Icons.Close /> : <PinIcon />}
-            </button>
+      {/* Desktop sidebar — always expanded and fixed on the left. The
+          page shell reserves matching horizontal space (see md:pl on the
+          root layout in App.tsx) so the capsule never overlaps dashboard
+          content. Vertically centred, same capsule styling as before. */}
+      <aside
+        className="hidden md:flex fixed left-[20px] top-1/2 -translate-y-1/2 z-30 w-[200px] flex-col gap-3.5 pt-[18px] pb-[14px] px-[14px] rounded-[36px] border backdrop-blur-[18px] h-[min(78vh,640px)] min-h-[520px] max-h-[calc(100vh-3rem)]"
+        style={CAPSULE_GLASS_STYLE}
+        aria-label="Primary navigation"
+      >
+        <Brand />
+        <div className="h-px bg-gradient-to-r from-transparent via-calm-violet/25 to-transparent" />
+        <nav className="flex-1 min-h-0 overflow-y-auto no-scrollbar -mx-1 px-1">
+          <div className="text-[8.5px] tracking-[0.28em] uppercase font-semibold text-charcoal-mute/80 pl-3 mb-2 select-none">
+            Market Desk
           </div>
-          <div className="h-px bg-gradient-to-r from-transparent via-calm-violet/25 to-transparent" />
-          <nav className="flex-1 min-h-0 overflow-y-auto no-scrollbar -mx-1 px-1">
-            <div className="text-[8.5px] tracking-[0.28em] uppercase font-semibold text-charcoal-mute/80 pl-3 mb-2 select-none">
-              Market Desk
-            </div>
-            <NavList
-              active={active}
-              onChange={(t) => {
-                onChange(t);
-                if (!pinned) setHoverOpen(false);
-              }}
-              layoutScope="desktop"
-            />
-          </nav>
-          <StatusDot />
-        </motion.aside>
-      </div>
+          <NavList active={active} onChange={onChange} layoutScope="desktop" />
+        </nav>
+        <StatusDot />
+      </aside>
 
       {/* Mobile drawer */}
       <AnimatePresence>

@@ -44,7 +44,7 @@ function App() {
     <LiveDataProvider>
     <UserBookProvider>
     <StoreProvider>
-      <div className="min-h-screen text-charcoal">
+      <div className="min-h-screen text-charcoal md:pl-[220px]">
         <SideNav active={tab} onChange={setTab} />
         <main className="px-6 md:px-16 pt-6 pb-10">
           <AnimatePresence mode="wait">
