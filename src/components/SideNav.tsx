@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import clsx from 'clsx';
 import { AnimatePresence, motion } from 'framer-motion';
 import logoUrl from '../assets/logos/munshot-logo-w.png';
@@ -159,8 +159,8 @@ function StatusBadge() {
   );
 }
 
-// Slim variant used inside the hover-reveal desktop capsule — just a
-// pulsing dot + tiny label, no chip background.
+// Slim variant used inside the desktop capsule — just a pulsing dot +
+// tiny label, no chip background.
 function StatusDot() {
   return (
     <span className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-full bg-calm-emerald-bg/70 ring-1 ring-calm-emerald/20 text-[9px] tracking-[0.18em] uppercase font-semibold text-calm-emerald w-fit mx-auto">
@@ -170,30 +170,6 @@ function StatusDot() {
       </span>
       Live · mock
     </span>
-  );
-}
-
-/**
- * Visible emerald→lavender hover handle that tells the user where to
- * hover when the nav capsule is hidden. Becomes transparent (but stays
- * mounted) while the capsule is open so it doesn't compete visually,
- * and is wrapped in a wider invisible trigger zone so the cursor can
- * cross from the handle to the capsule without entering a dead gap.
- */
-function HoverHandle({ open }: { open: boolean }) {
-  return (
-    <motion.div
-      aria-hidden
-      initial={false}
-      animate={{ opacity: open ? 0 : 1 }}
-      transition={{ duration: 0.2 }}
-      className="absolute left-3 top-1/2 -translate-y-1/2 w-[12px] h-[150px] rounded-full pointer-events-none"
-      style={{
-        background: 'linear-gradient(180deg, #0F8F6F 0%, #8C79C9 100%)',
-        boxShadow:
-          '0 0 22px rgba(15,143,111,0.30), 0 6px 18px rgba(140,121,201,0.30), 0 1px 0 rgba(255,255,255,0.55) inset',
-      }}
-    />
   );
 }
 
@@ -254,23 +230,6 @@ export function SideNav({ active, onChange }: Props) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const close = () => setMobileOpen(false);
 
-  // Desktop hover-reveal state. A small grace period on mouseleave
-  // lets the cursor cross the gap between trigger strip and capsule
-  // without closing.
-  const [hoverOpen, setHoverOpen] = useState(false);
-  const closeTimer = useRef<number | null>(null);
-  const cancelClose = () => {
-    if (closeTimer.current !== null) {
-      window.clearTimeout(closeTimer.current);
-      closeTimer.current = null;
-    }
-  };
-  const scheduleClose = () => {
-    cancelClose();
-    closeTimer.current = window.setTimeout(() => setHoverOpen(false), 140);
-  };
-  useEffect(() => cancelClose, []);
-
   return (
     <>
       {/* Mobile top capsule */}
@@ -291,48 +250,25 @@ export function SideNav({ active, onChange }: Props) {
         </div>
       </div>
 
-      {/* Desktop hover-reveal. Outer wrapper is pointer-events-none so
-          dashboard content underneath stays clickable; the trigger zone
-          + capsule re-enable pointer events on themselves. The trigger
-          zone hosts the visible handle and extends a bit past the
-          handle so the cursor never falls into a dead gap when the
-          capsule slides in. */}
-      <div className="hidden md:block fixed left-0 top-0 bottom-0 w-[220px] z-30 pointer-events-none">
-        <div
-          className="absolute left-0 top-0 bottom-0 w-[32px] pointer-events-auto"
-          onMouseEnter={() => {
-            cancelClose();
-            setHoverOpen(true);
-          }}
-          onMouseLeave={scheduleClose}
-        >
-          <HoverHandle open={hoverOpen} />
-        </div>
-
-        <motion.aside
-          initial={false}
-          animate={{ x: hoverOpen ? 20 : -180 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 32 }}
-          onMouseEnter={() => {
-            cancelClose();
-            setHoverOpen(true);
-          }}
-          onMouseLeave={scheduleClose}
-          className="absolute left-0 top-1/2 w-[184px] flex flex-col gap-3.5 pt-[18px] pb-[14px] px-[14px] rounded-[48px] border backdrop-blur-[18px] pointer-events-auto h-[min(76vh,640px)] min-h-[560px] max-h-[calc(100vh-3rem)]"
-          style={{ ...CAPSULE_GLASS_STYLE, y: '-50%' }}
-          aria-label="Primary navigation"
-        >
-          <Brand />
-          <div className="h-px bg-gradient-to-r from-transparent via-calm-violet/25 to-transparent" />
-          <nav className="flex-1 min-h-0 overflow-y-auto no-scrollbar -mx-1 px-1">
-            <div className="text-[8.5px] tracking-[0.28em] uppercase font-semibold text-charcoal-mute/80 pl-3 mb-2 select-none">
-              Market Desk
-            </div>
-            <NavList active={active} onChange={onChange} layoutScope="desktop" />
-          </nav>
-          <StatusDot />
-        </motion.aside>
-      </div>
+      {/* Desktop sidebar — always expanded and fixed on the left. The
+          page shell reserves matching horizontal space (see md:pl on the
+          root layout in App.tsx) so the capsule never overlaps dashboard
+          content. Vertically centred, same capsule styling as before. */}
+      <aside
+        className="hidden md:flex fixed left-[20px] top-1/2 -translate-y-1/2 z-30 w-[184px] flex-col gap-3.5 pt-[18px] pb-[14px] px-[14px] rounded-[48px] border backdrop-blur-[18px] h-[min(76vh,640px)] min-h-[560px] max-h-[calc(100vh-3rem)]"
+        style={CAPSULE_GLASS_STYLE}
+        aria-label="Primary navigation"
+      >
+        <Brand />
+        <div className="h-px bg-gradient-to-r from-transparent via-calm-violet/25 to-transparent" />
+        <nav className="flex-1 min-h-0 overflow-y-auto no-scrollbar -mx-1 px-1">
+          <div className="text-[8.5px] tracking-[0.28em] uppercase font-semibold text-charcoal-mute/80 pl-3 mb-2 select-none">
+            Market Desk
+          </div>
+          <NavList active={active} onChange={onChange} layoutScope="desktop" />
+        </nav>
+        <StatusDot />
+      </aside>
 
       {/* Mobile drawer */}
       <AnimatePresence>
